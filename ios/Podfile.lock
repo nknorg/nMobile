@@ -1,4 +1,6 @@
 PODS:
+  - audio_session (0.0.1):
+    - Flutter
   - background_fetch (1.2.0):
     - Flutter
   - camera_avfoundation (0.0.1):
@@ -54,11 +56,10 @@ PODS:
     - Flutter
   - flutter_secure_storage (6.0.0):
     - Flutter
-  - flutter_sound (8.5.0):
+  - flutter_sound (9.28.0):
     - Flutter
-    - flutter_sound_core (= 8.5.0)
-    - mobile-ffmpeg-audio (= 4.4.LTS)
-  - flutter_sound_core (8.5.0)
+    - flutter_sound_core (= 9.28.0)
+  - flutter_sound_core (9.28.0)
   - FMDB/SQLCipher (2.7.11):
     - SQLCipher (~> 4.0)
   - image_cropper (0.0.4):
@@ -68,17 +69,17 @@ PODS:
     - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
-  - libwebp (1.3.2):
-    - libwebp/demux (= 1.3.2)
-    - libwebp/mux (= 1.3.2)
-    - libwebp/sharpyuv (= 1.3.2)
-    - libwebp/webp (= 1.3.2)
-  - libwebp/demux (1.3.2):
+  - libwebp (1.5.0):
+    - libwebp/demux (= 1.5.0)
+    - libwebp/mux (= 1.5.0)
+    - libwebp/sharpyuv (= 1.5.0)
+    - libwebp/webp (= 1.5.0)
+  - libwebp/demux (1.5.0):
     - libwebp/webp
-  - libwebp/mux (1.3.2):
+  - libwebp/mux (1.5.0):
     - libwebp/demux
-  - libwebp/sharpyuv (1.3.2)
-  - libwebp/webp (1.3.2):
+  - libwebp/sharpyuv (1.5.0)
+  - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
   - local_auth_darwin (0.0.1):
     - Flutter
@@ -86,7 +87,6 @@ PODS:
   - Mantle (2.2.0):
     - Mantle/extobjc (= 2.2.0)
   - Mantle/extobjc (2.2.0)
-  - mobile-ffmpeg-audio (4.4.LTS)
   - MTBBarcodeScanner (5.0.11)
   - nkn_sdk_flutter (0.1.15):
     - Flutter
@@ -105,17 +105,17 @@ PODS:
   - ReachabilitySwift (5.2.4)
   - receive_sharing_intent (1.8.1):
     - Flutter
-  - SDWebImage (5.20.0):
-    - SDWebImage/Core (= 5.20.0)
-  - SDWebImage/Core (5.20.0)
+  - SDWebImage (5.21.0):
+    - SDWebImage/Core (= 5.21.0)
+  - SDWebImage/Core (5.21.0)
   - SDWebImageWebPCoder (0.14.6):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
-  - Sentry/HybridSDK (8.41.0)
-  - sentry_flutter (8.11.0):
+  - Sentry/HybridSDK (8.46.0)
+  - sentry_flutter (8.14.1):
     - Flutter
     - FlutterMacOS
-    - Sentry/HybridSDK (= 8.41.0)
+    - Sentry/HybridSDK (= 8.46.0)
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -149,6 +149,7 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - background_fetch (from `.symlinks/plugins/background_fetch/ios`)
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
@@ -190,7 +191,6 @@ SPEC REPOS:
     - FMDB
     - libwebp
     - Mantle
-    - mobile-ffmpeg-audio
     - MTBBarcodeScanner
     - ReachabilitySwift
     - SDWebImage
@@ -201,6 +201,8 @@ SPEC REPOS:
     - TOCropViewController
 
 EXTERNAL SOURCES:
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   background_fetch:
     :path: ".symlinks/plugins/background_fetch/ios"
   camera_avfoundation:
@@ -267,28 +269,28 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/ios"
 
 SPEC CHECKSUMS:
+  audio_session: 19e9480dbdd4e5f6c4543826b2e8b0e4ab6145fe
   background_fetch: 79229f3677f19e1851b8e46d051720842e25a7fc
   camera_avfoundation: 3125e8cd1a4387f6f31c6c63abb8a55892a9eeeb
   connectivity_plus: 413a8857dd5d9f1c399a39130850d02fe0feaf7e
   device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
-  file_picker: 09aa5ec1ab24135ccd7a1621c46c84134bfd6655
+  file_picker: b159e0c068aef54932bb15dc9fd1571818edaf49
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_image_compress: 5a5e9aee05b6553048b8df1c3bc456d0afaac433
   flutter_local_notifications: df98d66e515e1ca797af436137b4459b160ad8c9
   flutter_native_splash: 52501b97d1c0a5f898d687f1646226c1f93c56ef
   flutter_secure_storage: 23fc622d89d073675f2eaa109381aefbcf5a49be
-  flutter_sound: ba7daf658dea78e9f18b79657338bfc222489f4f
-  flutter_sound_core: d9396f10752a0df9aa3197f4c431d62d934918cc
+  flutter_sound: 82aba29055d6feba684d08906e0623217b87bcd3
+  flutter_sound_core: 427465f72d07ab8c3edbe8ffdde709ddacd3763c
   FMDB: 57486c1117fd8e0e6b947b2f54c3f42bf8e57a4e
   image_cropper: 37d40f62177c101ff4c164906d259ea2c3aa70cf
   image_gallery_saver: 259eab68fb271cfd57d599904f7acdc7832e7ef2
   image_picker_ios: 4a8aadfbb6dc30ad5141a2ce3832af9214a705b5
-  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
+  libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   local_auth_darwin: 66e40372f1c29f383a314c738c7446e2f7fdadc3
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
-  mobile-ffmpeg-audio: 1e0a053f8a6de57114e50ff48b3a85ff1c60f902
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   nkn_sdk_flutter: cb83324eb3ef17419f715707b59bee20a9adfd34
   open_filex: 6e26e659846ec990262224a12ef1c528bb4edbe4
@@ -298,10 +300,10 @@ SPEC CHECKSUMS:
   qr_code_scanner: bb67d64904c3b9658ada8c402e8b4d406d5d796e
   ReachabilitySwift: 32793e867593cfc1177f5d16491e3a197d2fccda
   receive_sharing_intent: 79c848f5b045674ad60b9fea3bafea59962ad2c1
-  SDWebImage: 73c6079366fea25fa4bb9640d5fb58f0893facd8
+  SDWebImage: f84b0feeb08d2d11e6a9b843cb06d75ebf5b8868
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
-  Sentry: 54d0fe6c0df448497c8ed4cce66ccf7027e1823e
-  sentry_flutter: 83a84efb7f978522c9127fbc0c07dab09663eecc
+  Sentry: da60d980b197a46db0b35ea12cb8f39af48d8854
+  sentry_flutter: 6a134f9d381e49f22ea25a67736cf0cf4d02ec9c
   share_plus: 8b6f8b3447e494cca5317c8c3073de39b3600d1f
   shared_preferences_foundation: 5b919d13b803cadd15ed2dc053125c68730e5126
   sqflite: c0667567fd3e682beb9509976c08bc2325429aab
