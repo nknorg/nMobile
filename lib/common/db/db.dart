@@ -270,7 +270,7 @@ class DB {
         // 7 -> 8
         if (oldVersion <= 7 && newVersion >= 8) {
           await Upgrade7to8.upgradeMessages(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
-          await Upgrade7to8.upgradeSessionList(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade7to8.upgradeSession(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
         }
 
         // dismiss tip dialog
