@@ -27,20 +27,25 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
-// import 'package:sqflite/sqflite.dart';
+
+import 'upgrade7to8.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static const int VERSION_DB_NOW = 7;
+  static const int VERSION_DB_NOW = 8;
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
+
   StreamSink<bool> get _openedSink => _openedController.sink;
+
   Stream<bool> get openedStream => _openedController.stream;
 
   // ignore: close_sinks
   StreamController<String?> _upgradeTipController = StreamController<String?>.broadcast();
+
   StreamSink<String?> get _upgradeTipSink => _upgradeTipController.sink;
+
   Stream<String?> get upgradeTipStream => _upgradeTipController.stream;
 
   Lock _lock = new Lock();
@@ -260,6 +265,12 @@ class DB {
           await Upgrade6to7.upgradeMessagePiece(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
           await Upgrade6to7.upgradeSession(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
           await Upgrade6to7.deletesOldTables(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+        }
+
+        // 7 -> 8
+        if (oldVersion <= 7 && newVersion >= 8) {
+          await Upgrade7to8.upgradeMessages(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade7to8.upgradeSessionList(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
         }
 
         // dismiss tip dialog

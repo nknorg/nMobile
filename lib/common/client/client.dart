@@ -53,7 +53,9 @@ Future<String?> getPubKeyFromWallet(String? walletAddress, String? walletPwd) as
 class ClientCommon with Tag {
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
+
   StreamSink<int> get _statusSink => _statusController.sink;
+
   Stream<int> get statusStream => _statusController.stream;
 
   StreamSubscription? _onErrorStreamSubscription;
@@ -77,13 +79,17 @@ class ClientCommon with Tag {
   int status = ClientConnectStatus.disconnected;
 
   bool get isClientConnecting => (status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connectPing);
+
   bool get isClientReconnecting => (reconnectCompleter != null) && !(reconnectCompleter?.isCompleted == true);
+
   bool get isClientOK => (client != null) && (status == ClientConnectStatus.connected) && !isClientReconnecting;
+
   bool get isClientStop => (status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected);
 
   // complete
   Completer? clientOkCompleter;
   Completer? reconnectCompleter;
+
   // Completer? pingCompleter;
 
   // tag
@@ -373,6 +379,12 @@ class ClientCommon with Tag {
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
       logger.d("$TAG - onMessage ->> from:${event.src} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
       MessageSchema? receive = MessageSchema.fromReceive(event);
+      // TODO: Handling messages with incorrect timestamp
+      var now = DateTime.now();
+      if (receive != null && DateTime.fromMillisecondsSinceEpoch(receive.sendAt).isAfter(now)) {
+        logger.w("$TAG - onMessage ->> message with incorrect timestamp - message:$receive");
+        receive.sendAt = now.millisecondsSinceEpoch;
+      }
       chatInCommon.onMessageReceive(receive); // await
       // connect_status
       if (isClientStop) return;
