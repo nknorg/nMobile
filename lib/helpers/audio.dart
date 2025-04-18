@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart' as Sound;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:logger/logger.dart';
 import 'package:nmobile/common/locator.dart';
@@ -19,7 +18,7 @@ import '../components/dialog/modal.dart';
 
 class AudioHelper with Tag {
   // player
-  Sound.FlutterSoundPlayer player = Sound.FlutterSoundPlayer(logLevel: Level.nothing);
+  FlutterSoundPlayer player = FlutterSoundPlayer(logLevel: Level.all);
   String? playerId;
   int? playerDurationMs;
   StreamSubscription? _onPlayProgressSubscription;
@@ -27,11 +26,13 @@ class AudioHelper with Tag {
 
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onPlayProgressController = StreamController<Map<String, dynamic>>.broadcast();
+
   StreamSink<Map<String, dynamic>> get _onPlayProgressSink => _onPlayProgressController.sink;
-  Stream<Map<String, dynamic>> get onPlayProgressStream => _onPlayProgressController.stream; // .distinct((prev, next) => (prev['player_id'] == next['player_id']) && (next['percent'] < prev['percent']));
+
+  Stream<Map<String, dynamic>> get onPlayProgressStream => _onPlayProgressController.stream;
 
   // record
-  Sound.FlutterSoundRecorder record = Sound.FlutterSoundRecorder(logLevel: Level.nothing);
+  FlutterSoundRecorder record = FlutterSoundRecorder(logLevel: Level.nothing);
   String? recordId;
   String? recordPath;
   double? recordMaxDurationS;
@@ -40,8 +41,10 @@ class AudioHelper with Tag {
 
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onRecordProgressController = StreamController<Map<String, dynamic>>.broadcast();
+
   StreamSink<Map<String, dynamic>> get _onRecordProgressSink => _onRecordProgressController.sink;
-  Stream<Map<String, dynamic>> get onRecordProgressStream => _onRecordProgressController.stream; // .distinct((prev, next) => (prev['player_id'] == next['player_id']) && (next['percent'] < prev['percent']));
+
+  Stream<Map<String, dynamic>> get onRecordProgressStream => _onRecordProgressController.stream;
 
   AudioHelper();
 
@@ -75,24 +78,17 @@ class AudioHelper with Tag {
     }
     if (Platform.isAndroid) localPath = 'file:///' + localPath;
     // init
-    Sound.FlutterSoundPlayer? _player;
     try {
-      _player = await player.openAudioSession(
-        focus: AudioFocus.requestFocusAndStopOthers,
-        category: Sound.SessionCategory.playback,
-        mode: SessionMode.modeVoiceChat,
-        device: AudioDevice.speaker,
-      );
+      player.openPlayer();
     } catch (e, st) {
       handleError(e, st);
-    }
-    if (_player == null) {
       await playStop();
       return false;
     }
-    this.player = _player;
+
     this.playerId = playerId;
     this.playerDurationMs = durationMs;
+
     // progress
     if (_onPlayProgressSubscription != null) {
       await _onPlayProgressSubscription?.cancel();
@@ -109,6 +105,7 @@ class AudioHelper with Tag {
         "percent": position / duration,
       });
     });
+
     // start
     try {
       await player.setSubscriptionDuration(Duration(milliseconds: 50));
@@ -144,7 +141,8 @@ class AudioHelper with Tag {
     _onPlayProgressSubscription = null;
     try {
       await player.stopPlayer();
-      await player.closeAudioSession();
+      await player.closePlayer();
+
     } catch (e, st) {
       handleError(e, st);
       isPlayReleasing = false;
@@ -210,25 +208,19 @@ class AudioHelper with Tag {
       await recordStop();
       return null;
     }
+
     // init
-    FlutterSoundRecorder? _record;
     try {
-      _record = await record.openAudioSession(
-        focus: AudioFocus.requestFocusAndStopOthers,
-        category: Sound.SessionCategory.record,
-        mode: SessionMode.modeDefault,
-        device: AudioDevice.speaker,
-      );
+      await record.openRecorder();
     } catch (e, st) {
       handleError(e, st);
-    }
-    if (_record == null) {
       await recordStop();
       return null;
     }
-    this.record = _record;
+
     this.recordId = recordId;
     this.recordMaxDurationS = maxDurationS;
+
     // progress
     if (_onRecordProgressSubscription != null) {
       await _onRecordProgressSubscription?.cancel();
@@ -248,10 +240,15 @@ class AudioHelper with Tag {
         }
       }
     });
+
     // start
     try {
       await record.setSubscriptionDuration(Duration(milliseconds: 50));
-      await record.startRecorder(toFile: recordPath, codec: Sound.Codec.aacADTS);
+      await record.startRecorder(
+        toFile: recordPath,
+        codec: Codec.aacADTS,
+        audioSource: AudioSource.microphone,
+      );
     } catch (e, st) {
       handleError(e, st);
     }
@@ -265,7 +262,8 @@ class AudioHelper with Tag {
     _onRecordProgressSubscription = null;
     try {
       await record.stopRecorder();
-      await record.closeAudioSession();
+      await record.closeRecorder();
+
     } catch (e, st) {
       handleError(e, st);
       isRecordReleasing = false;
