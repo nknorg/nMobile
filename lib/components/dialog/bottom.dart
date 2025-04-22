@@ -380,7 +380,7 @@ class BottomDialog extends BaseStateFulWidget {
       child: Container(
         padding: const EdgeInsets.only(left: 20, right: 20),
         child: Center(
-          child: QrImage(
+          child: QrImageView(
             data: data,
             version: QrVersions.auto,
             size: 240.0,

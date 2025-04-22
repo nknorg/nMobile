@@ -57,3 +57,4 @@ nkn.aar
 # psuh resource
 **.p12
 **.cer
+/android/app/.cxx/
