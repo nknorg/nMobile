@@ -109,7 +109,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                   SizedBox(height: 20),
                   this._contact.address.isNotEmpty
                       ? Center(
-                          child: QrImage(
+                          child: QrImageView(
                             data: this._contact.address,
                             backgroundColor: application.theme.backgroundLightColor,
                             foregroundColor: application.theme.primaryColor,

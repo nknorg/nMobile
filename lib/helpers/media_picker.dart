@@ -454,7 +454,7 @@ class MediaPicker {
     }
 
     // compress
-    File? compressFile;
+    XFile? compressFile;
     int compressSize = 0;
     try {
       List<int> qualityItems = force ? [20, 10, 5] : [70, 30, 15];
@@ -519,7 +519,7 @@ class MediaPicker {
           'MB',
           'GB'
         ])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
-    return compressFile;
+    return File(compressFile!.path);
   }
 
   /*static Future<Size?> getImageSize(File file) async {

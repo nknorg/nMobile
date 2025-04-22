@@ -126,7 +126,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
             ),
             Container(
               padding: const EdgeInsets.only(top: 24),
-              child: QrImage(
+              child: QrImageView(
                 data: _wallet.address,
                 version: QrVersions.auto,
                 size: Settings.screenWidth() * 0.57,

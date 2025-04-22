@@ -486,7 +486,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                   width: double.infinity,
                   height: 50,
                   child: TextButton(
-                    style: _buttonStyle(),
+                    style: _buttonStyle(bottom: true),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
@@ -511,72 +511,6 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     ),
                     onPressed: () async {
                       Util.launchUrl('mailto:nmobile@nkn.org');
-                    },
-                  ),
-                ),
-                Divider(height: 0, color: application.theme.dividerColor),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    style: _buttonStyle(bottom: true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          Settings.locale((s) => s.help, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor1,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Label(
-                              'https://forum.nkn.org',
-                              type: LabelType.bodyRegular,
-                              color: application.theme.fontColor2,
-                              height: 1,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onPressed: () {
-                      Util.launchUrl('https://forum.nkn.org');
-                    },
-                  ),
-                ),
-                Divider(height: 0, color: application.theme.dividerColor),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    style: _buttonStyle(bottom: true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          Settings.locale((s) => s.terms, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor1,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Label(
-                              'https://www.nkn.org',
-                              type: LabelType.bodyRegular,
-                              color: application.theme.fontColor2,
-                              height: 1,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, SettingsTermsScreen.routeName);
                     },
                   ),
                 ),
