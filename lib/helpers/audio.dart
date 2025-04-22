@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:logger/logger.dart';
@@ -32,7 +33,7 @@ class AudioHelper with Tag {
   Stream<Map<String, dynamic>> get onPlayProgressStream => _onPlayProgressController.stream;
 
   // record
-  FlutterSoundRecorder record = FlutterSoundRecorder(logLevel: Level.nothing);
+  FlutterSoundRecorder record = FlutterSoundRecorder(logLevel: Level.off);
   String? recordId;
   String? recordPath;
   double? recordMaxDurationS;
@@ -48,6 +49,27 @@ class AudioHelper with Tag {
 
   AudioHelper();
 
+  init() async {
+    final session = await AudioSession.instance;
+    await session.configure(AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+      avAudioSessionCategoryOptions:
+      AVAudioSessionCategoryOptions.allowBluetooth |
+      AVAudioSessionCategoryOptions.defaultToSpeaker,
+      avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+      avAudioSessionRouteSharingPolicy:
+      AVAudioSessionRouteSharingPolicy.defaultPolicy,
+      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+      androidAudioAttributes: const AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.speech,
+        flags: AndroidAudioFlags.none,
+        usage: AndroidAudioUsage.voiceCommunication,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: true,
+    ));
+  }
+
   ///***********************************************************************************************************************
   ///******************************************************* Player ********************************************************
   ///***********************************************************************************************************************
@@ -56,9 +78,10 @@ class AudioHelper with Tag {
     logger.i("$TAG - playStart - playerId:$playerId - localPath:$localPath - durationMs:$durationMs");
     if (isPlayReleasing) return false;
     // permission
-    var status = await Permission.storage.request();
-    if (status != PermissionStatus.granted) {
+    var status = await Permission.microphone.request();
+    if (status == PermissionStatus.denied) {
       await playStop(); // throw RecordingPermissionException('Storage permission not granted');
+      return false;
     }
     if (status != PermissionStatus.granted) {
       await playStop();
@@ -76,16 +99,16 @@ class AudioHelper with Tag {
       Toast.show(Settings.locale((s) => s.file_not_exist));
       return false;
     }
-    if (Platform.isAndroid) localPath = 'file:///' + localPath;
+
+    // if (Platform.isAndroid) localPath = 'file:///' + localPath;
     // init
     try {
-      player.openPlayer();
+      await player.openPlayer();
     } catch (e, st) {
       handleError(e, st);
       await playStop();
       return false;
     }
-
     this.playerId = playerId;
     this.playerDurationMs = durationMs;
 
@@ -110,7 +133,7 @@ class AudioHelper with Tag {
     try {
       await player.setSubscriptionDuration(Duration(milliseconds: 50));
       await player.startPlayer(
-          fromDataBuffer: localFile.readAsBytesSync(),
+          fromURI: localFile.path,
           codec: Codec.defaultCodec,
           whenFinished: () {
             logger.i("$TAG - playStart - whenFinished - playerId:$playerId");
@@ -142,7 +165,6 @@ class AudioHelper with Tag {
     try {
       await player.stopPlayer();
       await player.closePlayer();
-
     } catch (e, st) {
       handleError(e, st);
       isPlayReleasing = false;
@@ -191,7 +213,7 @@ class AudioHelper with Tag {
         ),
       );
     }
-    if (status != PermissionStatus.granted) {
+    if (status != PermissionStatus.denied) {
       await recordStop(); // throw RecordingPermissionException('Microphone permission not granted');
     }
     if (status != PermissionStatus.granted) {
@@ -247,7 +269,6 @@ class AudioHelper with Tag {
       await record.startRecorder(
         toFile: recordPath,
         codec: Codec.aacADTS,
-        audioSource: AudioSource.microphone,
       );
     } catch (e, st) {
       handleError(e, st);
@@ -263,7 +284,6 @@ class AudioHelper with Tag {
     try {
       await record.stopRecorder();
       await record.closeRecorder();
-
     } catch (e, st) {
       handleError(e, st);
       isRecordReleasing = false;
