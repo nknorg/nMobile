@@ -419,7 +419,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
 
   Widget _widgetTopicSubscribe(BuildContext context) {
     String who = widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : _sender?.displayName ?? widget.message.sender.substring(0, 6);
-    String content = who + Settings.locale((s) => s.joined_channel, ctx: context);
+    String content = who + ' ' + Settings.locale((s) => s.joined_channel, ctx: context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 6),
