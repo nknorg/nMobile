@@ -24,6 +24,8 @@ class AudioHelper with Tag {
   int? playerDurationMs;
   StreamSubscription? _onPlayProgressSubscription;
   bool isPlayReleasing = false;
+  Timer? _playProgressTimer;
+  int _currentPosition = 0;
 
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onPlayProgressController = StreamController<Map<String, dynamic>>.broadcast();
@@ -111,22 +113,42 @@ class AudioHelper with Tag {
     }
     this.playerId = playerId;
     this.playerDurationMs = durationMs;
+    this._currentPosition = 0;
 
     // progress
     if (_onPlayProgressSubscription != null) {
       await _onPlayProgressSubscription?.cancel();
     }
     _onPlayProgressSubscription = player.onProgress?.listen((PlaybackDisposition event) async {
-      // logger.v("$TAG - playStart - onProgress - recordId:${this.playerId} - duration:${event.duration} - position:${event.position}");
       onProgress?.call(event);
-      int duration = event.duration.inMinutes * 60 * 1000 + event.duration.inSeconds * 1000 + event.duration.inMilliseconds;
-      int position = event.position.inMinutes * 60 * 1000 + event.position.inSeconds * 1000 + event.position.inMilliseconds;
-      _onPlayProgressSink.add({
-        "id": this.playerId,
-        "duration": duration,
-        "position": position,
-        "percent": position / duration,
-      });
+
+      if (event.duration.inMilliseconds == 0 && event.position.inMilliseconds == 0) {
+        if (_playProgressTimer == null) {
+          _playProgressTimer = Timer.periodic(Duration(milliseconds: 50), (timer) {
+            if (this.playerDurationMs != null && this.playerDurationMs! > 0) {
+              _currentPosition += 50;
+              if (_currentPosition > this.playerDurationMs!) {
+                _currentPosition = this.playerDurationMs!;
+              }
+              _onPlayProgressSink.add({
+                "id": this.playerId,
+                "duration": this.playerDurationMs,
+                "position": _currentPosition,
+                "percent": _currentPosition / this.playerDurationMs!,
+              });
+            }
+          });
+        }
+      } else {
+        int duration = event.duration.inMinutes * 60 * 1000 + event.duration.inSeconds * 1000 + event.duration.inMilliseconds;
+        int position = event.position.inMinutes * 60 * 1000 + event.position.inSeconds * 1000 + event.position.inMilliseconds;
+        _onPlayProgressSink.add({
+          "id": this.playerId,
+          "duration": duration,
+          "position": position,
+          "percent": position / duration,
+        });
+      }
     });
 
     // start
@@ -137,6 +159,8 @@ class AudioHelper with Tag {
           codec: Codec.defaultCodec,
           whenFinished: () {
             logger.i("$TAG - playStart - whenFinished - playerId:$playerId");
+            _playProgressTimer?.cancel();
+            _playProgressTimer = null;
             _onPlayProgressSink.add({
               "id": this.playerId,
               "duration": this.playerDurationMs,
@@ -154,6 +178,9 @@ class AudioHelper with Tag {
   Future<bool> playStop() async {
     logger.i("$TAG - playStop - playerId:$playerId");
     isPlayReleasing = true;
+    _playProgressTimer?.cancel();
+    _playProgressTimer = null;
+    _currentPosition = 0;
     _onPlayProgressSink.add({
       "id": this.playerId,
       "duration": this.playerDurationMs,
