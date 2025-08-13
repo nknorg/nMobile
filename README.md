@@ -77,3 +77,24 @@ $ flutter run
 ### Generate intl using plugin
 
 * Using Flutter Intl plugin for generate intl files: [https://plugins.jetbrains.com/plugin/13666-flutter-intl](https://plugins.jetbrains.com/plugin/13666-flutter-intl)
+
+## Account & Wallet Onboarding
+
+### First-Time Registration (Passwordless)
+
+- On your first launch, you can create an account without a password.
+- The app generates a default, device-only account automatically so you can start using it immediately.
+- No data is uploaded to any server during this step.
+
+### Using Your Own Account (Import a Wallet)
+
+- If you prefer to use your own account, you can import an existing wallet at any time.
+- Open the app and go to: Settings → Account → Import Wallet.
+- Follow the on-screen steps to complete the import.
+- After import, your wallet becomes your active account.
+
+### Notes
+
+- Your keys are stored locally on your device. Make sure you back them up safely.
+- You can keep using the default account or switch to your own wallet later—your choice.
+- If you import a wallet, ensure you’re in a private, secure environment.
