@@ -9,7 +9,7 @@ class LightTheme implements SkinTheme {
   @override
   Color primaryColor = Color(0xFF0F6EFF);
   @override
-  Color fontColor1 = Color(0xFF2D2D2D);
+  Color fontColor1 = Color(0xFF9c9c9c); // Changed from dark grey to light grey
   @override
   Color fontColor2 = Color(0xFF8F92A1);
   @override
@@ -20,28 +20,60 @@ class LightTheme implements SkinTheme {
   Color fontLightColor = Color(0xFFFFFFFF);
 
   @override
-  TextStyle get bodyText1 => TextStyle(fontWeight: FontWeight.normal, fontSize: 16, height: 1.5, color: fontColor2);
+  TextStyle get bodyText1 => TextStyle(
+      fontWeight: FontWeight.normal,
+      fontSize: 16,
+      height: 1.5,
+      color: fontColor2);
 
   @override
-  TextStyle get bodyText2 => TextStyle(fontWeight: FontWeight.normal, fontSize: 14, height: 1.5, color: fontColor2);
+  TextStyle get bodyText2 => TextStyle(
+      fontWeight: FontWeight.normal,
+      fontSize: 14,
+      height: 1.5,
+      color: fontColor2);
 
   @override
-  TextStyle get bodyText3 => TextStyle(fontWeight: FontWeight.normal, fontSize: 12, height: 1.5, color: fontColor2);
+  TextStyle get bodyText3 => TextStyle(
+      fontWeight: FontWeight.normal,
+      fontSize: 12,
+      height: 1.5,
+      color: fontColor2);
 
   @override
-  TextStyle get headline1 => TextStyle(fontWeight: FontWeight.bold, fontSize: 30, height: 1.2, color: fontColor1);
+  TextStyle get headline1 => TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 30,
+      height: 1.2,
+      color: fontColor1);
 
   @override
-  TextStyle get headline2 => TextStyle(fontWeight: FontWeight.bold, fontSize: 22, height: 1.2, color: fontColor1);
+  TextStyle get headline2 => TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 22,
+      height: 1.2,
+      color: fontColor1);
 
   @override
-  TextStyle get headline3 => TextStyle(fontWeight: FontWeight.bold, fontSize: 16, height: 1.2, color: fontColor1);
+  TextStyle get headline3 => TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+      height: 1.2,
+      color: fontColor1);
 
   @override
-  TextStyle get headline4 => TextStyle(fontWeight: FontWeight.bold, fontSize: 14, height: 1.2, color: fontColor1);
+  TextStyle get headline4 => TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+      height: 1.2,
+      color: fontColor1);
 
   @override
-  TextStyle get display => TextStyle(fontWeight: FontWeight.normal, fontSize: 14, height: 1.2, color: fontColor1);
+  TextStyle get display => TextStyle(
+      fontWeight: FontWeight.normal,
+      fontSize: 14,
+      height: 1.2,
+      color: fontColor1);
 
   @override
   ThemeData get themeData => ThemeData(
@@ -65,7 +97,8 @@ class LightTheme implements SkinTheme {
         appBarTheme: AppBarTheme(
           backgroundColor: fontLightColor,
           foregroundColor: fontLightColor,
-          titleTextStyle: TextStyle(color: fontLightColor, fontSize: 20, fontWeight: FontWeight.bold),
+          titleTextStyle: TextStyle(
+              color: fontLightColor, fontSize: 20, fontWeight: FontWeight.bold),
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarIconBrightness: Brightness.dark,
@@ -79,14 +112,19 @@ class LightTheme implements SkinTheme {
           thickness: 1,
         ),
         buttonTheme: ButtonThemeData(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           buttonColor: primaryColor,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.resolveWith((states) => primaryColor),
-            textStyle: WidgetStateProperty.resolveWith((states) => TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            shape: WidgetStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            backgroundColor:
+                WidgetStateProperty.resolveWith((states) => primaryColor),
+            textStyle: WidgetStateProperty.resolveWith((states) =>
+                TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            shape: WidgetStateProperty.resolveWith((states) =>
+                RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
           ),
         ),
         visualDensity: VisualDensity.adaptivePlatformDensity,

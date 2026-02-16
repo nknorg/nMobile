@@ -7,6 +7,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
+import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/entropy/touch_entropy_collector.dart';
@@ -18,8 +19,10 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:nmobile/cctp_settings/services/wallet_service.dart';
+import 'package:nmobile/screens/onboarding/profile_setup.dart';
 
 class FirstWelcomeScreen extends BaseStateFulWidget {
   static const String routeName = '/onboarding/seed_pin';
@@ -863,9 +866,32 @@ class _FirstWelcomeScreenState
       _walletBloc?.add(AddWallet(
           wallet, nkn.keystore, _pinController.text, hexEncode(nkn.seed)));
 
-      // Navigate to app home
+      // Set the new wallet as default
+      _walletBloc?.add(DefaultWallet(wallet.address));
+
+      // Wait for wallet to be processed before navigating
       if (mounted) {
-        AppScreen.go(context);
+        // Listen for wallet state changes
+        StreamSubscription? subscription;
+        subscription = _walletBloc?.stream.listen((state) {
+          if (state is WalletLoaded) {
+            // Check if our wallet is now in the list
+            bool walletExists =
+                state.wallets.any((w) => w.address == wallet.address);
+            if (walletExists) {
+              subscription?.cancel();
+              ProfileSetupScreen.go(context);
+            }
+          }
+        });
+
+        // Cancel subscription after 5 seconds as fallback
+        Future.delayed(Duration(seconds: 5), () {
+          subscription?.cancel();
+          if (mounted) {
+            ProfileSetupScreen.go(context);
+          }
+        });
       }
     } catch (e) {
       logger.e('Error creating wallet: $e');
