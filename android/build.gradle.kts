@@ -13,6 +13,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://maven.nkn.org/releases") } // Added NKN repository to resolve missing nkn.aar file
     }
 }
 
@@ -39,7 +40,7 @@ subprojects {
                 }
                 
                 val javaVersion = JavaVersion.VERSION_21
-                val androidApiVersion = 35
+                val androidApiVersion = 36
                 
                 android.compileSdkVersion(androidApiVersion)
                 android.defaultConfig.targetSdk = androidApiVersion

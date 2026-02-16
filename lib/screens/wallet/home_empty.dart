@@ -5,9 +5,7 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
-import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class WalletHomeEmptyLayout extends BaseStateFulWidget {
@@ -15,7 +13,8 @@ class WalletHomeEmptyLayout extends BaseStateFulWidget {
   _WalletHomeEmptyLayoutState createState() => _WalletHomeEmptyLayoutState();
 }
 
-class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmptyLayout> {
+class _WalletHomeEmptyLayoutState
+    extends BaseStateFulWidgetState<WalletHomeEmptyLayout> {
   @override
   void onRefreshArguments() {}
 
@@ -28,7 +27,8 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Center(
-            child: Asset.image("wallet/pig.png", width: Settings.screenWidth() / 3),
+            child: Asset.image("wallet/pig.png",
+                width: Settings.screenWidth() / 3),
           ),
           Column(
             children: <Widget>[
@@ -61,16 +61,6 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
                 backgroundColor: application.theme.primaryColor,
                 onPressed: () {
                   WalletCreateNKNScreen.go(context);
-                },
-              ),
-              SizedBox(height: 12),
-              Button(
-                text: Settings.locale((s) => s.no_wallet_import, ctx: context),
-                width: double.infinity,
-                fontColor: application.theme.fontLightColor,
-                backgroundColor: application.theme.primaryColor.withAlpha(20),
-                onPressed: () {
-                  WalletImportScreen.go(context, WalletType.nkn);
                 },
               ),
             ],

@@ -647,7 +647,7 @@ class MessageStorage with Tag {
                 offset: 0,
                 limit: 1,
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - updateOptions - no exists - msgId:$msgId");
                 return null;
               }

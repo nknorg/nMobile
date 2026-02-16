@@ -27,6 +27,7 @@ import 'package:nmobile/screens/chat/no_wallet.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
+import 'package:nmobile/screens/chat/telegram_chat_screen.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -199,7 +200,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         if (!(state is WalletLoaded)) {
           return Container(
             child: SpinKitThreeBounce(
-              color: application.theme.primaryColor,
+              color: Theme.of(context).colorScheme.primary,
               size: Settings.screenWidth() / 15,
             ),
           );
@@ -219,8 +220,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         }
         // client connected
         return Layout(
-          headerColor: application.theme.primaryColor,
-          bodyColor: application.theme.backgroundLightColor,
+          headerColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.primary,
+          bodyColor: Theme.of(context).scaffoldBackgroundColor,
           header: Header(
             titleChild: Container(
               margin: EdgeInsets.only(left: 20),
@@ -253,7 +254,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               key: _floatingActionKey,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
               elevation: 12,
-              backgroundColor: application.theme.primaryColor,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               child: Asset.iconSvg('pencil', width: 24),
               onPressed: () {
                 _showFloatActionMenu();
@@ -264,7 +265,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               ? ChatSessionListLayout(_contactMe!)
               : Container(
                   child: SpinKitThreeBounce(
-                    color: application.theme.primaryColor,
+                    color: Theme.of(context).colorScheme.primary,
                     size: Settings.screenWidth() / 15,
                   ),
                 ),
@@ -357,7 +358,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         ),
         padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.all(Radius.circular(8)),
         ),
         child: Column(
@@ -365,7 +366,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           children: [
             SizedBox(height: 10),
             CircularProgressIndicator(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).cardColor,
             ),
             SizedBox(height: 25),
             Label(
@@ -422,6 +423,26 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                             ),
                             child: Label(
                               Settings.locale((s) => s.new_private_group, ctx: context),
+                              height: 1.2,
+                              type: LabelType.h4,
+                              dark: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      SizedBox(
+                        height: btnSize,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                              color: Colors.black26,
+                            ),
+                            child: Label(
+                              'Public groups',
                               height: 1.2,
                               type: LabelType.h4,
                               dark: true,
@@ -532,6 +553,27 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                             Loading.dismiss();
                             if (contact != null) await ChatMessagesScreen.go(context, contact);
                             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context); // floatActionBtn
+                          },
+                        ),
+                        SizedBox(height: 10),
+                        Button(
+                          width: btnSize,
+                          height: btnSize,
+                          fontColor: application.theme.fontLightColor,
+                          backgroundColor: application.theme.backgroundLightColor.withAlpha(77),
+                          child: Icon(Icons.send, color: application.theme.fontLightColor, size: 22),
+                          onPressed: () async {
+                            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const TelegramChatScreen(
+                                  chatId: 'demo_chat',
+                                  chatName: 'Telegram Chat',
+                                  isGroup: false,
+                                ),
+                              ),
+                            );
                           },
                         ),
                       ],

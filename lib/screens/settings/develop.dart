@@ -73,7 +73,7 @@ class _SettingsDevelopScreenState extends BaseStateFulWidgetState<SettingsDevelo
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _bubbleEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     Settings.messageDebugInfo = value;
                                     SettingsStorage.setSettings('${SettingsStorage.OPEN_DEVELOP_OPTIONS_MESSAGE_DEBUG}', value);
@@ -108,8 +108,8 @@ class _SettingsDevelopScreenState extends BaseStateFulWidgetState<SettingsDevelo
 
   _buttonStyle({bool top = false, bool bottom = false}) {
     return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
+      padding: WidgetStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
+      shape: WidgetStateProperty.resolveWith(
         (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
       ),
     );

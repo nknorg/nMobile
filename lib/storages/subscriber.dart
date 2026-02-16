@@ -71,7 +71,7 @@ class SubscriberStorage with Tag {
               where: 'topic_id = ? AND contact_address = ?',
               whereArgs: [schema.topicId, schema.contactAddress],
             );
-            if (res != null && res.length > 0) {
+            if (res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
               entity = res.first;
               return null;
@@ -368,7 +368,7 @@ class SubscriberStorage with Tag {
                 where: 'topic_id = ? AND contact_address = ?',
                 whereArgs: [topicId, contactAddress],
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setData - no exists - topicId:$topicId - contactAddress:$contactAddress");
                 return null;
               }

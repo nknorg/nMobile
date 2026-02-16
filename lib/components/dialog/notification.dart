@@ -36,10 +36,8 @@ class NotificationDialog extends StatelessWidget {
       animationDuration: const Duration(milliseconds: 256),
       wrapToastAnimation: (controller, cancel, child) {
         final anim = notificationAnimation(controller, cancel, child);
-        if (anim != null) {
-          child = anim;
-        }
-        child = Align(alignment: Alignment.topCenter, child: child);
+        child = anim;
+              child = Align(alignment: Alignment.topCenter, child: child);
         return child;
       },
       toastBuilder: (CancelFunc cancelFunc) {

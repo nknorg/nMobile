@@ -442,9 +442,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _buttonStyle({bool topRadius = true, bool botRadius = true, double topPad = 12, double botPad = 12}) {
     return ButtonStyle(
-      backgroundColor: MaterialStateProperty.resolveWith((state) => application.theme.backgroundLightColor),
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16, top: topPad, bottom: botPad)),
-      shape: MaterialStateProperty.resolveWith(
+      backgroundColor: WidgetStateProperty.resolveWith((state) => application.theme.backgroundLightColor),
+      padding: WidgetStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16, top: topPad, bottom: botPad)),
+      shape: WidgetStateProperty.resolveWith(
         (states) => RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: topRadius ? Radius.circular(12) : Radius.zero,

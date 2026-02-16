@@ -62,7 +62,7 @@ class Signature {
 
   Uint8List open_len(Uint8List signedMessage, final int smoff, final int smlen) {
     // check sm length
-    if (!(signedMessage != null && signedMessage.length >= (smoff + smlen) && smlen >= signatureLength)) return throw ArgumentError();
+    if (!(signedMessage.length >= (smoff + smlen) && smlen >= signatureLength)) return throw ArgumentError();
 
     // temp buffer
     Uint8List tmp = Uint8List(smlen);

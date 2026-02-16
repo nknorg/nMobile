@@ -40,7 +40,7 @@ class Layout extends StatelessWidget {
         child: PhysicalModel(
           elevation: 0,
           clipBehavior: this.clipAlias ? Clip.antiAlias : Clip.none,
-          color: this.bodyColor ?? application.theme.backgroundColor,
+          color: this.bodyColor ?? Theme.of(context).scaffoldBackgroundColor,
           borderRadius: this.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
           child: Column(
             children: <Widget>[

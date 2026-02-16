@@ -49,6 +49,7 @@ class NKNAccountContract {
     } catch (e, st) {
       handleError(e, st);
     }
+    return null;
   }
 
   Future<void> close() {

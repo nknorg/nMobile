@@ -411,9 +411,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _buttonStyle({bool topRadius = true, bool botRadius = true, double topPad = 12, double botPad = 12}) {
     return ButtonStyle(
-      backgroundColor: MaterialStateProperty.resolveWith((state) => application.theme.backgroundLightColor),
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16, top: topPad, bottom: botPad)),
-      shape: MaterialStateProperty.resolveWith(
+      backgroundColor: WidgetStateProperty.resolveWith((state) => application.theme.backgroundLightColor),
+      padding: WidgetStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16, top: topPad, bottom: botPad)),
+      shape: WidgetStateProperty.resolveWith(
         (states) => RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: topRadius ? Radius.circular(12) : Radius.zero,
@@ -864,7 +864,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     Spacer(),
                     CupertinoSwitch(
                       value: _burnOpen,
-                      activeColor: application.theme.primaryColor,
+                      activeTrackColor: application.theme.primaryColor,
                       onChanged: (value) {
                         setState(() {
                           _burnOpen = value;
@@ -958,7 +958,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 Spacer(),
                 CupertinoSwitch(
                   value: _notificationOpen,
-                  activeColor: application.theme.primaryColor,
+                  activeTrackColor: application.theme.primaryColor,
                   onChanged: (value) {
                     setState(() {
                       _notificationOpen = value;

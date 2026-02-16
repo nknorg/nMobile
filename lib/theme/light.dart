@@ -84,9 +84,9 @@ class LightTheme implements SkinTheme {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith((states) => primaryColor),
-            textStyle: MaterialStateProperty.resolveWith((states) => TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            backgroundColor: WidgetStateProperty.resolveWith((states) => primaryColor),
+            textStyle: WidgetStateProperty.resolveWith((states) => TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            shape: WidgetStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           ),
         ),
         visualDensity: VisualDensity.adaptivePlatformDensity,

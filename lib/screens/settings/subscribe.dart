@@ -183,7 +183,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _subscribeSpeedEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE}', value);
                                     setState(() {
@@ -236,7 +236,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _resubscribeSpeedEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE}', value);
                                     setState(() {
@@ -270,8 +270,8 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
 
   _buttonStyle({bool top = false, bool bottom = false}) {
     return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
+      padding: WidgetStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
+      shape: WidgetStateProperty.resolveWith(
         (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
       ),
     );

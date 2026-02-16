@@ -1,21 +1,19 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
+//
 
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/helpers/file.dart';
+//
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:synchronized/synchronized.dart';
@@ -284,45 +282,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   }
 
   Future _save(int index) async {
-    // permission
-    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    if ((await Permission.storage.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    // data
-    if ((index < 0) || (index >= _medias.length)) return null;
-    Map<String, dynamic>? media = _medias[index];
-    if (media.isEmpty) return null;
-    String mediaType = media["mediaType"] ?? "";
-    String contentType = media["contentType"] ?? "";
-    String content = media["content"] ?? "";
-    // save
-    if (mediaType == "image") {
-      if ((contentType == "path") && content.isNotEmpty) {
-        File file = File(content);
-        if (!file.existsSync()) return;
-        logger.i("MediaScreen - save image file - path:${file.path}");
-        Uint8List bytes = await file.readAsBytes();
-        String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
-        String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-        Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: mediaName, isReturnImagePathOfIOS: true);
-        logger.i("MediaScreen - save copy image - path:${result?["filePath"]}");
-        Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
-      }
-    } else if (mediaType == "video") {
-      if ((contentType == "path") && content.isNotEmpty) {
-        File file = File(content);
-        if (!file.existsSync()) return;
-        logger.i("MediaScreen - save video file - path:${file.path}");
-        String ext = Path.getFileExt(file, FileHelper.DEFAULT_VIDEO_EXT);
-        String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-        Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: mediaName, isReturnPathOfIOS: true);
-        logger.i("MediaScreen - save copy video - path:${result?["filePath"]}");
-        Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
-      }
-    }
+    Toast.show("Saving to gallery is temporarily disabled.");
   }
 
   Future _share(int index) async {

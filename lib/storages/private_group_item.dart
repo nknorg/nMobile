@@ -69,7 +69,7 @@ class PrivateGroupItemStorage with Tag {
               where: 'group_id = ? AND invitee = ?',
               whereArgs: [schema.groupId, schema.invitee],
             );
-            if (res != null && res.length > 0) {
+            if (res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
               entity = res.first;
               return null;

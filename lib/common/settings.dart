@@ -70,11 +70,9 @@ class Settings {
     try {
       if (_s != null) return _s;
       if (ctx != null) return S.maybeOf(ctx);
-      if (appContext != null) {
-        S? s = S.maybeOf(appContext);
-        if ((s != null) && (_s == null)) _s = s;
-      }
-    } catch (e) {
+      S? s = S.maybeOf(appContext);
+      if ((s != null) && (_s == null)) _s = s;
+        } catch (e) {
       //handleError(e, st, toast: false, upload: false);
     }
     return _s;

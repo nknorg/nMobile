@@ -21,6 +21,7 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/screens/settings/develop.dart';
+import 'package:nmobile/screens/settings/seedphrase.dart';
 import 'package:nmobile/screens/settings/subscribe.dart';
 import 'package:nmobile/screens/settings/terms.dart';
 import 'package:nmobile/screens/settings/tracker.dart';
@@ -37,7 +38,9 @@ class SettingsHomeScreen extends BaseStateFulWidget {
   _SettingsHomeScreenState createState() => _SettingsHomeScreenState();
 }
 
-class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScreen> with AutomaticKeepAliveClientMixin {
+class _SettingsHomeScreenState
+    extends BaseStateFulWidgetState<SettingsHomeScreen>
+    with AutomaticKeepAliveClientMixin {
   SettingsBloc? _settingsBloc;
   StreamSubscription? _settingSubscription;
 
@@ -129,7 +132,9 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
 
   _changeNotificationType() {
     setState(() {
-      _currentNotificationType = _notificationTypeList.firstWhere((x) => x.value == Settings.notificationType).text;
+      _currentNotificationType = _notificationTypeList
+          .firstWhere((x) => x.value == Settings.notificationType)
+          .text;
     });
   }
 
@@ -149,7 +154,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.only(top: 20, bottom: 100, left: 20, right: 20),
+        padding:
+            const EdgeInsets.only(top: 20, bottom: 100, left: 20, right: 20),
         children: [
           // My account
           Padding(
@@ -234,11 +240,14 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                   child: TextButton(
                     style: _buttonStyle(top: true, bottom: true),
                     onPressed: () async {
-                      Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                        SelectScreen.title: Settings.locale((s) => s.change_language, ctx: context),
-                        SelectScreen.selectedValue: Settings.language,
-                        SelectScreen.list: _languageList,
-                      }).then((lang) {
+                      Navigator.pushNamed(context, SelectScreen.routeName,
+                          arguments: {
+                            SelectScreen.title: Settings.locale(
+                                (s) => s.change_language,
+                                ctx: context),
+                            SelectScreen.selectedValue: Settings.language,
+                            SelectScreen.list: _languageList,
+                          }).then((lang) {
                         if ((lang != null) && (lang is String)) {
                           _settingsBloc?.add(UpdateLanguage(lang));
                         }
@@ -317,34 +326,51 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                           children: <Widget>[
                             CupertinoSwitch(
                                 value: _biometricsSelected,
-                                activeColor: application.theme.primaryColor,
+                                activeTrackColor:
+                                    application.theme.primaryColor,
                                 onChanged: (bool value) async {
-                                  WalletSchema? _wallet = await walletCommon.getDefault();
-                                  if (_wallet == null || _wallet.address.isEmpty) {
-                                    final wallets = await walletCommon.getWallets();
-                                    if (wallets.isNotEmpty) _wallet = wallets[0];
+                                  WalletSchema? _wallet =
+                                      await walletCommon.getDefault();
+                                  if (_wallet == null ||
+                                      _wallet.address.isEmpty) {
+                                    final wallets =
+                                        await walletCommon.getWallets();
+                                    if (wallets.isNotEmpty)
+                                      _wallet = wallets[0];
                                   }
-                                  if (_wallet == null || _wallet.address.isEmpty) {
+                                  if (_wallet == null ||
+                                      _wallet.address.isEmpty) {
                                     ModalDialog.of(Settings.appContext).confirm(
-                                      title: Settings.locale((s) => s.wallet_missing),
+                                      title: Settings.locale(
+                                          (s) => s.wallet_missing),
                                       hasCloseButton: true,
                                     );
                                     return;
                                   }
-                                  String? input = await BottomDialog.of(Settings.appContext).showInput(
-                                    title: Settings.locale((s) => s.verify_wallet_password),
-                                    inputTip: Settings.locale((s) => s.wallet_password),
-                                    inputHint: Settings.locale((s) => s.input_password),
-                                    actionText: Settings.locale((s) => s.continue_text),
+                                  String? input =
+                                      await BottomDialog.of(Settings.appContext)
+                                          .showInput(
+                                    title: Settings.locale(
+                                        (s) => s.verify_wallet_password),
+                                    inputTip: Settings.locale(
+                                        (s) => s.wallet_password),
+                                    inputHint: Settings.locale(
+                                        (s) => s.input_password),
+                                    actionText:
+                                        Settings.locale((s) => s.continue_text),
                                     validator: Validator.of(context).password(),
                                     password: true,
                                   );
-                                  if (!(await walletCommon.isPasswordRight(_wallet.address, input))) {
-                                    Toast.show(Settings.locale((s) => s.tip_password_error));
+                                  if (!(await walletCommon.isPasswordRight(
+                                      _wallet.address, input))) {
+                                    Toast.show(Settings.locale(
+                                        (s) => s.tip_password_error));
                                     return;
                                   }
                                   Settings.biometricsAuthentication = value;
-                                  SettingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
+                                  SettingsStorage.setSettings(
+                                      '${SettingsStorage.BIOMETRICS_AUTHENTICATION}',
+                                      value);
                                   setState(() {
                                     _biometricsSelected = value;
                                   });
@@ -390,7 +416,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Settings.locale((s) => s.notification_type, ctx: context),
+                          Settings.locale((s) => s.notification_type,
+                              ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -414,16 +441,23 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                        SelectScreen.title: Settings.locale((s) => s.local_notification),
-                        SelectScreen.selectedValue: Settings.notificationType,
-                        SelectScreen.list: _notificationTypeList,
-                      }).then((type) {
+                      Navigator.pushNamed(context, SelectScreen.routeName,
+                          arguments: {
+                            SelectScreen.title:
+                                Settings.locale((s) => s.local_notification),
+                            SelectScreen.selectedValue:
+                                Settings.notificationType,
+                            SelectScreen.list: _notificationTypeList,
+                          }).then((type) {
                         if (type != null) {
                           Settings.notificationType = type as int;
-                          SettingsStorage.setSettings('${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
+                          SettingsStorage.setSettings(
+                              '${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
                           setState(() {
-                            _currentNotificationType = _notificationTypeList.firstWhere((x) => x.value == Settings.notificationType).text;
+                            _currentNotificationType = _notificationTypeList
+                                .firstWhere(
+                                    (x) => x.value == Settings.notificationType)
+                                .text;
                           });
                         }
                       });
@@ -566,7 +600,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, SettingsAccelerateScreen.routeName);
+                      Navigator.pushNamed(
+                          context, SettingsAccelerateScreen.routeName);
                     },
                   ),
                 ),
@@ -598,7 +633,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, SettingsCacheScreen.routeName);
+                      Navigator.pushNamed(
+                          context, SettingsCacheScreen.routeName);
                     },
                   ),
                 ),
@@ -630,7 +666,41 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, SettingsTrackerScreen.routeName);
+                      Navigator.pushNamed(
+                          context, SettingsTrackerScreen.routeName);
+                    },
+                  ),
+                ),
+                Divider(height: 0, color: application.theme.dividerColor),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton(
+                    style: _buttonStyle(bottom: false),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Label(
+                          "Show Seedphrase",
+                          type: LabelType.bodyRegular,
+                          color: application.theme.fontColor1,
+                          fontWeight: FontWeight.bold,
+                          height: 1,
+                        ),
+                        Row(
+                          children: [
+                            Asset.iconSvg(
+                              'right',
+                              width: 24,
+                              color: application.theme.fontColor2,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(
+                          context, SeedphraseDisplayScreen.routeName);
                     },
                   ),
                 ),
@@ -644,7 +714,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Settings.locale((s) => s.developer_options, ctx: context),
+                          Settings.locale((s) => s.developer_options,
+                              ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -662,7 +733,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, SettingsDevelopScreen.routeName);
+                      Navigator.pushNamed(
+                          context, SettingsDevelopScreen.routeName);
                     },
                   ),
                 ),
@@ -676,9 +748,13 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
 
   _buttonStyle({bool top = false, bool bottom = false}) {
     return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
-        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
+      padding: WidgetStateProperty.resolveWith(
+          (states) => EdgeInsets.only(left: 16, right: 16)),
+      shape: WidgetStateProperty.resolveWith(
+        (states) => RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+                top: top ? Radius.circular(12) : Radius.zero,
+                bottom: bottom ? Radius.circular(12) : Radius.zero)),
       ),
     );
   }

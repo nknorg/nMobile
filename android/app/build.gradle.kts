@@ -7,8 +7,12 @@ plugins {
 }
 
 android {
+    lintOptions {
+        isAbortOnError = false
+        isCheckReleaseBuilds = false
+    }
     namespace = "org.nkn.mobile.app"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {

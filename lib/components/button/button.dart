@@ -57,9 +57,9 @@ class Button extends StatelessWidget {
           );
 
     var btnStyle = ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => this.padding ?? EdgeInsets.all(0)),
-      shape: MaterialStateProperty.resolveWith((states) => StadiumBorder()),
-      backgroundColor: MaterialStateProperty.resolveWith((states) {
+      padding: WidgetStateProperty.resolveWith((states) => this.padding ?? EdgeInsets.all(0)),
+      shape: WidgetStateProperty.resolveWith((states) => StadiumBorder()),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (this.disabled) {
           return application.theme.backgroundColor2;
         }
@@ -69,7 +69,7 @@ class Button extends StatelessWidget {
 
     if (this.borderColor != null) {
       Color color = this.disabled ? application.theme.backgroundColor2 : this.borderColor!;
-      btnStyle = btnStyle.copyWith(side: MaterialStateProperty.resolveWith((state) => BorderSide(color: color)));
+      btnStyle = btnStyle.copyWith(side: WidgetStateProperty.resolveWith((state) => BorderSide(color: color)));
     }
 
     return this.outline

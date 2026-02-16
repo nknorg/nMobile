@@ -68,29 +68,35 @@ class _ManualTestPageState extends State<ManualTestPage> {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('select sqlite_version(): $version')));
         }
+        return null;
       }, summary: 'select sqlite_version()'),
       SqfMenuItem('Factory information', () async {
         var info = databaseFactory.toString();
         print('sqlite database factory: $info');
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(info)));
+        return null;
       }, summary: 'toString()'),
       SqfMenuItem('openDatabase', () async {
         await _openDatabase();
+        return null;
       }, summary: 'Open the database'),
       SqfMenuItem('BEGIN EXCLUSIVE', () async {
         final db = await _openDatabase();
         await db.execute('BEGIN EXCLUSIVE');
+        return null;
       },
           summary:
               'Execute than exit or hot-restart the application. Open the database if needed'),
       SqfMenuItem('close', () async {
         await _closeDatabase();
+        return null;
       },
           summary:
               'Execute after starting then exit the app using the back button on Android and restart from the launcher.'),
       SqfMenuItem('delete', () async {
         await _deleteDatabase();
+        return null;
       },
           summary:
               'Try open (then optionally) delete, exit or hot-restart then delete then open'),
@@ -99,35 +105,42 @@ class _ManualTestPageState extends State<ManualTestPage> {
         await Sqflite.devSetOptions(
             // ignore: deprecated_member_use
             SqfliteOptions(logLevel: sqfliteLogLevelNone));
+        return null;
       }, summary: 'No logs'),
       SqfMenuItem('log level: sql', () async {
         // ignore: deprecated_member_use
         await Sqflite.devSetOptions(
             // ignore: deprecated_member_use
             SqfliteOptions(logLevel: sqfliteLogLevelSql));
+        return null;
       }, summary: 'Log sql command and basic database operation'),
       SqfMenuItem('log level: verbose', () async {
         // ignore: deprecated_member_use
         await Sqflite.devSetOptions(
             // ignore: deprecated_member_use
             SqfliteOptions(logLevel: sqfliteLogLevelVerbose));
+        return null;
       }, summary: 'Verbose logs, for debugging'),
       SqfMenuItem('Get info', () async {
         final factory = databaseFactory as impl.SqfliteDatabaseFactoryMixin;
         final info = await factory.getDebugInfo();
         print(info.toString());
+        return null;
       }, summary: 'Implementation info (dev only)'),
       SqfMenuItem('Increment version', () async {
         print(await _incrementVersion());
+        return null;
       }, summary: 'Implementation info (dev only)'),
       SqfMenuItem('Multiple db', () async {
         await Navigator.of(context).push(MaterialPageRoute(builder: (_) {
           return const MultipleDbTestPage();
         }));
+        return null;
       }, summary: 'Open multiple databases'),
       ...[800000, 1500000, 15000000, 150000000]
           .map((size) => SqfMenuItem('Big blob $size', () async {
                 await testBigBlog(size);
+                return null;
               }))
     ];
   }

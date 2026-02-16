@@ -75,7 +75,7 @@ class PrivateGroupStorage with Tag {
               where: 'group_id = ?',
               whereArgs: [schema.groupId],
             );
-            if (res != null && res.length > 0) {
+            if (res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
               entity = res.first;
               return null;
@@ -316,7 +316,7 @@ class PrivateGroupStorage with Tag {
                 where: 'group_id = ?',
                 whereArgs: [groupId],
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setBurning - no exists - groupId:$groupId");
                 return null;
               }
@@ -361,7 +361,7 @@ class PrivateGroupStorage with Tag {
                 where: 'group_id = ?',
                 whereArgs: [groupId],
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setData - no exists - groupId:$groupId");
                 return null;
               }
@@ -409,7 +409,7 @@ class PrivateGroupStorage with Tag {
                 where: 'group_id = ?',
                 whereArgs: [groupId],
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setDataItemMapChange - no exists - groupId:$groupId");
                 return null;
               }

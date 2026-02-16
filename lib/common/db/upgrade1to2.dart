@@ -21,33 +21,29 @@ class Upgrade1to2 {
     String topicTable = 'topic';
     var sql = "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$topicTable'";
     var res = await db.rawQuery(sql);
-    if (res == null) {
-      await db.execute(createTopicSql);
-    } else {
-      bool isTopExists = await DB.checkColumnExists(db, topicTable, 'is_top');
-      bool themeIdExists = await DB.checkColumnExists(db, topicTable, 'theme_id');
-      bool timeUpdateExists = await DB.checkColumnExists(db, topicTable, 'time_update');
-      bool isExpireAtExists = await DB.checkColumnExists(db, topicTable, 'expire_at');
-      if (isTopExists == false) {
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN is_top BOOLEAN DEFAULT 0');
-      }
-      if (themeIdExists == false) {
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN theme_id INTEGER DEFAULT 0');
-      }
-      if (timeUpdateExists == false) {
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN time_update INTEGER DEFAULT 0');
-      }
-      if (isExpireAtExists == false) {
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN expire_at INTEGER DEFAULT 0');
-      }
+    bool isTopExists = await DB.checkColumnExists(db, topicTable, 'is_top');
+    bool themeIdExists = await DB.checkColumnExists(db, topicTable, 'theme_id');
+    bool timeUpdateExists = await DB.checkColumnExists(db, topicTable, 'time_update');
+    bool isExpireAtExists = await DB.checkColumnExists(db, topicTable, 'expire_at');
+    if (isTopExists == false) {
+      await db.execute('ALTER TABLE $topicTable ADD COLUMN is_top BOOLEAN DEFAULT 0');
     }
-  }
+    if (themeIdExists == false) {
+      await db.execute('ALTER TABLE $topicTable ADD COLUMN theme_id INTEGER DEFAULT 0');
+    }
+    if (timeUpdateExists == false) {
+      await db.execute('ALTER TABLE $topicTable ADD COLUMN time_update INTEGER DEFAULT 0');
+    }
+    if (isExpireAtExists == false) {
+      await db.execute('ALTER TABLE $topicTable ADD COLUMN expire_at INTEGER DEFAULT 0');
+    }
+    }
 
   static upgradeContactSchema2V3(Database db) async {
     String tableName = ContactStorage.tableName;
     var sql = "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$tableName'";
     var res = await db.rawQuery(sql);
-    var returnRes = res != null && res.length > 0;
+    var returnRes = res.length > 0;
 
     final createSqlV3 = '''
       CREATE TABLE $tableName (

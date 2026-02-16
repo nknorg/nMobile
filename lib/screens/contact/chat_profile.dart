@@ -56,9 +56,9 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
           children: <Widget>[
             TextButton(
               style: ButtonStyle(
-                padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.all(16)),
-                backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundLightColor),
-                shape: MaterialStateProperty.resolveWith(
+                padding: WidgetStateProperty.resolveWith((states) => EdgeInsets.all(16)),
+                backgroundColor: WidgetStateProperty.resolveWith((states) => application.theme.backgroundLightColor),
+                shape: WidgetStateProperty.resolveWith(
                   (states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
                 ),
               ),

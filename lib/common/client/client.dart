@@ -158,12 +158,8 @@ class ClientCommon with Tag {
   Future<bool> signIn(WalletSchema? wallet, {String? pwd, bool toast = false, Function(bool, bool, bool)? loading}) async {
     if ((wallet == null) || wallet.address.isEmpty) return false;
     bool success = await _lock.synchronized(() async {
-      // password (before status update)
-      String? password = pwd ??
-          await authorization.getWalletPassword(
-            wallet.address,
-            onInput: (visible) => loading?.call(true, visible, false),
-          );
+      // password (do not prompt: use stored password)
+      String? password = pwd ?? await walletCommon.getPassword(wallet.address);
       // status (just updated(connecting) in this func)
       if (status == ClientConnectStatus.connecting) return false;
       status = ClientConnectStatus.connecting;

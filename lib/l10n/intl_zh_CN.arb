@@ -123,7 +123,6 @@
 
   "keystore": "Keystore",
   "seed": "Seed",
-  "tab_keystore": "Keystore",
   "tab_seed": "Seed",
   "import_ethereum_wallet": "导入以太坊账户",
   "import_nkn_wallet": "导入主网账户",

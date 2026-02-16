@@ -1,9 +1,5 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -16,6 +12,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
+import 'dart:io';
 
 class PhotoScreen extends BaseStateFulWidget {
   static final String routeName = "/photo";
@@ -60,24 +57,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
   }
 
   Future _save() async {
-    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    if ((await Permission.storage.request()) != PermissionStatus.granted) {
-      return null;
-    }
-
-    File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-    String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
-    logger.i("PhotoScreen - save image file - path:${file?.path}");
-    if (file == null || !await file.exists() || _content == null || (_content?.isEmpty == true)) return;
-    String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-
-    Uint8List bytes = await file.readAsBytes();
-    Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: imageName, isReturnImagePathOfIOS: true);
-
-    logger.i("PhotoScreen - save copy file - path:${result?["filePath"]}");
-    Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+    Toast.show("Saving to gallery is temporarily disabled.");
   }
 
   @override

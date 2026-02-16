@@ -183,8 +183,8 @@ class ChatBottomMenu extends StatelessWidget {
                   height: btnSize,
                   child: TextButton(
                     style: ButtonStyle(
-                      shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
-                      backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
+                      shape: WidgetStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
+                      backgroundColor: WidgetStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                     ),
                     child: Asset.iconSvg(
                       'image',
@@ -214,8 +214,8 @@ class ChatBottomMenu extends StatelessWidget {
                   height: btnSize,
                   child: TextButton(
                     style: ButtonStyle(
-                      shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
-                      backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
+                      shape: WidgetStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
+                      backgroundColor: WidgetStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                     ),
                     child: Asset.iconSvg(
                       'camera',
@@ -245,8 +245,8 @@ class ChatBottomMenu extends StatelessWidget {
                   height: btnSize,
                   child: TextButton(
                     style: ButtonStyle(
-                      shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
-                      backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
+                      shape: WidgetStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
+                      backgroundColor: WidgetStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                     ),
                     child: Icon(
                       CupertinoIcons.folder,

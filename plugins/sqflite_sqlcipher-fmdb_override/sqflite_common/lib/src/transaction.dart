@@ -11,6 +11,7 @@ class SqfliteTransaction
   SqfliteTransaction(this.database);
 
   /// The transaction database
+  @override
   final SqfliteDatabase database;
 
   @override

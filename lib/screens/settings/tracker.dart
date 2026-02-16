@@ -76,7 +76,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _pushEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.CLOSE_NOTIFICATION_PUSH_API}', !value);
                                     Settings.notificationPushEnable = value;
@@ -130,7 +130,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _bugEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.CLOSE_BUG_UPLOAD_API}', !value);
                                     Settings.sentryEnable = value;
@@ -165,8 +165,8 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
 
   _buttonStyle({bool top = false, bool bottom = false}) {
     return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
+      padding: WidgetStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
+      shape: WidgetStateProperty.resolveWith(
         (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
       ),
     );

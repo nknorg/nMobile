@@ -5,9 +5,12 @@
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
+migrate_working_dir/
 
 # IntelliJ related
 *.iml
@@ -26,14 +29,9 @@
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
-.packages
 .pub-cache/
 .pub/
 /build/
-/ios/build/
-
-# Web related
-lib/generated_plugin_registrant.dart
 
 # Symbolication related
 app.*.symbols
@@ -41,20 +39,7 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# nkn build(android)
-nkn-sources.jar
-nkn.aar
-
-# nkn build(ios)
-**/Nkn.xcframework/
-
-# android build
-**.jks
-**.keystore
-**/key.properties
-/android/app/release/
-
-# psuh resource
-**.p12
-**.cer
-/android/app/.cxx/
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release

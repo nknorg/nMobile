@@ -17,6 +17,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/settings/terms.dart';
+import 'package:nmobile/screens/onboarding/seed_pin.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -128,144 +129,29 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                   color: application.theme.backgroundColor2,
                   borderRadius: BorderRadius.all(Radius.circular(32)),
                 ),
-                child: Form(
-                  key: _formKey,
-                  autovalidateMode: AutovalidateMode.always,
-                  onChanged: () {
-                    setState(() {
-                      _formValid = (_formKey.currentState as FormState).validate();
-                    });
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Label(
-                              Settings.locale((s) => s.wallet_name, ctx: context),
-                              type: LabelType.h3,
-                              textAlign: TextAlign.start,
-                            ),
-                            TextButton(
-                                onPressed: () {
-                                  WalletImportScreen.go(context, WalletType.nkn);
-                                },
-                                child: Label(
-                                  Settings.locale((s) => s.import_wallet_as_account, ctx: context),
-                                  type: LabelType.bodyRegular,
-                                  color: application.theme.primaryColor,
-                                  decoration: TextDecoration.underline,
-                                  fontStyle: FontStyle.italic,
-                                )),
-                          ],
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Button(
+                        text: 'Create with seed phrase + PIN',
+                        onPressed: () => SeedPinOnboardingScreen.go(context),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20),
-                        child: FormText(
-                          controller: _nameController,
-                          focusNode: _nameFocusNode,
-                          hintText: Settings.locale((s) => s.hint_enter_wallet_name, ctx: context),
-                          textInputAction: TextInputAction.next,
-                          validator: Validator.of(context).walletName(),
-                          onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
-                        ),
-                      ),
-                      SizedBox(height: 14),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: OutlinedButton(
+                        onPressed: () => WalletImportScreen.go(context, WalletType.nkn),
                         child: Label(
-                          Settings.locale((s) => s.wallet_password, ctx: context),
-                          type: LabelType.h3,
-                          textAlign: TextAlign.start,
+                          Settings.locale((s) => s.import_wallet_as_account, ctx: context),
+                          type: LabelType.bodyRegular,
+                          color: application.theme.primaryColor,
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20),
-                        child: FormText(
-                          controller: _passwordController,
-                          focusNode: _passwordFocusNode,
-                          hintText: Settings.locale((s) => s.input_password, ctx: context),
-                          textInputAction: TextInputAction.next,
-                          validator: Validator.of(context).password(),
-                          onEditingComplete: () => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
-                          password: true,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20),
-                        child: Text(
-                          Settings.locale((s) => s.wallet_password_mach, ctx: context),
-                          style: application.theme.bodyText2,
-                        ),
-                      ),
-                      SizedBox(height: 24),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20),
-                        child: Label(
-                          Settings.locale((s) => s.confirm_password, ctx: context),
-                          type: LabelType.h3,
-                          textAlign: TextAlign.start,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20, bottom: 10),
-                        child: FormText(
-                          focusNode: _confirmPasswordFocusNode,
-                          hintText: Settings.locale((s) => s.input_password_again, ctx: context),
-                          textInputAction: TextInputAction.done,
-                          validator: Validator.of(context).confirmPassword(_passwordController.text),
-                          onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
-                          password: true,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 5, right: 0, bottom: 10),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: _termsChecked,
-                              activeColor: Colors.blue,
-                              checkColor: Colors.white,
-                              onChanged: (checked) {
-                                setState(() {
-                                  _termsChecked = checked ?? false;
-                                });
-                              },
-                            ),
-                            Label(
-                              Settings.locale((s) => s.read_and_agree_terms_01, ctx: context),
-                              type: LabelType.bodyRegular,
-                            ),
-                            Button(
-                              child: Label(
-                                Settings.locale((s) => s.read_and_agree_terms_02, ctx: context),
-                                color: Colors.blue,
-                                type: LabelType.bodyRegular,
-                                decoration: TextDecoration.underline,
-                              ),
-                              backgroundColor: Colors.transparent,
-                              onPressed: () {
-                                Navigator.pushNamed(context, SettingsTermsScreen.routeName);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 30),
-                        child: Button(
-                          text: Settings.locale((s) => s.create_wallet, ctx: context),
-                          width: double.infinity,
-                          disabled: !_formValid,
-                          onPressed: _create,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],

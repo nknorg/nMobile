@@ -144,7 +144,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     bool isGroupTail = false;
     if (widget.prevMessage == null) {
       isGroupTail = true;
-    } else if (timeSelf == null || timeSelf == 0) {
+    } else if (timeSelf == 0) {
       isGroupTail = true;
     } else if (timeBot == null || timeBot == 0) {
       isGroupTail = true;

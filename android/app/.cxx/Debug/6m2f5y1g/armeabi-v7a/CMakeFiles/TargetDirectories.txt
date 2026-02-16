@@ -1,0 +1,2 @@
+/home/ratta/Documents/Projects/flutter_projects/nMobile/android/app/.cxx/Debug/6m2f5y1g/armeabi-v7a/CMakeFiles/edit_cache.dir
+/home/ratta/Documents/Projects/flutter_projects/nMobile/android/app/.cxx/Debug/6m2f5y1g/armeabi-v7a/CMakeFiles/rebuild_cache.dir

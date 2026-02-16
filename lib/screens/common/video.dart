@@ -2,19 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/helpers/file.dart';
-import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/path.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
+import 'package:nmobile/utils/asset.dart';
+
+// Removed unused imports and media_store_plus for unblocking
 
 class VideoScreen extends BaseStateFulWidget {
   static final String routeName = "/video";
@@ -105,23 +102,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
   }
 
   Future _save() async {
-    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    if ((await Permission.storage.request()) != PermissionStatus.granted) {
-      return null;
-    }
-
-    File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-    String ext = Path.getFileExt(file, FileHelper.DEFAULT_VIDEO_EXT);
-    logger.i("VideoScreen - get video file - path:${file?.path}");
-    if (file == null || !await file.exists() || _content == null || (_content?.isEmpty == true)) return;
-    String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-
-    Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: videoName, isReturnPathOfIOS: true);
-
-    logger.i("VideoScreen - save copy file - path:${result?["filePath"]}");
-    Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+    Toast.show("Saving to gallery is temporarily disabled.");
   }
 
   @override

@@ -82,8 +82,8 @@ class _SelectScreenState extends BaseStateFulWidgetState<SelectScreen> {
                       ),
                       child: TextButton(
                         style: ButtonStyle(
-                          padding: MaterialStateProperty.resolveWith((states) => const EdgeInsets.only(left: 16, right: 16)),
-                          shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero))),
+                          padding: WidgetStateProperty.resolveWith((states) => const EdgeInsets.only(left: 16, right: 16)),
+                          shape: WidgetStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero))),
                         ),
                         onPressed: () {
                           if (Navigator.of(this.context).canPop()) Navigator.of(this.context).pop(item.value);

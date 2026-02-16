@@ -71,7 +71,7 @@ class Upgrade4to5 {
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
-      if (results == null || results.isEmpty) {
+      if (results.isEmpty) {
         loop = false;
         logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
@@ -177,7 +177,7 @@ class Upgrade4to5 {
 
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(ContactStorage.tableName, columns: ['*'], where: 'address = ?', whereArgs: [newAddress], offset: 0, limit: 1);
-        if (duplicated != null && duplicated.length > 0) {
+        if (duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${ContactStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
           continue;
         }
@@ -272,7 +272,7 @@ class Upgrade4to5 {
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
-      if (results == null || results.isEmpty) {
+      if (results.isEmpty) {
         loop = false;
         logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
@@ -348,7 +348,7 @@ class Upgrade4to5 {
 
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(TopicStorage.tableName, columns: ['*'], where: 'topic = ?', whereArgs: [newTopic], offset: 0, limit: 1);
-        if (duplicated != null && duplicated.length > 0) {
+        if (duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${TopicStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
           continue;
         }
@@ -429,7 +429,7 @@ class Upgrade4to5 {
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
-      if (results == null || results.isEmpty) {
+      if (results.isEmpty) {
         loop = false;
         logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
@@ -491,7 +491,7 @@ class Upgrade4to5 {
 
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(SubscriberStorage.tableName, columns: ['*'], where: 'topic = ? AND chat_id = ?', whereArgs: [newTopic, newChatId], offset: 0, limit: 1);
-        if (duplicated != null && duplicated.length > 0) {
+        if (duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
           continue;
         }
@@ -571,7 +571,7 @@ class Upgrade4to5 {
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
-      if (results == null || results.isEmpty) {
+      if (results.isEmpty) {
         loop = false;
         logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
@@ -777,7 +777,7 @@ class Upgrade4to5 {
 
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(MessageStorage.tableName, columns: ['*'], where: 'msg_id = ?', whereArgs: [newMsgId], offset: 0, limit: 1);
-        if (duplicated != null && duplicated.length > 0) {
+        if (duplicated.length > 0) {
           Map<String, dynamic> exist = duplicated[0];
           if ((newType == exist['type']) && (newTargetId == exist['target_id'])) {
             logger.w("Upgrade4to5 - ${MessageStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
@@ -848,7 +848,7 @@ class Upgrade4to5 {
     bool contactLoop = true;
     while (contactLoop) {
       List<Map<String, dynamic>>? contacts = await db.query(ContactStorage.tableName, columns: ['*'], offset: contactOffset, limit: contactLimit);
-      if (contacts == null || contacts.isEmpty) {
+      if (contacts.isEmpty) {
         contactLoop = false;
         break;
       } else {
@@ -875,7 +875,7 @@ class Upgrade4to5 {
 
         // lastMsg
         List<Map<String, dynamic>>? msgList = await db.query(MessageStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], orderBy: "send_at DESC", offset: 0, limit: 1);
-        if (msgList == null || msgList.isEmpty) {
+        if (msgList.isEmpty) {
           logger.i("Upgrade4to5 - ${SessionStorage.tableName} added reject with no contact message - contact:$contact");
           continue;
         }
@@ -887,7 +887,7 @@ class Upgrade4to5 {
 
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ? AND type = ?', whereArgs: [targetId, SessionType.CONTACT], offset: 0, limit: 1);
-        if (duplicated != null && duplicated.length > 0) {
+        if (duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} query - duplicated - lastMsg:$lastMsgMap - duplicated:$duplicated");
           continue;
         }
@@ -920,7 +920,7 @@ class Upgrade4to5 {
     bool topicLoop = true;
     while (topicLoop) {
       List<Map<String, dynamic>>? topics = await db.query(TopicStorage.tableName, columns: ['*'], offset: topicOffset, limit: topicLimit);
-      if (topics == null || topics.isEmpty) {
+      if (topics.isEmpty) {
         topicLoop = false;
         break;
       } else {
@@ -941,7 +941,7 @@ class Upgrade4to5 {
 
         // lastMsg
         List<Map<String, dynamic>>? msgList = await db.query(MessageStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], orderBy: "send_at DESC", offset: 0, limit: 1);
-        if (msgList == null || msgList.isEmpty) {
+        if (msgList.isEmpty) {
           logger.i("Upgrade4to5 - ${SessionStorage.tableName} added reject with no topic message - topic:$topic");
           continue;
         }
@@ -953,7 +953,7 @@ class Upgrade4to5 {
 
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ? AND type = ?', whereArgs: [targetId, SessionType.TOPIC], offset: 0, limit: 1);
-        if (duplicated != null && duplicated.length > 0) {
+        if (duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} query - duplicated - lastMsg:$lastMsgMap - duplicated:$duplicated");
           continue;
         }

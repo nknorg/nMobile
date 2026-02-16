@@ -1,0 +1,20 @@
+                        -H/home/ratta/snap/flutter/common/flutter/packages/flutter_tools/gradle/src/main/groovy
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=24
+-DANDROID_PLATFORM=android-24
+-DANDROID_ABI=armeabi-v7a
+-DCMAKE_ANDROID_ARCH_ABI=armeabi-v7a
+-DANDROID_NDK=/home/ratta/Android/Sdk/ndk/27.0.12077973
+-DCMAKE_ANDROID_NDK=/home/ratta/Android/Sdk/ndk/27.0.12077973
+-DCMAKE_TOOLCHAIN_FILE=/home/ratta/Android/Sdk/ndk/27.0.12077973/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/home/ratta/Android/Sdk/cmake/3.22.1/bin/ninja
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/ratta/Documents/Projects/flutter_projects/nMobile/build/app/intermediates/cxx/Debug/6m2f5y1g/obj/armeabi-v7a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/ratta/Documents/Projects/flutter_projects/nMobile/build/app/intermediates/cxx/Debug/6m2f5y1g/obj/armeabi-v7a
+-DCMAKE_BUILD_TYPE=Debug
+-B/home/ratta/Documents/Projects/flutter_projects/nMobile/android/app/.cxx/Debug/6m2f5y1g/armeabi-v7a
+-GNinja
+-Wno-dev
+--no-warn-unused-cli
+                        Build command args: []
+                        Version: 2

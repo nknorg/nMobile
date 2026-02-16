@@ -1370,7 +1370,7 @@ class Upgrade6to7 {
           offset: 0,
           limit: 1,
         );
-        if (res != null && res.length > 0) {
+        if (res.length > 0) {
           Map entity = res.first;
           Map<String, dynamic>? _newData;
           if (entity['data']?.toString().isNotEmpty == true) {
@@ -1415,7 +1415,7 @@ class Upgrade6to7 {
           offset: 0,
           limit: 1,
         );
-        if (res != null && res.length > 0) {
+        if (res.length > 0) {
           Map entity = res.first;
           Map<String, dynamic>? _newData;
           if (entity['data']?.toString().isNotEmpty == true) {

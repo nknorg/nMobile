@@ -7,10 +7,8 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/layout/tabs.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/scanner.dart';
-import 'package:nmobile/screens/wallet/import_by_keystore.dart';
 import 'package:nmobile/screens/wallet/import_by_seed.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -35,21 +33,16 @@ class WalletImportScreen extends BaseStateFulWidget {
   _ImportWalletScreenState createState() => _ImportWalletScreenState();
 }
 
-class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScreen> with SingleTickerProviderStateMixin, Tag {
-  late TabController _tabController;
+class _ImportWalletScreenState
+    extends BaseStateFulWidgetState<WalletImportScreen> with Tag {
   late String _walletType;
 
   StreamController<String> _qrController = StreamController<String>.broadcast();
 
   @override
   void onRefreshArguments() {
-    this._walletType = widget.arguments?[WalletImportScreen.argWalletType] ?? WalletType.nkn;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    this._walletType =
+        widget.arguments?[WalletImportScreen.argWalletType] ?? WalletType.nkn;
   }
 
   @override
@@ -60,31 +53,35 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
 
   @override
   Widget build(BuildContext context) {
-    List<String> tabTitles = [Settings.locale((s) => s.tab_keystore, ctx: context), Settings.locale((s) => s.tab_seed, ctx: context)];
-
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: this._walletType == WalletType.eth ? Settings.locale((s) => s.import_ethereum_wallet, ctx: context) : Settings.locale((s) => s.import_nkn_wallet, ctx: context),
+        title: this._walletType == WalletType.eth
+            ? Settings.locale((s) => s.import_ethereum_wallet, ctx: context)
+            : Settings.locale((s) => s.import_nkn_wallet, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
-            icon: Asset.iconSvg('scan', width: 24, color: application.theme.backgroundLightColor),
+            icon: Asset.iconSvg('scan',
+                width: 24, color: application.theme.backgroundLightColor),
             onPressed: () async {
-              if (_tabController.index != 1) {
-                _tabController.index = 1;
-              }
               // permission
-              PermissionStatus permissionStatus = await Permission.camera.request();
+              PermissionStatus permissionStatus =
+                  await Permission.camera.request();
               if (permissionStatus != PermissionStatus.granted) return;
               // scan
-              String? qrData = (await Navigator.pushNamed(context, ScannerScreen.routeName))?.toString().replaceAll("\n", "").trim();
+              String? qrData =
+                  (await Navigator.pushNamed(context, ScannerScreen.routeName))
+                      ?.toString()
+                      .replaceAll("\n", "")
+                      .trim();
               logger.i("$TAG - QR_DATA:$qrData");
               if (qrData != null && qrData.isNotEmpty) {
                 _qrController.sink.add(qrData);
               } else {
                 ModalDialog.of(Settings.appContext).show(
-                  content: Settings.locale((s) => s.error_unknown_nkn_qrcode, ctx: context),
+                  content: Settings.locale((s) => s.error_unknown_nkn_qrcode,
+                      ctx: context),
                   hasCloseButton: true,
                 );
               }
@@ -97,23 +94,8 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
           onTap: () {
             FocusScope.of(context).requestFocus(FocusNode());
           },
-          child: Column(
-            children: <Widget>[
-              Tabs(
-                controller: _tabController,
-                titles: tabTitles,
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: <Widget>[
-                    WalletImportByKeystoreLayout(walletType: this._walletType),
-                    WalletImportBySeedLayout(walletType: this._walletType, qrStream: _qrController.stream),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          child: WalletImportBySeedLayout(
+              walletType: this._walletType, qrStream: _qrController.stream),
         ),
       ),
     );

@@ -59,7 +59,7 @@ class MediaPicker {
     List<XFile>? pickedResults;
     try {
       pickedResults = await picker.pickMultipleMedia(limit: maxNum);
-    } catch (e, st) {
+    } catch (e) {
 
     }
 
@@ -79,7 +79,7 @@ class MediaPicker {
       // exist
       XFile? entity = pickedResults[i];
       File file = File(entity.path);
-      if (entity == null || entity.path.isEmpty) {
+      if (entity.path.isEmpty) {
         logger.e("MediaPicker - pickCommons - pickedResults originFile = null");
         continue;
       }
@@ -87,7 +87,7 @@ class MediaPicker {
       // type
       String? fileExt = Path.getFileExt(file, "");
       String? mimeType;
-      if (fileExt != null && fileExt.isNotEmpty) {
+      if (fileExt.isNotEmpty) {
         if (FileHelper.isVideoByExt(fileExt)) {
           mimeType = "video";
         } else if (FileHelper.isAudioByExt(fileExt)) {
@@ -272,7 +272,7 @@ class MediaPicker {
 
     // convert
     File? pickedFile = File(pickedResults.path);
-    if (pickedFile == null || pickedFile.path.isEmpty) {
+    if (pickedFile.path.isEmpty) {
       logger.e("MediaPicker - pickImage - pickedFile = null");
       return null;
     }

@@ -55,7 +55,7 @@ class _ExpansionLayoutState extends BaseStateFulWidgetState<ExpansionLayout> wit
           if (!mounted) return;
         });
       }
-      PageStorage.of(context)?.writeState(context, _isExpanded);
+      PageStorage.of(context).writeState(context, _isExpanded);
     });
     if (widget.onExpansionChanged != null) widget.onExpansionChanged!(_isExpanded);
   }

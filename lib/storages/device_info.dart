@@ -68,7 +68,7 @@ class DeviceInfoStorage with Tag {
               where: 'contact_address = ? AND device_id = ?',
               whereArgs: [schema.contactAddress, schema.deviceId],
             );
-            if (res != null && res.length > 0) {
+            if (res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
               entity = res.first;
               return null;
@@ -324,7 +324,7 @@ class DeviceInfoStorage with Tag {
                 whereArgs: [contactAddress, deviceId],
                 orderBy: 'online_at DESC',
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setData - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
                 return null;
               }
@@ -373,7 +373,7 @@ class DeviceInfoStorage with Tag {
                 where: 'contact_address = ? AND device_id = ?',
                 whereArgs: [contactAddress, deviceId],
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setDataItemListChange - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
                 return null;
               }
@@ -422,7 +422,7 @@ class DeviceInfoStorage with Tag {
                 where: 'contact_address = ? AND device_id = ?',
                 whereArgs: [contactAddress, deviceId],
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setDataItemMapChange - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
                 return null;
               }

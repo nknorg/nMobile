@@ -78,7 +78,6 @@ class WalletCommon with Tag {
 
   queryAllBalance({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    if (Settings.appContext == null) return;
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     var state = _walletBloc.state;
     if (state is WalletLoaded) {
@@ -96,7 +95,6 @@ class WalletCommon with Tag {
 
   Future<double?> queryNKNBalance(WalletSchema wallet, {bool notifyIfNeed = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    if (Settings.appContext == null) return null;
     if (wallet.address.isEmpty || wallet.type == WalletType.eth) return null;
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     try {
@@ -115,7 +113,6 @@ class WalletCommon with Tag {
 
   Future<List<double?>> queryETHBalance(WalletSchema wallet, {bool notifyIfNeed = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    if (Settings.appContext == null) return [null, null];
     if (wallet.address.isEmpty || wallet.type == WalletType.nkn) return [null, null];
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     try {

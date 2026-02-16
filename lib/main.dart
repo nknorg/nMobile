@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/settings/settings_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_state.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
@@ -15,12 +14,12 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/theme/app_theme.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/native/crypto.dart';
 import 'package:nmobile/routes/routes.dart';
+import 'package:nmobile/app.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -31,8 +30,8 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
     ),
   );
 
@@ -52,45 +51,11 @@ void main() async {
   });
   await application.initialize();
 
-  if (Settings.sentryEnable) {
-    await SentryFlutter.init(
-      (options) {
-        options.debug = !Settings.isRelease;
-        options.environment = Settings.isRelease ? 'production' : 'debug';
-        options.release = Settings.versionFormat;
-        options.dsn = Settings.sentryDSN;
-        options.autoInitializeNativeSdk = true;
-        options.enableTracing = true;
-        options.attachStacktrace = true;
-        options.attachViewHierarchy = true;
-        options.idleTimeout = Duration(seconds: 10);
-        options.sendClientReports = true;
-        options.captureFailedRequests = true;
-        options.enableNativeCrashHandling = true;
-        options.enableAutoSessionTracking = true;
-        options.enableNdkScopeSync = true;
-        options.attachThreads = true;
-        options.enableAutoPerformanceTracing = true;
-        options.enableWatchdogTerminationTracking = true;
-        options.enableScopeSync = true;
-        options.reportPackages = true;
-        options.anrEnabled = true;
-        options.reportSilentFlutterErrors = true;
-        options.autoAppStart = true;
-        options.enableAutoNativeBreadcrumbs = true;
-        options.enableUserInteractionBreadcrumbs = true;
-        // options.beforeSend = (SentryEvent event, {Hint? hint}) {};
-      },
-      appRunner: () => runApp(Main()),
-    );
-  } else {
-    catchGlobalError(() async {
-      runApp(Main());
-    }, onZoneError: (Object error, StackTrace stack) {
-      if (Settings.debug) logger.e(error);
-      if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stack);
-    });
-  }
+  catchGlobalError(() async {
+    runApp(Main());
+  }, onZoneError: (Object error, StackTrace stack) {
+    if (Settings.debug) logger.e(error);
+  });
 }
 
 class Main extends StatefulWidget {
@@ -111,7 +76,6 @@ class _MainState extends State<Main> {
     super.initState();
     Settings.appContext = context; // be replace by app.context
   }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -127,14 +91,15 @@ class _MainState extends State<Main> {
               return Settings.appName;
             },
             title: Settings.appName,
-            theme: application.theme.themeData,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.dark,
             navigatorObservers: [
               BotToastNavigatorObserver(),
-              SentryNavigatorObserver(),
               Routes.routeObserver,
             ],
             onGenerateRoute: Routes.onGenerateRoute,
-            initialRoute: AppScreen.routeName,
+            home: AppScreen(),
             locale: Settings.language == 'auto' ? null : Locale.fromSubtags(languageCode: Settings.language),
             localizationsDelegates: [
               S.delegate,

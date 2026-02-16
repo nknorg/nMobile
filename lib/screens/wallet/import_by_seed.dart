@@ -18,7 +18,8 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/screens/settings/terms.dart';
+import 'package:nmobile/screens/onboarding/profile_setup.dart';
+// Removed terms screen import as terms checkbox is no longer required
 import 'package:nmobile/utils/logger.dart';
 
 class WalletImportBySeedLayout extends BaseStateFulWidget {
@@ -28,10 +29,13 @@ class WalletImportBySeedLayout extends BaseStateFulWidget {
   const WalletImportBySeedLayout({required this.walletType, this.qrStream});
 
   @override
-  _WalletImportBySeedLayoutState createState() => _WalletImportBySeedLayoutState();
+  _WalletImportBySeedLayoutState createState() =>
+      _WalletImportBySeedLayoutState();
 }
 
-class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImportBySeedLayout> with SingleTickerProviderStateMixin, Tag {
+class _WalletImportBySeedLayoutState
+    extends BaseStateFulWidgetState<WalletImportBySeedLayout>
+    with SingleTickerProviderStateMixin, Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   WalletBloc? _walletBloc;
@@ -45,7 +49,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
 
-  bool _termsChecked = false;
+  // Terms checkbox removed
 
   @override
   void onRefreshArguments() {
@@ -70,10 +74,6 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
   }
 
   _import() async {
-    if (!_termsChecked) {
-      Toast.show(Settings.locale((s) => s.read_and_agree_terms, ctx: context));
-      return;
-    }
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       Loading.show();
@@ -85,37 +85,54 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet nkn = await Wallet.create(hexDecode(seed), config: WalletConfig(password: password));
+          Wallet nkn = await Wallet.create(hexDecode(seed),
+              config: WalletConfig(password: password));
           logger.i("$TAG - import_nkn - nkn:${nkn.toString()}");
           if (nkn.address.isEmpty || nkn.keystore.isEmpty) {
             Loading.dismiss();
             return;
           }
 
-          WalletSchema wallet = WalletSchema(type: WalletType.nkn, address: nkn.address, publicKey: hexEncode(nkn.publicKey), name: name);
+          WalletSchema wallet = WalletSchema(
+              type: WalletType.nkn,
+              address: nkn.address,
+              publicKey: hexEncode(nkn.publicKey),
+              name: name);
           logger.i("$TAG - import_nkn - wallet:${wallet.toString()}");
 
-          _walletBloc?.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
-          walletCommon.queryNKNBalance(wallet, notifyIfNeed: true, delayMs: 1000); // await
+          _walletBloc?.add(
+              AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
+          walletCommon.queryNKNBalance(wallet,
+              notifyIfNeed: true, delayMs: 1000); // await
         } else {
-          final eth = Ethereum.restoreByPrivateKey(name: name, privateKey: seed, password: password);
+          final eth = Ethereum.restoreByPrivateKey(
+              name: name, privateKey: seed, password: password);
           String ethAddress = (await eth.address).hex;
           String ethKeystore = await eth.keystore();
-          logger.i("$TAG - import_eth - address:$ethAddress - keystore:$ethKeystore - eth:${eth.toString()}");
+          logger.i(
+              "$TAG - import_eth - address:$ethAddress - keystore:$ethKeystore - eth:${eth.toString()}");
           if (ethAddress.isEmpty || ethKeystore.isEmpty) {
             Loading.dismiss();
             return;
           }
 
-          WalletSchema wallet = WalletSchema(type: WalletType.eth, address: ethAddress, publicKey: eth.pubKeyHex, name: name);
+          WalletSchema wallet = WalletSchema(
+              type: WalletType.eth,
+              address: ethAddress,
+              publicKey: eth.pubKeyHex,
+              name: name);
           logger.i("$TAG - import_eth - wallet:${wallet.toString()}");
 
-          _walletBloc?.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
-          walletCommon.queryETHBalance(wallet, notifyIfNeed: true, delayMs: 1000); // await
+          _walletBloc?.add(
+              AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
+          walletCommon.queryETHBalance(wallet,
+              notifyIfNeed: true, delayMs: 1000); // await
         }
         Loading.dismiss();
         Toast.show(Settings.locale((s) => s.success));
         if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+        // Navigate to profile setup for first-time users
+        ProfileSetupScreen.go(context);
       } catch (e, st) {
         Loading.dismiss();
         handleError(e, st);
@@ -139,17 +156,21 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
             child: ListView(
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 24),
+                  padding: const EdgeInsets.only(
+                      left: 20, right: 20, top: 24, bottom: 24),
                   child: Label(
-                    Settings.locale((s) => s.import_with_seed_title, ctx: context),
+                    Settings.locale((s) => s.import_with_seed_title,
+                        ctx: context),
                     type: LabelType.h2,
                     textAlign: TextAlign.start,
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 32),
+                  padding:
+                      const EdgeInsets.only(left: 20, right: 20, bottom: 32),
                   child: Label(
-                    Settings.locale((s) => s.import_with_seed_desc, ctx: context),
+                    Settings.locale((s) => s.import_with_seed_desc,
+                        ctx: context),
                     type: LabelType.bodyRegular,
                     textAlign: TextAlign.start,
                     softWrap: true,
@@ -168,10 +189,14 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   child: FormText(
                     controller: _seedController,
                     focusNode: _seedFocusNode,
-                    hintText: Settings.locale((s) => s.input_seed, ctx: context),
-                    validator: widget.walletType == WalletType.nkn ? Validator.of(context).seedNKN() : Validator.of(context).seedETH(),
+                    hintText:
+                        Settings.locale((s) => s.input_seed, ctx: context),
+                    validator: widget.walletType == WalletType.nkn
+                        ? Validator.of(context).seedNKN()
+                        : Validator.of(context).seedETH(),
                     textInputAction: TextInputAction.next,
-                    onEditingComplete: () => FocusScope.of(context).requestFocus(_nameFocusNode),
+                    onEditingComplete: () =>
+                        FocusScope.of(context).requestFocus(_nameFocusNode),
                     maxLines: 10,
                   ),
                 ),
@@ -188,10 +213,12 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   child: FormText(
                     controller: _nameController,
                     focusNode: _nameFocusNode,
-                    hintText: Settings.locale((s) => s.hint_enter_wallet_name, ctx: context),
+                    hintText: Settings.locale((s) => s.hint_enter_wallet_name,
+                        ctx: context),
                     validator: Validator.of(context).walletName(),
                     textInputAction: TextInputAction.next,
-                    onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                    onEditingComplete: () =>
+                        FocusScope.of(context).requestFocus(_passwordFocusNode),
                   ),
                 ),
                 Padding(
@@ -207,46 +234,16 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   child: FormText(
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
-                    hintText: Settings.locale((s) => s.input_password, ctx: context),
+                    hintText:
+                        Settings.locale((s) => s.input_password, ctx: context),
                     validator: Validator.of(context).password(),
                     textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
+                    onFieldSubmitted: (_) =>
+                        FocusScope.of(context).requestFocus(null),
                     password: true,
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(left: 5, right: 0, bottom: 6),
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: _termsChecked,
-                        activeColor: Colors.blue,
-                        checkColor: Colors.white,
-                        onChanged: (checked) {
-                          setState(() {
-                            _termsChecked = checked ?? false;
-                          });
-                        },
-                      ),
-                      Label(
-                        Settings.locale((s) => s.read_and_agree_terms_01, ctx: context),
-                        type: LabelType.bodyRegular,
-                      ),
-                      Button(
-                        child: Label(
-                          Settings.locale((s) => s.read_and_agree_terms_02, ctx: context),
-                          color: Colors.blue,
-                          type: LabelType.bodyRegular,
-                          decoration: TextDecoration.underline,
-                        ),
-                        backgroundColor: Colors.transparent,
-                        onPressed: () {
-                          Navigator.pushNamed(context, SettingsTermsScreen.routeName);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                // Terms of policy checkbox removed
               ],
             ),
           ),
@@ -258,7 +255,11 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30),
                     child: Button(
-                      text: widget.walletType == WalletType.nkn ? Settings.locale((s) => s.import_nkn_wallet, ctx: context) : Settings.locale((s) => s.import_ethereum_wallet, ctx: context),
+                      text: widget.walletType == WalletType.nkn
+                          ? Settings.locale((s) => s.import_nkn_wallet,
+                              ctx: context)
+                          : Settings.locale((s) => s.import_ethereum_wallet,
+                              ctx: context),
                       width: double.infinity,
                       disabled: !_formValid,
                       onPressed: _import,

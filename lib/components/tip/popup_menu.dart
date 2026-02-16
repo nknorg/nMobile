@@ -148,7 +148,7 @@ class PopupMenu {
       return buildPopupMenuLayout(_offset);
     });
 
-    Overlay.of(this.context)?.insert(_entry!);
+    Overlay.of(this.context).insert(_entry!);
     _isShow = true;
     this.stateChanged?.call(true);
   }

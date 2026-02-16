@@ -495,9 +495,6 @@ class Box {
   Uint8List box_len(Uint8List message, final int moff, final int mlen) {
     if (!(message.length >= (moff + mlen))) return throw ArgumentError();
 
-    // prepare shared key
-    if (this._sharedKey == null) before();
-
     return after(message, moff, mlen);
   }
 
@@ -523,9 +520,6 @@ class Box {
   Uint8List box_nonce_len(Uint8List message, final int moff, final int mlen, Uint8List theNonce) {
     if (!(message.length >= (moff + mlen) && theNonce.length == nonceLength)) return throw ArgumentError();
 
-    // prepare shared key
-    if (this._sharedKey == null) before();
-
     return after_len(message, moff, mlen, theNonce);
   }
 
@@ -537,25 +531,17 @@ class Box {
    * */
   Uint8List open(Uint8List box) {
     // prepare shared key
-    if (this._sharedKey == null) before();
-
     return open_after(box, 0, box.length);
   }
 
   Uint8List open_off(Uint8List box, final int boxoff) {
     if (!(box.length > boxoff)) return throw ArgumentError();
 
-    // prepare shared key
-    if (this._sharedKey == null) before();
-
     return open_after(box, boxoff, box.length - boxoff);
   }
 
   Uint8List open_len(Uint8List box, final int boxoff, final int boxlen) {
     if (!(box.length >= (boxoff + boxlen))) return throw ArgumentError();
-
-    // prepare shared key
-    if (this._sharedKey == null) before();
 
     return open_after(box, boxoff, boxlen);
   }
@@ -569,17 +555,11 @@ class Box {
   Uint8List open_nonce(Uint8List box, Uint8List theNonce) {
     if (!(theNonce.length == nonceLength)) return throw ArgumentError();
 
-    // prepare shared key
-    if (this._sharedKey == null) before();
-
     return open_after_len(box, 0, box.length, theNonce);
   }
 
   Uint8List open_nonce_off(Uint8List box, final int boxoff, Uint8List theNonce) {
     if (!(box.length > boxoff && theNonce.length == nonceLength)) throw ArgumentError();
-
-    // prepare shared key
-    if (this._sharedKey == null) before();
 
     return open_after_len(box, boxoff, box.length - boxoff, theNonce);
   }
@@ -587,18 +567,10 @@ class Box {
   Uint8List open_nonce_len(Uint8List box, final int boxoff, final int boxlen, Uint8List theNonce) {
     if (!(box.length >= (boxoff + boxlen) && theNonce.length == nonceLength)) return throw ArgumentError();
 
-    // prepare shared key
-    if (this._sharedKey == null) before();
-
     return open_after_len(box, boxoff, boxlen, theNonce);
   }
 
   Uint8List before() {
-    if (this._sharedKey == null) {
-      this._sharedKey = Uint8List(sharedKeyLength);
-      TweetNaclFast.crypto_box_beforenm(this._sharedKey, this._theirPublicKey, this._mySecretKey);
-    }
-
     return this._sharedKey;
   }
 

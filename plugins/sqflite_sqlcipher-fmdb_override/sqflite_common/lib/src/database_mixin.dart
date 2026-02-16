@@ -290,6 +290,7 @@ mixin SqfliteDatabaseMixin implements SqfliteDatabase {
   }
 
   /// Invoke the native method of the factory.
+  @override
   Future<T> invokeMethod<T>(String method, [dynamic arguments]) =>
       factory.invokeMethod(method, arguments);
 

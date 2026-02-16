@@ -16,7 +16,6 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/settings/home.dart';
-import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/services/task.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -173,8 +172,8 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
       _setAuthProgress(false);
       return false;
     }
-    // password (android bug return null when fromBackground)
-    String? password = await authorization.getWalletPassword(wallet.address);
+    // password (do not prompt on connect; use stored password)
+    String? password = await walletCommon.getPassword(wallet.address);
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("AppScreen - _tryAuth - password error, close all");
       Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
@@ -224,7 +223,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         return false;
       },
       child: Scaffold(
-        backgroundColor: application.theme.backgroundColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Stack(
           children: [
             PageView(
@@ -242,7 +241,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
               left: 0,
               right: 0,
               child: PhysicalModel(
-                color: application.theme.backgroundColor,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 clipBehavior: Clip.antiAlias,
                 elevation: 2,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),

@@ -77,7 +77,7 @@ class TopicStorage with Tag {
               where: 'topic_id = ?',
               whereArgs: [schema.topicId],
             );
-            if (res != null && res.length > 0) {
+            if (res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
               entity = res.first;
               return null;
@@ -364,7 +364,7 @@ class TopicStorage with Tag {
                 where: 'topic_id = ?',
                 whereArgs: [topicId],
               );
-              if (res == null || res.length <= 0) {
+              if (res.length <= 0) {
                 logger.w("$TAG - setData - no exists - topicId:$topicId");
                 return null;
               }

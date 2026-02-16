@@ -48,7 +48,7 @@ Future addTestData(
     where: 'address = ?',
     whereArgs: [sideAddress],
   );
-  if (res != null && res.length > 0) {
+  if (res.length > 0) {
     logger.i("DB - _addTestData - success - duplicated");
     return;
   }
