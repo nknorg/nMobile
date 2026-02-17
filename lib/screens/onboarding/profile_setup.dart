@@ -181,9 +181,9 @@ class _ProfileSetupScreenState
         }
       }
 
-      // Save username
-      await contactCommon.setOtherRemarkName(
-          wallet.address, _usernameController.text.trim(),
+      // Save username for self profile
+      await contactCommon.setSelfFullName(
+          wallet.address, _usernameController.text.trim(), null,
           notify: true);
 
       await _loadMyContact();
