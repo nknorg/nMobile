@@ -20,6 +20,11 @@ import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/storages/contact.dart';
+import 'package:nmobile/storages/wallet.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_event.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -60,21 +65,21 @@ class _ProfileSetupScreenState
     try {
       WalletSchema? wallet = await walletCommon.getDefault();
       if (wallet != null) {
+        logger
+            .d("PROFILE_SETUP - Loading contact for wallet: ${wallet.address}");
         ContactSchema? contact =
             await contactCommon.getMe(fetchWalletAddress: true);
 
-        // If no contact exists, create a temporary one for setup
-        if (contact == null) {
-          contact = ContactSchema(
-            address: wallet.address,
-            firstName: "",
-            type: ContactType.me,
-          );
-        }
+        logger.d("PROFILE_SETUP - Contact loaded: '${contact?.firstName}'");
 
+        // If no contact exists, don't create a temporary one
+        // Let the user create it through the save process
         setState(() {
           _myContact = contact;
         });
+
+        logger.d(
+            "PROFILE_SETUP - Contact set in state: '${_myContact?.firstName}'");
       }
     } catch (e) {
       logger.e("$TAG - Error loading contact: $e");
@@ -182,11 +187,69 @@ class _ProfileSetupScreenState
       }
 
       // Save username for self profile
-      await contactCommon.setSelfFullName(
-          wallet.address, _usernameController.text.trim(), null,
-          notify: true);
+      String username = _usernameController.text.trim();
+      logger.d(
+          "PROFILE_SETUP - Saving username: '$username' for address: ${wallet.address}");
 
+      // Ensure contact exists before saving
+      if (_myContact == null) {
+        logger.d(
+            "PROFILE_SETUP - Creating new contact for wallet: ${wallet.address}");
+        _myContact = ContactSchema(
+          address: wallet?.address ?? "",
+          firstName: username,
+          type: ContactType.me,
+        );
+        // Add the contact to storage first
+        await ContactStorage.instance.insert(_myContact!);
+      }
+
+      String? result = await contactCommon
+          .setSelfFullName(wallet?.address, username, null, notify: true);
+
+      logger.d("PROFILE_SETUP - Contact save result: $result");
+
+      // Also update the wallet name to match the username
+      WalletStorage walletStorage = WalletStorage();
+      List<WalletSchema> wallets = await walletStorage.getAll();
+      int walletIndex = wallets.indexWhere((w) => w.address == wallet?.address);
+      if (walletIndex >= 0) {
+        WalletSchema updatedWallet = wallets[walletIndex];
+        updatedWallet.name = username; // Update wallet name
+        await walletStorage.update(walletIndex, updatedWallet);
+        logger.d("PROFILE_SETUP - Wallet name updated to: '$username'");
+
+        // Notify wallet bloc of the update
+        final walletBloc = BlocProvider.of<WalletBloc>(context);
+        walletBloc.add(UpdateWallet(updatedWallet));
+      }
+
+      // Reload contact to verify the save and clear any cache
       await _loadMyContact();
+
+      // Force refresh the contact in contactCommon to clear any cache and trigger notifications
+      await contactCommon.queryAndNotify(wallet?.address);
+
+      // Also explicitly trigger meUpdateSink to ensure UI components update
+      ContactSchema? updatedContact =
+          await contactCommon.getMe(fetchWalletAddress: true);
+      if (updatedContact != null) {
+        // Double-check that firstName matches the username
+        if (updatedContact.firstName != username) {
+          logger.d(
+              "PROFILE_SETUP - Fixing mismatch: firstName was '${updatedContact.firstName}', should be '$username'");
+          await contactCommon.setSelfFullName(wallet?.address, username, null,
+              notify: true);
+          updatedContact = await contactCommon.getMe(fetchWalletAddress: true);
+        }
+        contactCommon.meUpdateSink.add(updatedContact);
+      }
+
+      // Verify the username was saved
+      if (_myContact != null) {
+        logger.d(
+            "PROFILE_SETUP - After save - firstName: '${_myContact!.firstName}' - displayName: '${_myContact!.displayName}'");
+      }
 
       Toast.show('Profile saved successfully!');
     } catch (e, st) {

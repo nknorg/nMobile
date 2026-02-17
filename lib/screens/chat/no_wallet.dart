@@ -17,7 +17,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/settings/terms.dart';
-import 'package:nmobile/screens/onboarding/seed_pin.dart';
+import 'package:nmobile/screens/onboarding/seed_pin_enhanced.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -26,7 +26,8 @@ class ChatNoWalletLayout extends BaseStateFulWidget {
   _ChatNoWalletLayoutState createState() => _ChatNoWalletLayoutState();
 }
 
-class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayout> with Tag {
+class _ChatNoWalletLayoutState
+    extends BaseStateFulWidgetState<ChatNoWalletLayout> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   WalletBloc? _walletBloc;
@@ -62,17 +63,23 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
       String password = _passwordController.text;
       logger.i("$TAG - name:$name, password:$password");
 
-      Wallet nkn = await Wallet.create(null, config: WalletConfig(password: password));
+      Wallet nkn =
+          await Wallet.create(null, config: WalletConfig(password: password));
       logger.i("$TAG - wallet create - nkn:${nkn.toString()}");
       if (nkn.address.isEmpty || nkn.keystore.isEmpty) {
         Loading.dismiss();
         return;
       }
 
-      WalletSchema wallet = WalletSchema(type: WalletType.nkn, address: nkn.address, publicKey: hexEncode(nkn.publicKey), name: name);
+      WalletSchema wallet = WalletSchema(
+          type: WalletType.nkn,
+          address: nkn.address,
+          publicKey: hexEncode(nkn.publicKey),
+          name: name);
       logger.i("$TAG - wallet create - wallet:${wallet.toString()}");
 
-      _walletBloc?.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
+      _walletBloc
+          ?.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
 
       Loading.dismiss();
       // AppScreen.go(context);
@@ -105,7 +112,8 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
               Column(
                 children: <Widget>[
                   Label(
-                    Settings.locale((s) => s.chat_no_wallet_title, ctx: context),
+                    Settings.locale((s) => s.chat_no_wallet_title,
+                        ctx: context),
                     type: LabelType.h2,
                     textAlign: TextAlign.center,
                     softWrap: true,
@@ -113,7 +121,8 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                   Padding(
                     padding: EdgeInsets.only(top: 8, left: 48, right: 48),
                     child: Label(
-                      Settings.locale((s) => s.chat_no_wallet_desc, ctx: context),
+                      Settings.locale((s) => s.chat_no_wallet_desc,
+                          ctx: context),
                       type: LabelType.bodySmall,
                       textAlign: TextAlign.center,
                       softWrap: true,
@@ -135,20 +144,8 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Button(
-                        text: 'Create with seed phrase + PIN',
-                        onPressed: () => SeedPinOnboardingScreen.go(context),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: OutlinedButton(
-                        onPressed: () => WalletImportScreen.go(context, WalletType.nkn),
-                        child: Label(
-                          Settings.locale((s) => s.import_wallet_as_account, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.primaryColor,
-                        ),
+                        text: 'Get started...',
+                        onPressed: () => FirstWelcomeScreen.go(context),
                       ),
                     ),
                   ],

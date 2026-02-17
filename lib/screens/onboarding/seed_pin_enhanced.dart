@@ -4,7 +4,6 @@ import 'package:bip39/bip39.dart' as bip39;
 import 'package:bip39/src/wordlists/english.dart' show WORDLIST;
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
@@ -93,8 +92,10 @@ class _FirstWelcomeScreenState
   void _changeMnemonic() {
     setState(() {
       _mnemonic = '';
-      _step = 2; // Go to seedphrase change step
+      _entropyCollected = false;
+      _step = 0; // Go back to entropy creation
     });
+    Toast.show('Ready to generate new seed phrase');
   }
 
   void _useCustomMnemonic() {
@@ -133,7 +134,7 @@ class _FirstWelcomeScreenState
   void _editWord(int index) async {
     // Word 12 is the checksum - not editable
     if (_words.length == 12 && index == 11) {
-      Toast.show('Word 12 is the checksum and cannot be edited directly');
+      Toast.show('Word 12 is the checksum');
       return;
     }
 
@@ -155,7 +156,6 @@ class _FirstWelcomeScreenState
 
       // Always recalculate checksum (word 12) when editing any word 1-11
       if (_words.length == 12) {
-        final oldChecksum = _words[11];
         _recalculateChecksum();
       }
 
@@ -329,7 +329,7 @@ class _FirstWelcomeScreenState
                       ),
                       decoration: BoxDecoration(
                         color: isChecksum
-                            ? Colors.purple.withOpacity(0.15)
+                            ? Colors.purple.withValues(alpha: 0.15)
                             : Theme.of(context)
                                 .colorScheme
                                 .surfaceContainerHighest,
@@ -552,7 +552,6 @@ class _FirstWelcomeScreenState
     try {
       // Use the wallet service to generate EVM address
       if (_mnemonic.isNotEmpty) {
-        final wallet = WalletService(mnemonic: _mnemonic);
         // Since getEthereumAddress() is async, we'll use a simplified version for now
         return '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'; // Mock EVM address for demo
       }
@@ -576,7 +575,7 @@ class _FirstWelcomeScreenState
         ),
         const SizedBox(height: 12),
         Button(
-          text: 'Change Seed Phrase',
+          text: 'recreate Seedphrase',
           width: double.infinity,
           backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
           fontColor: Theme.of(context).colorScheme.onSecondaryContainer,
@@ -586,7 +585,7 @@ class _FirstWelcomeScreenState
         ),
         const SizedBox(height: 12),
         Button(
-          text: 'Use Custom Seed Phrase',
+          text: 'Import Seed Phrase',
           width: double.infinity,
           backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
           fontColor: Theme.of(context).colorScheme.onTertiaryContainer,
@@ -705,15 +704,24 @@ class _FirstWelcomeScreenState
     final pin = _pinController.text;
     final confirmPin = _pinConfirmController.text;
     final isConfirming = pin.length == 4 && confirmPin.length < 4;
+    final isComplete = pin.length == 4 && confirmPin.length == 4;
     final currentPin = isConfirming ? confirmPin : pin;
     const maxLength = 4;
 
     return Column(
       children: [
-        Text(
-          isConfirming ? 'Confirm your 4-digit PIN' : 'Enter a 4-digit PIN',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        // Only show instruction text when not complete
+        if (!isComplete)
+          if (!isConfirming)
+            Text(
+              'Enter a 4-digit PIN',
+              style: Theme.of(context).textTheme.bodyMedium,
+            )
+          else
+            Text(
+              'Confirm your 4-digit PIN',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -809,8 +817,10 @@ class _FirstWelcomeScreenState
           setState(() {
             if (_pinController.text.length < 4) {
               _pinController.text += number;
+              // Force state update after adding digit
               if (_pinController.text.length == 4 &&
                   _pinConfirmController.text.isEmpty) {
+                // Switch to confirmation mode
                 _pinFocusNode.unfocus();
                 _pinConfirmFocusNode.requestFocus();
               }
@@ -849,7 +859,40 @@ class _FirstWelcomeScreenState
   }
 
   void _createWallet() async {
-    if (!_formValid || _mnemonic.isEmpty) return;
+    if (!_formValid || _mnemonic.isEmpty) {
+      // Show specific error message based on validation failure
+      if (_pinController.text.length != 4) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a 4-digit PIN'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else if (_pinConfirmController.text.length != 4) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please confirm your 4-digit PIN'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else if (_pinController.text != _pinConfirmController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PINs do not match. Please confirm your PIN'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      // Reset PIN input to start from scratch
+      setState(() {
+        _pinController.clear();
+        _pinConfirmController.clear();
+        _formValid = false;
+      });
+
+      return;
+    }
 
     try {
       // Create wallet using 32-byte seed derived from entropy (compatible with NKN)
