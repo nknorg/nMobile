@@ -130,10 +130,11 @@ class ContactCommon with Tag {
     List<ContactSchema> contacts = await queryList(type: ContactType.me, orderDesc: false, limit: 1);
     String myAddress = selfAddress ?? clientCommon.address ?? "";
     // TODO: fix multiple me
-    for (int i = 0; i < contacts.length; i++) {
+    // Iterate backwards so remove() does not shift indices we haven't visited
+    for (int i = contacts.length - 1; i >= 0; i--) {
       if (myAddress.isNotEmpty && contacts[i].address != myAddress) {
         await setType(contacts[i].address, ContactType.none, notify: false);
-        contacts.remove(contacts[i]);
+        contacts.removeAt(i);
       }
     }
 

@@ -36,7 +36,6 @@ class WalletStorage with Tag {
     futures.add(SecureStorage.instance.set('$KEY_SEEDS:${wallet.address}', seed));
     await Future.wait(futures);
 
-    logger.v("$TAG - add - index:$index - wallet:$wallet - keystore:$keystore - password:$password");
     return;
   }
 
@@ -87,7 +86,6 @@ class WalletStorage with Tag {
     }
     await Future.wait(futures);
 
-    logger.v("$TAG - update - index:$index - wallet:$wallet - keystore:$keystore - password:$password");
     return;
   }
 

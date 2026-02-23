@@ -159,7 +159,7 @@ func solvePoW(signature string, difficulty int) (string, time.Duration) {
 	buf := make([]byte, len(sigBytes), len(sigBytes)+20)
 	copy(buf, sigBytes)
 
-	nonce := 0
+	nonce := uint64(0)
 
 	// Keep track of where signature ends
 	sigLen := len(sigBytes)
@@ -168,7 +168,7 @@ func solvePoW(signature string, difficulty int) (string, time.Duration) {
 	for {
 		// Build data: signature + nonce (optimized - reuse buffer)
 		buf = buf[:sigLen]
-		buf = strconv.AppendInt(buf, int64(nonce), 10)
+		buf = strconv.AppendUint(buf, nonce, 10)
 
 		// Calculate hash
 		hash := sha256.Sum256(buf)
@@ -195,7 +195,7 @@ func solvePoW(signature string, difficulty int) (string, time.Duration) {
 		if isValid {
 			duration := time.Since(startTime)
 			log.Printf("PoW solved: nonce=%d, duration=%v", nonce, duration)
-			return strconv.Itoa(nonce), duration
+			return strconv.FormatUint(nonce, 10), duration
 		}
 
 		nonce++

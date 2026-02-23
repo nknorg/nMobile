@@ -188,15 +188,12 @@ class ClientCommon with Tag {
           }
         }
         if (c != null) {
-          logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
           break;
         } else if (!canTry) {
-          logger.e("$TAG - signIn - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
           await signOut(clearWallet: true, closeDB: true, lock: false);
           break;
         }
-        logger.w("$TAG - signIn - try again - tryTimes:$tryTimes - wallet:$wallet - password:$password");
         if ((tryTimes > 0) && isNetworkOk) await RPC.setRpcServers(wallet.address, []);
         tryTimes++;
         _statusSink.add(ClientConnectStatus.connecting); // need flush
@@ -470,15 +467,12 @@ class ClientCommon with Tag {
         bool canTry = result["canTry"];
         password = result["password"]?.toString();
         if (c != null) {
-          logger.i("$TAG - reconnect - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
           break;
         } else if (!canTry) {
-          logger.e("$TAG - reconnect - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
           await signOut(clearWallet: true, closeDB: true, lock: false);
           break;
         }
-        logger.w("$TAG - reconnect - try again - tryTimes:$tryTimes - wallet:$wallet - password:$password");
         if ((tryTimes > 0) && isNetworkOk) await RPC.setRpcServers(wallet.address, []);
         tryTimes++;
         _statusSink.add(ClientConnectStatus.connecting); // need first flush

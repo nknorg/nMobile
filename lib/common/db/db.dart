@@ -78,7 +78,6 @@ class DB {
     String path = await getDBFilePath(publicKey);
     bool exists = await databaseExists(path);
     String password = seed.isEmpty ? "" : hexEncode(Uint8List.fromList(Hash.sha256(seed)));
-    logger.i("DB - open - exists:$exists - publicKey:$publicKey - seed:$seed - password:$password - path:$path");
 
     if (!Platform.isIOS) {
       database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
