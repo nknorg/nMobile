@@ -233,7 +233,7 @@ class ChatOutCommon with Tag {
     if (notification && (contact != null) && !contact.isMe) {
       deviceInfoCommon.queryDeviceTokenList(contact.address).then((tokens) async {
         logger.d("$TAG - _sendWithContact - push notification - count:${tokens.length} - target:${contact.address} - tokens:$tokens");
-        List<String> results = await RemoteNotification.send(tokens);
+        List<String> results = await RemoteNotification.send(tokens, targetAddress: contact.address);
         if (results.isNotEmpty) {
           message.options = MessageOptions.setPushNotifyId(message.options, results[0]);
           await messageCommon.updateMessageOptions(message, message.options, notify: false);
@@ -320,7 +320,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.address).then((tokens) {
             logger.d("$TAG - _sendWithTopic - push notification - count:${tokens.length} - target:${_contact.address} - topic:${topic.topicId} - tokens:$tokens");
-            RemoteNotification.send(tokens); // await // no need result
+            RemoteNotification.send(tokens, targetAddress: _contact.address); // await // no need result
           });
         }
       });
@@ -388,7 +388,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.address).then((tokens) {
             logger.d("$TAG - _sendWithPrivateGroup - push notification - count:${tokens.length} - target:${_contact.address} - groupId:${group.groupId} - tokens:$tokens");
-            RemoteNotification.send(tokens); // await // no need result
+            RemoteNotification.send(tokens, targetAddress: _contact.address); // await // no need result
           });
         }
       });

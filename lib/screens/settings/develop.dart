@@ -7,6 +7,7 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/screens/settings/files.dart';
+import 'package:nmobile/screens/settings/push_token_debug.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 
@@ -97,6 +98,38 @@ class _SettingsDevelopScreenState extends BaseStateFulWidgetState<SettingsDevelo
                               ),
                               onPressed: () {
 
+                              },
+                            ),
+                          ),
+                          Divider(height: 0, color: application.theme.dividerColor),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: TextButton(
+                              style: _buttonStyle(bottom: false),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Label(
+                                    'Push / Device Token',
+                                    type: LabelType.bodyRegular,
+                                    color: application.theme.fontColor1,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
+                                  ),
+                                  Row(
+                                    children: <Widget>[
+                                      Asset.iconSvg(
+                                        'right',
+                                        width: 24,
+                                        color: application.theme.fontColor2,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              onPressed: () {
+                                Navigator.pushNamed(context, SettingsPushTokenDebugScreen.routeName);
                               },
                             ),
                           ),

@@ -4,6 +4,7 @@ import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/screens/settings/develop.dart';
 import 'package:nmobile/screens/settings/files.dart';
 import 'package:nmobile/screens/settings/home.dart';
+import 'package:nmobile/screens/settings/push_token_debug.dart';
 import 'package:nmobile/screens/settings/subscribe.dart';
 import 'package:nmobile/screens/settings/terms.dart';
 import 'package:nmobile/screens/settings/tracker.dart';
@@ -16,6 +17,7 @@ Map<String, WidgetBuilder> _routes = {
   SettingsTermsScreen.routeName: (BuildContext context) => SettingsTermsScreen(),
   SettingsDevelopScreen.routeName: (BuildContext context) => SettingsDevelopScreen(),
   SettingsFilesScreen.routeName: (BuildContext context) => SettingsFilesScreen(),
+  SettingsPushTokenDebugScreen.routeName: (BuildContext context) => SettingsPushTokenDebugScreen(),
 };
 
 init() {
