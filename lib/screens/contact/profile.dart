@@ -166,7 +166,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       String publicKey = contactAddress.split('.').last;
 
       // Convert public key to wallet address
-      String? walletAddress = await Wallet.pubKeyToWalletAddr(publicKey);
+      String? walletAddress = await Wallet.pubKeyToWalletAddr(hexDecode(publicKey));
       if (walletAddress == null || walletAddress.isEmpty) return;
 
       // Get seed from secure storage

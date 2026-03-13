@@ -21,6 +21,8 @@ class SettingsStorage {
   static const String CLOSE_NOTIFICATION_PUSH_API = 'close_notification_push_api';
 
   static const String OPEN_DEVELOP_OPTIONS_MESSAGE_DEBUG = 'open_develop_options_message_debug';
+  /// Current cross send policy in use. Default: prefer stable.
+  static const String CROSS_SEND_POLICY = 'cross_send_policy';
 
   // FUTURE:GG IOS_152_V2
   static const String DATABASE_FIXED_IOS_152 = "database_fixed_ios_152";

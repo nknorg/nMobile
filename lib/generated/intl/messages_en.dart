@@ -159,6 +159,14 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to revoke this message?"),
         "confirm_unsubscribe_group": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to leave the group chat?"),
+        "conn_state_connected":
+            MessageLookupByLibrary.simpleMessage("Connected"),
+        "conn_state_connecting":
+            MessageLookupByLibrary.simpleMessage("Connecting"),
+        "conn_state_disconnected":
+            MessageLookupByLibrary.simpleMessage("Disconnected"),
+        "conn_state_not_connected":
+            MessageLookupByLibrary.simpleMessage("Not connected"),
         "connect": MessageLookupByLibrary.simpleMessage("Connect"),
         "connected": MessageLookupByLibrary.simpleMessage("Connected"),
         "connecting": MessageLookupByLibrary.simpleMessage("Connecting"),
@@ -190,6 +198,28 @@ class MessageLookup extends MessageLookupByLibrary {
         "create_private_group":
             MessageLookupByLibrary.simpleMessage("Create Private Group"),
         "create_wallet": MessageLookupByLibrary.simpleMessage("Create Account"),
+        "cross_send_policy":
+            MessageLookupByLibrary.simpleMessage("Cross Send Policy"),
+        "cross_send_policy_desc_all_connected":
+            MessageLookupByLibrary.simpleMessage(
+                "All connected sub-clients send (redundant sending)."),
+        "cross_send_policy_desc_any_connected":
+            MessageLookupByLibrary.simpleMessage(
+                "Any connected sub-client can send (cross send)."),
+        "cross_send_policy_desc_none": MessageLookupByLibrary.simpleMessage(
+            "Do not use cross send policy."),
+        "cross_send_policy_desc_prefer_stable":
+            MessageLookupByLibrary.simpleMessage(
+                "Use the most stable / lowest latency sub-client (recommended)."),
+        "cross_send_policy_restart_hint":
+            MessageLookupByLibrary.simpleMessage("Restart client to apply"),
+        "cross_send_policy_restart_tip": MessageLookupByLibrary.simpleMessage(
+            "Changing policy takes effect after restarting the client."),
+        "cross_send_policy_sub_client_refresh":
+            MessageLookupByLibrary.simpleMessage("Refresh"),
+        "cross_send_policy_sub_client_status":
+            MessageLookupByLibrary.simpleMessage(
+                "Sub-client connection status"),
         "custom_id": MessageLookupByLibrary.simpleMessage("Custom ID"),
         "custom_id_tips": MessageLookupByLibrary.simpleMessage(
             "You can set a custom ID so that others can add you as a friend using this ID."),
@@ -578,6 +608,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "start_chat": MessageLookupByLibrary.simpleMessage("Start Chat"),
         "storage_text": MessageLookupByLibrary.simpleMessage("Storage"),
         "stranger": MessageLookupByLibrary.simpleMessage("Stranger"),
+        "subclient_conn_duration":
+            MessageLookupByLibrary.simpleMessage("Duration"),
+        "subclient_duration_na": MessageLookupByLibrary.simpleMessage("—"),
+        "subclient_reconnect_count":
+            MessageLookupByLibrary.simpleMessage("Reconnects"),
+        "subclient_score": MessageLookupByLibrary.simpleMessage("Score"),
+        "subclient_send_failure_count":
+            MessageLookupByLibrary.simpleMessage("Send failures"),
         "submitting": MessageLookupByLibrary.simpleMessage("Submitting..."),
         "subscribe": MessageLookupByLibrary.simpleMessage("Subscribe"),
         "subscribe_or_waiting":

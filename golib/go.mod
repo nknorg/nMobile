@@ -1,18 +1,19 @@
 module nkngolib
 
-go 1.22.0
-
-toolchain go1.22.2
+go 1.25.0
 
 require (
 	github.com/nknorg/dns-resolver-go v0.0.0-20230404043755-e50d32d9043a
 	github.com/nknorg/eth-resolver-go v0.0.0-20230404061427-d0bd773f899f
-	github.com/nknorg/nkn-sdk-go v1.4.9-0.20250718092920-5d1593ad7642
+	github.com/nknorg/nkn-sdk-go v1.4.9-0.20240725072249-776f5f4fa62f
 	github.com/nknorg/nkn/v2 v2.2.2-0.20250718093239-1e65fafdf8f0
 	github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9
 	github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4
-	golang.org/x/mobile v0.0.0-20240905004112-7c4916698cc9
+	github.com/pion/webrtc/v4 v4.0.0-beta.30
+	golang.org/x/mobile v0.0.0-20260312152759-81488f6aeb60
 )
+
+replace github.com/nknorg/nkn-sdk-go => ../../nkn-sdk-go
 
 require (
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
@@ -56,7 +57,6 @@ require (
 	github.com/pion/stun/v3 v3.0.0 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pion/turn/v4 v4.0.0 // indirect
-	github.com/pion/webrtc/v4 v4.0.0-beta.30 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rjeczalik/notify v0.9.3 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
@@ -67,14 +67,14 @@ require (
 	github.com/wealdtech/go-multicodec v1.4.0 // indirect
 	github.com/wlynxg/anet v0.0.4 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	golang.org/x/tools v0.24.0 // indirect
+	golang.org/x/tools v0.43.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect

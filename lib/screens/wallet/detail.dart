@@ -207,7 +207,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 try {
                   String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
                   if (Validate.isNknPublicKey(pubKey)) {
-                    connectAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+                    connectAddress = await Wallet.pubKeyToWalletAddr(hexDecode(pubKey!));
                   }
                 } catch (e, st) {
                   handleError(e, st);

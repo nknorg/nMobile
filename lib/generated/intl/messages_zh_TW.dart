@@ -136,6 +136,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "confirm_revoke": MessageLookupByLibrary.simpleMessage("確定要撤回此消息嗎？"),
         "confirm_unsubscribe_group":
             MessageLookupByLibrary.simpleMessage("確定要退出群聊嗎？"),
+        "conn_state_connected": MessageLookupByLibrary.simpleMessage("已連接"),
+        "conn_state_connecting": MessageLookupByLibrary.simpleMessage("連接中"),
+        "conn_state_disconnected": MessageLookupByLibrary.simpleMessage("未連接"),
+        "conn_state_not_connected": MessageLookupByLibrary.simpleMessage("未連接"),
         "connect": MessageLookupByLibrary.simpleMessage("連接"),
         "connected": MessageLookupByLibrary.simpleMessage("已連接"),
         "connecting": MessageLookupByLibrary.simpleMessage("連接中"),
@@ -161,6 +165,23 @@ class MessageLookup extends MessageLookupByLibrary {
         "create_nkn_wallet": MessageLookupByLibrary.simpleMessage("創建主網帳戶"),
         "create_private_group": MessageLookupByLibrary.simpleMessage("新建私有群"),
         "create_wallet": MessageLookupByLibrary.simpleMessage("創建賬戶"),
+        "cross_send_policy": MessageLookupByLibrary.simpleMessage("交叉發送策略"),
+        "cross_send_policy_desc_all_connected":
+            MessageLookupByLibrary.simpleMessage("所有連通的子客戶端都會發送（冗餘發送）。"),
+        "cross_send_policy_desc_any_connected":
+            MessageLookupByLibrary.simpleMessage("任一再線的子客戶端均可發送（交叉發送）。"),
+        "cross_send_policy_desc_none":
+            MessageLookupByLibrary.simpleMessage("不使用交叉策略。"),
+        "cross_send_policy_desc_prefer_stable":
+            MessageLookupByLibrary.simpleMessage("使用最穩定/延遲最低的子客戶端（推薦）。"),
+        "cross_send_policy_restart_hint":
+            MessageLookupByLibrary.simpleMessage("需重啟客戶端後生效"),
+        "cross_send_policy_restart_tip":
+            MessageLookupByLibrary.simpleMessage("切換策略後需重啟客戶端方可生效。"),
+        "cross_send_policy_sub_client_refresh":
+            MessageLookupByLibrary.simpleMessage("重新整理"),
+        "cross_send_policy_sub_client_status":
+            MessageLookupByLibrary.simpleMessage("子客戶端連接狀態"),
         "custom_id": MessageLookupByLibrary.simpleMessage("自定義ID"),
         "custom_id_tips":
             MessageLookupByLibrary.simpleMessage("您可以設定自訂ID，以便其他人透過此ID新增您為好友。"),
@@ -484,6 +505,13 @@ class MessageLookup extends MessageLookupByLibrary {
         "start_chat": MessageLookupByLibrary.simpleMessage("開始聊天"),
         "storage_text": MessageLookupByLibrary.simpleMessage("存儲"),
         "stranger": MessageLookupByLibrary.simpleMessage("陌生人"),
+        "subclient_conn_duration": MessageLookupByLibrary.simpleMessage("連接時長"),
+        "subclient_duration_na": MessageLookupByLibrary.simpleMessage("—"),
+        "subclient_reconnect_count":
+            MessageLookupByLibrary.simpleMessage("重連次數"),
+        "subclient_score": MessageLookupByLibrary.simpleMessage("評分"),
+        "subclient_send_failure_count":
+            MessageLookupByLibrary.simpleMessage("發送失敗次數"),
         "submitting": MessageLookupByLibrary.simpleMessage("提交中..."),
         "subscribe": MessageLookupByLibrary.simpleMessage("加入"),
         "subscribe_or_waiting":

@@ -4120,6 +4120,186 @@ class S {
     );
   }
 
+  /// `Cross Send Policy`
+  String get cross_send_policy {
+    return Intl.message(
+      'Cross Send Policy',
+      name: 'cross_send_policy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restart client to apply`
+  String get cross_send_policy_restart_hint {
+    return Intl.message(
+      'Restart client to apply',
+      name: 'cross_send_policy_restart_hint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Changing policy takes effect after restarting the client.`
+  String get cross_send_policy_restart_tip {
+    return Intl.message(
+      'Changing policy takes effect after restarting the client.',
+      name: 'cross_send_policy_restart_tip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Do not use cross send policy.`
+  String get cross_send_policy_desc_none {
+    return Intl.message(
+      'Do not use cross send policy.',
+      name: 'cross_send_policy_desc_none',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Any connected sub-client can send (cross send).`
+  String get cross_send_policy_desc_any_connected {
+    return Intl.message(
+      'Any connected sub-client can send (cross send).',
+      name: 'cross_send_policy_desc_any_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All connected sub-clients send (redundant sending).`
+  String get cross_send_policy_desc_all_connected {
+    return Intl.message(
+      'All connected sub-clients send (redundant sending).',
+      name: 'cross_send_policy_desc_all_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use the most stable / lowest latency sub-client (recommended).`
+  String get cross_send_policy_desc_prefer_stable {
+    return Intl.message(
+      'Use the most stable / lowest latency sub-client (recommended).',
+      name: 'cross_send_policy_desc_prefer_stable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sub-client connection status`
+  String get cross_send_policy_sub_client_status {
+    return Intl.message(
+      'Sub-client connection status',
+      name: 'cross_send_policy_sub_client_status',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh`
+  String get cross_send_policy_sub_client_refresh {
+    return Intl.message(
+      'Refresh',
+      name: 'cross_send_policy_sub_client_refresh',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connecting`
+  String get conn_state_connecting {
+    return Intl.message(
+      'Connecting',
+      name: 'conn_state_connecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connected`
+  String get conn_state_connected {
+    return Intl.message(
+      'Connected',
+      name: 'conn_state_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Disconnected`
+  String get conn_state_disconnected {
+    return Intl.message(
+      'Disconnected',
+      name: 'conn_state_disconnected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not connected`
+  String get conn_state_not_connected {
+    return Intl.message(
+      'Not connected',
+      name: 'conn_state_not_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Duration`
+  String get subclient_conn_duration {
+    return Intl.message(
+      'Duration',
+      name: 'subclient_conn_duration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reconnects`
+  String get subclient_reconnect_count {
+    return Intl.message(
+      'Reconnects',
+      name: 'subclient_reconnect_count',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send failures`
+  String get subclient_send_failure_count {
+    return Intl.message(
+      'Send failures',
+      name: 'subclient_send_failure_count',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Score`
+  String get subclient_score {
+    return Intl.message(
+      'Score',
+      name: 'subclient_score',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `—`
+  String get subclient_duration_na {
+    return Intl.message(
+      '—',
+      name: 'subclient_duration_na',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Are you sure you want to delete "{name}"?`
   String delete_file_confirm_title(Object name) {
     return Intl.message(

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
@@ -91,7 +92,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     try {
       String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
       if (Validate.isNknPublicKey(pubKey)) {
-        walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+        walletAddress = await Wallet.pubKeyToWalletAddr(hexDecode(pubKey!));
       }
     } catch (e, st) {
       handleError(e, st);

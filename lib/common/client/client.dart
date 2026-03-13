@@ -13,6 +13,7 @@ import 'package:nmobile/common/application.dart';
 import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
@@ -151,6 +152,12 @@ class ClientCommon with Tag {
     return client?.seed;
   }
 
+  /// Returns connection state for each sub-client. Empty if not connected.
+  Future<List<SubClientConnectionState>> getSubClientConnectionStates() async {
+    if (client == null) return [];
+    return client!.getSubClientConnectionStates();
+  }
+
   /// **************************************************************************************** ///
   /// ***************************************   Sign   *************************************** ///
   /// **************************************************************************************** ///
@@ -272,7 +279,11 @@ class ClientCommon with Tag {
     // client
     try {
       List<String> seedRpcList = await RPC.getRpcServers(wallet.address, measure: true);
-      _lastClientConfig = ClientConfig(seedRPCServerAddr: seedRpcList);
+      int? crossSendPolicy = await SettingsStorage.getSettings(SettingsStorage.CROSS_SEND_POLICY).then((v) {
+        if (v == null) return CrossSendPolicy.preferStable;
+        return v is int ? v : int.tryParse(v.toString());
+      });
+      _lastClientConfig = ClientConfig(seedRPCServerAddr: seedRpcList, crossSendPolicy: crossSendPolicy);
       if (client == null) {
         while ((client?.address == null) || (client?.address.isEmpty == true)) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: _lastClientConfig); // network
@@ -280,7 +291,8 @@ class ClientCommon with Tag {
         logger.i("$TAG - _signIn - client create OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         _startListen(wallet);
       } else {
-        await client?.recreate(hexDecode(seed), numSubClients: 4, config: _lastClientConfig); // network
+        await client?.close();
+        client = await Client.create(hexDecode(seed), numSubClients: 4, config: _lastClientConfig); // network
         logger.i("$TAG - _signIn - client reCreate OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
       }
       _lastAddress = client?.address;
