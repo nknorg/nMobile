@@ -83,6 +83,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private suspend fun onConnect(client: MultiClient, numSubClients: Long) {
         try {
             val node = client.onConnect.next()
+            if (node == null) {
+                eventSinkError(eventSink, client.address(), "onConnect: node is null")
+                onConnect(client, numSubClients)
+                return
+            }
             val rpcServers = ArrayList<String>()
             for (i in 0..numSubClients) {
                 val c = client.getClient(i)
@@ -253,15 +258,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         for (i in 0 until 16) {
             val c = multiClient.getClient(i.toLong()) ?: break
             val stats = multiClient.getClientStats(i.toLong())
-            val connectTime = try {
-                (stats?.javaClass?.getMethod("getConnectTime")?.invoke(stats) as? Number)?.toLong()?.toInt() ?: 0
-            } catch (e: Exception) {
-                0
-            }
             val item = mutableMapOf<String, Any>(
                 "index" to i,
                 "state" to c.state.toInt(),
-                "connectTime" to connectTime,
+                "connectTime" to ((stats?.connectTime as? Number)?.toLong() ?: 0L) as Any,
                 "reconnectCount" to ((stats?.reconnectCount as? Number)?.toInt() ?: 0),
                 "sendFailureCount" to ((stats?.sendFailureCount as? Number)?.toInt() ?: 0)
             )
@@ -283,7 +283,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         val config = ClientConfig()
         if (crossSendPolicy != null) {
-            config.crossSendPolicy = crossSendPolicy.toLong()
+            config.crossSendPolicy = crossSendPolicy
         }
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)

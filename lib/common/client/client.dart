@@ -170,7 +170,7 @@ class ClientCommon with Tag {
           await authorization.getWalletPassword(
             wallet.address,
             onInput: (visible) => loading?.call(true, visible, false),
-          );
+          ) ?? '';
       // status (just updated(connecting) in this func)
       if (status == ClientConnectStatus.connecting) return false;
       status = ClientConnectStatus.connecting;
