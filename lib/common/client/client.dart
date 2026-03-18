@@ -291,8 +291,7 @@ class ClientCommon with Tag {
         logger.i("$TAG - _signIn - client create OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         _startListen(wallet);
       } else {
-        await client?.close();
-        client = await Client.create(hexDecode(seed), numSubClients: 4, config: _lastClientConfig); // network
+        await client?.recreate(hexDecode(seed), numSubClients: 4, config: _lastClientConfig); // network
         logger.i("$TAG - _signIn - client reCreate OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
       }
       _lastAddress = client?.address;
