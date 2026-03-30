@@ -101,6 +101,9 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
           // taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 6, (key) => clientCommon.ping(), delayMs: 0);
           taskService.addTask(TaskService.KEY_SUBSCRIBE_CHECK, 50, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2 * 1000);
           taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
+          Future.delayed(const Duration(milliseconds: 2000), () {
+            chatOutCommon.refreshDeviceTokenOnClientReady();
+          });
         }
       } else if (clientCommon.isClientStop) {
         // task remove

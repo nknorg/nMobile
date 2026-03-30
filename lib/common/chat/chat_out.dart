@@ -777,6 +777,38 @@ class ChatOutCommon with Tag {
     return result != null;
   }
 
+  /// Pull the latest OS push token, persist via [deviceInfoCommon.getMe], and if it changed, send
+  /// [sendContactOptionsToken] to every contact with [OptionsSchema.notificationOpen] so peers update.
+  Future<void> refreshDeviceTokenOnClientReady() async {
+    try {
+      if (!(await clientCommon.checkClientOk("refreshDeviceToken", ping: false))) return;
+      String? selfAddress = clientCommon.address;
+      if (selfAddress == null || selfAddress.isEmpty) return;
+      DeviceInfoSchema? before = await deviceInfoCommon.query(selfAddress, Settings.deviceId);
+      String oldToken = before?.deviceToken ?? "";
+      DeviceInfoSchema? after = await deviceInfoCommon.getMe(selfAddress: selfAddress, canAdd: true, fetchDeviceToken: true);
+      if (after == null) return;
+      if (oldToken == after.deviceToken) return;
+      logger.i("$TAG - refreshDeviceTokenOnClientReady - token changed - notify notificationOpen contacts");
+      int offset = 0;
+      const int page = 100;
+      while (true) {
+        List<ContactSchema> list = await contactCommon.queryList(offset: offset, limit: page);
+        if (list.isEmpty) break;
+        for (ContactSchema c in list) {
+          if (c.isMe) continue;
+          if (!c.options.notificationOpen) continue;
+          String? tok = after.deviceToken.isNotEmpty ? after.deviceToken : null;
+          await sendContactOptionsToken(c.address, tok);
+        }
+        if (list.length < page) break;
+        offset += page;
+      }
+    } catch (e, st) {
+      handleError(e, st);
+    }
+  }
+
   // NO DB NO display (1 to 1)
   Future<bool> sendDeviceRequest(String? targetAddress, {int gap = 0}) async {
     if (targetAddress == null || targetAddress.isEmpty) return false;

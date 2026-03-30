@@ -61,7 +61,11 @@ func GetSeedFromPrivateKey(priKey []byte) []byte {
 }
 
 func Sign(privateKey, data []byte) ([]byte, error) {
-	return ed25519.Sign(privateKey, data)
+	pk := make([]byte, len(privateKey))
+	copy(pk, privateKey)
+	d := make([]byte, len(data))
+	copy(d, data)
+	return ed25519.Sign(pk, d)
 }
 
 func Verify(publicKey, data, signature []byte) error {
