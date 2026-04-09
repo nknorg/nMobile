@@ -17,7 +17,7 @@ import 'package:nmobile/common/topic/topic.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/ipfs.dart';
-import 'package:nmobile/helpers/memory_cache.dart';
+import 'package:nmobile/helpers/app_cache.dart';
 import 'package:nmobile/services/task.dart';
 
 GetIt locator = GetIt.instance;
@@ -29,7 +29,7 @@ late LocalNotification localNotification;
 // late BackgroundFetchService backgroundFetchService;
 late AudioHelper audioHelper;
 late IpfsHelper ipfsHelper;
-late MemoryCache memoryCache;
+late AppCache appCache;
 
 late DB dbCommon;
 late WalletCommon walletCommon;
@@ -54,7 +54,7 @@ void setupLocator() {
   // locator.registerSingleton(BackgroundFetchService());
   locator.registerSingleton(AudioHelper());
   locator.registerSingleton(IpfsHelper());
-  locator.registerSingleton(MemoryCache());
+  locator.registerSingleton(AppCache());
 
   locator.registerSingleton(DB());
   locator.registerSingleton(WalletCommon());
@@ -78,7 +78,7 @@ void setupLocator() {
   // backgroundFetchService = locator.get<BackgroundFetchService>();
   audioHelper = locator.get<AudioHelper>();
   ipfsHelper = locator.get<IpfsHelper>();
-  memoryCache = locator.get<MemoryCache>();
+  appCache = locator.get<AppCache>();
 
   dbCommon = locator.get<DB>();
   walletCommon = locator.get<WalletCommon>();

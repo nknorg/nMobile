@@ -91,9 +91,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     _inputControllerListener = () {
       String draft = _inputController.text;
       if (draft.isNotEmpty) {
-        memoryCache.setDraft(widget.targetId, draft);
+        appCache.setDraft(clientCommon.address, widget.targetId, clientCommon.getSeed(), draft);
       } else {
-        memoryCache.removeDraft(widget.targetId);
+        appCache.removeDraft(clientCommon.address, widget.targetId);
       }
       if (mounted) {
         setState(() {
@@ -136,7 +136,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       });
     });
     // draft
-    _draft = memoryCache.getDraft(widget.targetId);
+    _draft = appCache.getDraft(clientCommon.address, widget.targetId, clientCommon.getSeed());
     if (_draft?.isNotEmpty == true) {
       _inputController.text = _draft!;
       _canSendText = true;
@@ -274,7 +274,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     setState(() {
       _canSendText = false;
     });
-    memoryCache.removeDraft(widget.targetId);
+    appCache.removeDraft(clientCommon.address, widget.targetId);
     widget.onSendPress?.call(content); // await
   }
 

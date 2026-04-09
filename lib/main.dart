@@ -59,6 +59,7 @@ void main() async {
   application.registerInitialize(() async {
     Routes.init();
     await Settings.init();
+    await appCache.init();
     await Upgrade.run();
   });
   await application.initialize();
