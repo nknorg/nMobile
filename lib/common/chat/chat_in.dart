@@ -973,37 +973,14 @@ class ChatInCommon with Tag {
   }
 
   Future<int> _deletePieces(String msgId) async {
-    final limit = 20;
-    List<MessageSchema> pieces = [];
-    for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await messageCommon.queryPieceList(msgId, offset: offset, limit: limit);
-      pieces.addAll(result);
-      if (result.length < limit) break;
-    }
-    logger.i("$TAG - _deletePieces - DELETE:START - pieces_count:${pieces.length}");
-    int count = 0;
+    logger.i("$TAG - _deletePieces - DELETE:START - msgId:$msgId");
     int result = await messageCommon.delete(msgId, MessageContentType.piece);
     if (result > 0) {
-      for (var i = 0; i < pieces.length; i++) {
-        MessageSchema piece = pieces[i];
-        if (piece.isContentFile) {
-          File file = piece.content as File;
-          if (file.existsSync()) {
-            await file.delete();
-            // logger.v("$TAG - _deletePieces - DELETE:PROGRESS - path:${(piece.content as File).path}");
-            count++;
-          } else {
-            // logger.v("$TAG - _deletePieces - DELETE:NO_EXISTS - path:${(piece.content as File).path}");
-          }
-        } else {
-          logger.w("$TAG - _deletePieces - DELETE:ERROR - empty:${piece.content?.toString()}");
-        }
-      }
-      logger.i("$TAG - _deletePieces - DELETE:SUCCESS - count:${pieces.length}");
+      logger.i("$TAG - _deletePieces - DELETE:SUCCESS - piece_rows:$result");
     } else {
-      logger.w("$TAG - _deletePieces - DELETE:FAIL - empty - pieces:$pieces");
+      logger.w("$TAG - _deletePieces - DELETE:FAIL - empty - msgId:$msgId");
     }
-    return count;
+    return result;
   }
 
   // SUPPORT:START
