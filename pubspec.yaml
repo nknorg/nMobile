@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 
-version: 1.9.0+372
+version: 1.9.0+374
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -61,7 +61,7 @@ dependencies:
   encrypt: ^5.0.3
 
   # log
-  logger: ^2.6.2
+  logger: ^2.7.0
   sentry_flutter: ^8.14.2
 
   # locale

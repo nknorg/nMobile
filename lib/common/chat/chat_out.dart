@@ -335,8 +335,9 @@ class ChatOutCommon with Tag {
       return null;
     }
     // me
-    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, message.sender);
-    if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
+    bool canSend = await privateGroupCommon.canSendGroupMessage(group, message.sender);
+    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItemForSelf(group.groupId);
+    if (!canSend || (_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
       logger.w("$TAG - _sendWithPrivateGroup - member me is null - type:${message.contentType} - me:$_me - group:$group - message:${message.toStringSimple()}");
       return null;
     }
@@ -347,7 +348,7 @@ class ChatOutCommon with Tag {
     for (var i = 0; i < members.length; i++) {
       String? clientAddress = members[i].invitee;
       if (clientAddress == null || clientAddress.isEmpty) continue;
-      if (clientAddress == message.sender) {
+      if (privateGroupCommon.isSameInvitee(clientAddress, message.sender)) {
         selfIsReceiver = true;
       } else if (members[i].permission > PrivateGroupItemPerm.none) {
         destList.add(clientAddress);

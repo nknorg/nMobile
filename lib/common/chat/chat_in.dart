@@ -153,20 +153,12 @@ class ChatInCommon with Tag {
         if (received.isGroupAction) {
           // nothing
         } else {
-          if (privateGroup.joined != true) {
-            logger.w("$TAG - _handleMessage - group - deny message - me no joined - topic:$topic");
+          bool allowed = await privateGroupCommon.canReceiveGroupMessage(privateGroup, received);
+          if (!allowed) {
+            logger.w("$TAG - _handleMessage - group - deny message - permission check fail - group:$privateGroup - sender:${received.sender}");
             return;
           }
-          PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
-          if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
-            logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
-            return;
-          }
-          PrivateGroupItemSchema? _sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.sender);
-          if ((_sender == null) || (_sender.permission <= PrivateGroupItemPerm.none)) {
-            logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$_sender - group:$privateGroup");
-            return;
-          }
+          privateGroup = await privateGroupCommon.queryGroup(privateGroup.groupId) ?? privateGroup;
         }
       }
       bool blocked = await contactCommon.isBlocked(received.sender);

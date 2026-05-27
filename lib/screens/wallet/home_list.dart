@@ -114,7 +114,9 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     if (schema == null || schema.address.isEmpty) return;
 
     authorization.getWalletPassword(schema.address).then((String? password) async {
-      if (password == null || password.isEmpty) return;
+      if (password == null || password.isEmpty) {
+        password = '';
+      }
       String keystore = await walletCommon.getKeystore(schema.address);
 
       Loading.show();

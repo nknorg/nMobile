@@ -417,7 +417,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (!clientCommon.isClientOK) return;
     if (this._targetType != SessionType.PRIVATE_GROUP) return;
     PrivateGroupSchema _privateGroup = this._target as PrivateGroupSchema;
-    if (privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address)) return;
+    await privateGroupCommon.ensurePrivateGroupMembersMatchChain(_privateGroup);
+    _privateGroup = (await privateGroupCommon.queryGroup(_privateGroup.groupId)) ?? _privateGroup;
+    bool owner = privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address);
+    bool incomplete = await privateGroupCommon.isPrivateGroupStateIncomplete(_privateGroup);
+    if (owner && incomplete) {
+      await privateGroupCommon.recoverOwnerPrivateGroup(_privateGroup, null);
+      return;
+    }
+    if (owner) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup.ownerPublicKey, _privateGroup.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
       if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup.groupId, _privateGroup.version, notify: true);
     }); // await

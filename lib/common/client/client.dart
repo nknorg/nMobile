@@ -279,11 +279,12 @@ class ClientCommon with Tag {
     // client
     try {
       List<String> seedRpcList = await RPC.getRpcServers(wallet.address, measure: true);
-      int? crossSendPolicy = await SettingsStorage.getSettings(SettingsStorage.CROSS_SEND_POLICY).then((v) {
-        if (v == null) return CrossSendPolicy.preferStable;
-        return v is int ? v : int.tryParse(v.toString());
-      });
-      _lastClientConfig = ClientConfig(seedRPCServerAddr: seedRpcList, crossSendPolicy: crossSendPolicy);
+      // int? crossSendPolicy = await SettingsStorage.getSettings(SettingsStorage.CROSS_SEND_POLICY).then((v) {
+      //   if (v == null) return CrossSendPolicy.preferStable;
+      //   return v is int ? v : int.tryParse(v.toString());
+      // });
+      // Release: Use allConnected as default cross send policy
+      _lastClientConfig = ClientConfig(seedRPCServerAddr: seedRpcList, crossSendPolicy: CrossSendPolicy.allConnected);
       if (client == null) {
         while ((client?.address == null) || (client?.address.isEmpty == true)) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: _lastClientConfig); // network
