@@ -16,6 +16,7 @@ class WalletItem extends StatelessWidget {
   final BorderRadius? radius;
   final EdgeInsetsGeometry? padding;
   final Widget? tail;
+  final bool showBalance;
 
   WalletItem({
     required this.walletType,
@@ -26,6 +27,7 @@ class WalletItem extends StatelessWidget {
     this.radius,
     this.padding,
     this.tail,
+    this.showBalance = true,
   });
 
   @override
@@ -76,10 +78,11 @@ class WalletItem extends StatelessWidget {
                   this.wallet.name ?? "",
                   type: LabelType.h3,
                 ),
-                Label(
-                  Format.nknBalance(this.wallet.balance, decimalDigits: 4, symbol: 'NKN'),
-                  type: LabelType.bodySmall,
-                ),
+                if (this.showBalance)
+                  Label(
+                    Format.nknBalance(this.wallet.balance, decimalDigits: 4, symbol: 'NKN'),
+                    type: LabelType.bodySmall,
+                  ),
               ],
             ),
           ),
@@ -106,7 +109,7 @@ class WalletItem extends StatelessWidget {
                   ),
                 ),
               ),
-              this.walletType == WalletType.eth
+              this.showBalance && this.walletType == WalletType.eth
                   ? Padding(
                       padding: EdgeInsets.only(right: 4, top: 4),
                       child: Label(
