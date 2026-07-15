@@ -41,6 +41,8 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart' as Path2;
 import 'package:nmobile/utils/time.dart';
 
+import '../../components/chat/emoji_picker.dart';
+
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
   static final String argTarget = "target";
@@ -103,9 +105,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Timer? _delRefreshTimer;
 
   bool _showBottomMenu = false;
+  bool _showEmojiPicker = false;
 
   bool _showRecordLock = false;
   bool _showRecordLockLocked = false;
+
+  final TextEditingController _inputController = TextEditingController();
 
   @override
   void onRefreshArguments() {
@@ -412,7 +417,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (!clientCommon.isClientOK) return;
     if (this._targetType != SessionType.PRIVATE_GROUP) return;
     PrivateGroupSchema _privateGroup = this._target as PrivateGroupSchema;
-    if (privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address)) return;
+    await privateGroupCommon.ensurePrivateGroupMembersMatchChain(_privateGroup);
+    _privateGroup = (await privateGroupCommon.queryGroup(_privateGroup.groupId)) ?? _privateGroup;
+    bool owner = privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address);
+    bool incomplete = await privateGroupCommon.isPrivateGroupStateIncomplete(_privateGroup);
+    if (owner && incomplete) {
+      await privateGroupCommon.recoverOwnerPrivateGroup(_privateGroup, null);
+      return;
+    }
+    if (owner) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup.ownerPublicKey, _privateGroup.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
       if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup.groupId, _privateGroup.version, notify: true);
     }); // await
@@ -436,6 +449,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (mounted) FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = !_showBottomMenu;
+      if (_showBottomMenu) {
+        _showEmojiPicker = false;
+      }
     });
   }
 
@@ -443,6 +459,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (mounted) FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = false;
+      _showEmojiPicker = false;
     });
   }
 
@@ -767,13 +784,38 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       itemBuilder: (BuildContext context, int index) {
                         if (index < 0 || index >= _messages.length) return SizedBox.shrink();
                         MessageSchema msg = _messages[index];
+                        bool shouldShowResend = false;
+                        if (msg.isOutbound && 
+                            msg.status >= MessageStatus.Success && 
+                            msg.status < MessageStatus.Receipt) {
+                          if (msg.status == MessageStatus.Error) {
+                            shouldShowResend = true;
+                          } else {
+                            int now = DateTime.now().millisecondsSinceEpoch;
+                            int sendAt = msg.sendAt;
+                            int timeDiff = now - sendAt;
+                            bool isWithin10Seconds = timeDiff < 10000; // 10秒 = 10000毫秒
+                            
+                            if (!isWithin10Seconds) {
+                              if (index > 0) {
+                                for (int i = 0; i < index; i++) {
+                                  MessageSchema checkMsg = _messages[i];
+                                  if (checkMsg.isOutbound && 
+                                      checkMsg.status >= MessageStatus.Receipt) {
+                                    shouldShowResend = true;
+                                    break;
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                        bool lastMessageHasReceipt = shouldShowResend;
                         return ChatMessageItem(
                           message: msg,
-                          // sender: _sender,
-                          // topic: _topic,
-                          // privateGroup: _privateGroup,
                           prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
                           nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
+                          lastMessageHasReceipt: lastMessageHasReceipt,
                           onAvatarPress: (ContactSchema contact, _) {
                             ContactProfileScreen.go(context, schema: contact);
                           },
@@ -826,16 +868,25 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               ChatSendBar(
                 targetId: this._targetId,
                 disableTip: disableTip,
+                controller: _inputController,
                 onMenuPressed: () {
                   _toggleBottomMenu();
+                },
+                onEmojiPressed: () {
+                  if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+                  setState(() {
+                    _showBottomMenu = false;
+                    _showEmojiPicker = !_showEmojiPicker;
+                  });
                 },
                 onSendPress: (String content) {
                   return chatOutCommon.sendText(this._target, content); // await
                 },
                 onInputFocus: (bool focus) {
-                  if (focus && _showBottomMenu) {
+                  if (focus) {
                     setState(() {
                       _showBottomMenu = false;
+                      _showEmojiPicker = false;
                     });
                   }
                 },
@@ -926,6 +977,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       },
                     )
                   : SizedBox.shrink(),
+              isClientSendOk ? EmojiPickerBottomMenu(
+                target: _targetId,
+                show: _showEmojiPicker,
+                controller: _inputController,
+              ) : SizedBox.shrink(),
             ],
           ),
         ),

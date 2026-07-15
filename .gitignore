@@ -58,3 +58,6 @@ nkn.aar
 **.p12
 **.cer
 /android/app/.cxx/
+/.env
+
+/lib/upgrade/appcast.json

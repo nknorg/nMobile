@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/storages/settings.dart';
@@ -26,11 +27,11 @@ class Settings {
 
   // sentry
   static bool sentryEnable = true;
-  static const String sentryDSN = '';
+  static late String sentryDSN;
 
   // infura
-  static const String infuraProjectId = '';
-  static const String infuraApiKeySecret = '';
+  static late String infuraProjectId;
+  static late String infuraApiKeySecret;
 
   // notification
   static bool notificationPushEnable = true;
@@ -149,6 +150,11 @@ class Settings {
   static const int piecesMaxSize = piecesMaxTotal * piecesPreMaxLen; // <= 160K
 
   static init() async {
+    // init dotenv
+    sentryDSN = dotenv.get('SENTRY_DSN');
+    infuraProjectId = dotenv.get('INFURA_PROJECT_ID');
+    infuraApiKeySecret = dotenv.get('INFURA_API_KEY_SECRET');
+
     // settings
     var bug = await SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API);
     sentryEnable = !((bug?.toString() == "true") || (bug == true));

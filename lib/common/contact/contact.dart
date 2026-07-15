@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -11,10 +13,14 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:uuid/uuid.dart';
 
+import '../search_service/search_service.dart';
+
 class ContactCommon with Tag {
   // ignore: close_sinks
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
+
   StreamSink<ContactSchema> get _addSink => _addController.sink;
+
   Stream<ContactSchema> get addStream => _addController.stream;
 
   // ignore: close_sinks
@@ -24,12 +30,16 @@ class ContactCommon with Tag {
 
   // ignore: close_sinks
   StreamController<ContactSchema> _updateController = StreamController<ContactSchema>.broadcast();
+
   StreamSink<ContactSchema> get _updateSink => _updateController.sink;
+
   Stream<ContactSchema> get updateStream => _updateController.stream;
 
   // ignore: close_sinks
   StreamController<ContactSchema?> _meUpdateController = StreamController<ContactSchema?>.broadcast();
+
   StreamSink<ContactSchema?> get meUpdateSink => _meUpdateController.sink;
+
   Stream<ContactSchema?> get meUpdateStream => _meUpdateController.stream;
 
   ContactCommon();
@@ -58,12 +68,26 @@ class ContactCommon with Tag {
     if ((address == null) || address.isEmpty) return null;
     // address
     String? clientAddress;
-    try {
-      Resolver resolver = Resolver();
-      clientAddress = await resolver.resolve(address);
-    } catch (e, st) {
-      handleError(e, st);
+    // TODO
+    // try {
+    //   Resolver resolver = Resolver();
+    //   clientAddress = await resolver.resolve(address);
+    // } catch (e, st) {
+    //   handleError(e, st);
+    // }
+
+    if (clientAddress == null) {
+      Uint8List? seed = clientCommon.getSeed();
+      if (seed == null) {
+        String? walletAddress = await walletCommon.getDefaultAddress();
+        seed = hexDecode(await walletCommon.getSeed(walletAddress));
+      }
+      final service = await SearchService.createWithAuth(seed: seed);
+
+      final response = await service.queryByID(address);
+      clientAddress = response?.nknAddress;
     }
+
     bool resolveOk = false;
     if ((clientAddress != null) && Validate.isNknChatIdentifierOk(clientAddress)) {
       resolveOk = true;
@@ -106,10 +130,11 @@ class ContactCommon with Tag {
     List<ContactSchema> contacts = await queryList(type: ContactType.me, orderDesc: false, limit: 1);
     String myAddress = selfAddress ?? clientCommon.address ?? "";
     // TODO: fix multiple me
-    for(int i = 0; i < contacts.length; i++) {
+    // Iterate backwards so remove() does not shift indices we haven't visited
+    for (int i = contacts.length - 1; i >= 0; i--) {
       if (myAddress.isNotEmpty && contacts[i].address != myAddress) {
         await setType(contacts[i].address, ContactType.none, notify: false);
-        contacts.remove(contacts[i]);
+        contacts.removeAt(i);
       }
     }
 
@@ -418,6 +443,31 @@ class ContactCommon with Tag {
       if (notify) queryAndNotify(address);
     } else {
       logger.w("$TAG - setDeviceInfoRequestAt - fail - timeAt:$timeAt - data:$data - address:$address");
+    }
+    return data;
+  }
+
+  Future<bool> isBlocked(String? address) async {
+    if (address == null || address.isEmpty) return false;
+    ContactSchema? contact = await query(address, fetchWalletAddress: false);
+    if (contact == null) return false;
+    var value = contact.data['blocked'];
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    String str = value?.toString().toLowerCase() ?? "";
+    return str == "1" || str == "true";
+  }
+
+  Future<Map<String, dynamic>?> setBlocked(String? address, bool blocked, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
+      "blocked": blocked ? 1 : 0,
+    });
+    if (data != null) {
+      logger.i("$TAG - setBlocked - success - blocked:$blocked - data:$data - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setBlocked - fail - blocked:$blocked - data:$data - address:$address");
     }
     return data;
   }

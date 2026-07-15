@@ -351,11 +351,18 @@ class ChatCommon with Tag {
     if (exists == null) return null;
     // sync
     if (!message.isOutbound) {
-      if ((clientCommon.address != null) && !privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
+      await privateGroupCommon.ensurePrivateGroupMembersMatchChain(exists);
+      exists = await privateGroupCommon.queryGroup(exists.groupId) ?? exists;
+      bool owner = (clientCommon.address != null) && privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address);
+      bool incomplete = await privateGroupCommon.isPrivateGroupStateIncomplete(exists);
+      if (owner && incomplete) {
+        await privateGroupCommon.recoverOwnerPrivateGroup(exists, message);
+        exists = await privateGroupCommon.queryGroup(exists.groupId) ?? exists;
+      } else if (!owner) {
         String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
         int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
         int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
-        if (nativeCommits < remoteCommits) {
+        if (nativeCommits < remoteCommits || incomplete) {
           logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits - sender:${message.sender}');
           // burning
           if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.sender) && message.canBurning) {
@@ -377,6 +384,9 @@ class ChatCommon with Tag {
           chatOutCommon.sendPrivateGroupOptionRequest(message.sender, message.targetId, gap: gap).then((value) {
             if (value) privateGroupCommon.setGroupOptionsRequestInfo(exists?.groupId, remoteVersion, notify: true);
           }); // await
+          if (incomplete) {
+            privateGroupCommon.recoverMemberPrivateGroup(exists, message);
+          }
         }
       }
     }

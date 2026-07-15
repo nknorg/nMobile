@@ -16,11 +16,12 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/settings/home.dart';
-import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/services/task.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:share_handler/share_handler.dart';
+
+import 'upgrade/upgrade_checker.dart';
 
 class AppScreen extends StatefulWidget {
   static const String routeName = '/';
@@ -62,6 +63,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   Completer loginCompleter = Completer();
 
   bool isAuthProgress = false;
+  SharedMedia? media;
 
   @override
   void initState() {
@@ -80,6 +82,8 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
       // await backgroundFetchService.install();
       await localNotification.init();
       await audioHelper.init();
+
+      UpgradeChecker.checkAndShowDialog(Settings.appContext);
     });
     application.mounted(); // await
 
@@ -97,6 +101,9 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
           // taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 6, (key) => clientCommon.ping(), delayMs: 0);
           taskService.addTask(TaskService.KEY_SUBSCRIBE_CHECK, 50, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2 * 1000);
           taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
+          Future.delayed(const Duration(milliseconds: 2000), () {
+            chatOutCommon.refreshDeviceTokenOnClientReady();
+          });
         }
       } else if (clientCommon.isClientStop) {
         // task remove
@@ -117,25 +124,25 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
       }
     });
 
-    // For sharing images coming from outside the app while the app is in the memory
-    _intentDataMediaStreamSubscription = ReceiveSharingIntent.instance.getMediaStream().listen((List<SharedMediaFile>? values) async {
-      if (values == null || values.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithFiles(this.context, values);
-    }, onError: (err, stack) {
-      handleError(err, stack);
-    });
-
-    // For sharing images coming from outside the app while the app is closed
-    ReceiveSharingIntent.instance.getInitialMedia().then((List<SharedMediaFile>? values) async {
-      if (values == null || values.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithFiles(this.context, values);
-    });
-
-
+    initPlatformState();
     // wallet
     taskService.addTask(TaskService.KEY_WALLET_BALANCE, 60, (key) => walletCommon.queryAllBalance(), delayMs: 1 * 1000);
+  }
+
+  Future<void> initPlatformState() async {
+    final handler = ShareHandlerPlatform.instance;
+    media = await handler.getInitialSharedMedia();
+
+    handler.sharedMediaStream.listen((SharedMedia media) async {
+      if (media.attachments?.isNotEmpty != true) return;
+      if (!mounted) return;
+      this.media = media;
+      await loginCompleter.future;
+      ShareHelper.showWithFiles(this.context, media);
+    });
+    if (!mounted) return;
+
+    setState(() {});
   }
 
   @override
@@ -216,12 +223,12 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (Platform.isAndroid) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop && Platform.isAndroid) {
           await Common.backDesktop();
         }
-        return false;
       },
       child: Scaffold(
         backgroundColor: application.theme.backgroundColor,

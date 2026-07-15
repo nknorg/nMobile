@@ -1,14 +1,7 @@
-//
-//  APNSPusher.swift
-//  Runner
-//
-//  Created by 蒋治国 on 2021/10/31.
-//
-
 import Foundation
 
-let p12FileName = ""
-let p12FilePasswordd = ""
+let p12FileName = BuildSecrets.apnsP12FileName
+let p12FilePasswordd = BuildSecrets.apnsP12Password
 
 public class APNSPusher {
     

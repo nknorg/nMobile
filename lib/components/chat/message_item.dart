@@ -23,6 +23,7 @@ class ChatMessageItem extends BaseStateFulWidget {
   final MessageSchema message;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
+  final bool lastMessageHasReceipt;
   final Function(ContactSchema, MessageSchema)? onAvatarPress;
   final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
@@ -31,6 +32,7 @@ class ChatMessageItem extends BaseStateFulWidget {
     required this.message,
     this.prevMessage,
     this.nextMessage,
+    this.lastMessageHasReceipt = false,
     this.onAvatarPress,
     this.onAvatarLonePress,
     this.onResend,
@@ -246,6 +248,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   showTimeAndStatus: showTimeAndStatus,
                   hideTopMargin: hideTopMargin,
                   hideBotMargin: hideBotMargin,
+                  lastMessageHasReceipt: this.widget.lastMessageHasReceipt,
                   onResend: this.widget.onResend,
                 ),
                 SizedBox(height: hideBotMargin ? 0 : 4),
@@ -366,7 +369,8 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   type: LabelType.bodyRegular,
                 ),
                 onTap: () {
-                  ContactProfileScreen.go(context, schema: this._sender);
+                  final String peerAddress = widget.message.isOutbound ? widget.message.targetId : widget.message.sender;
+                  ContactProfileScreen.go(context, address: peerAddress);
                 },
               ),
             ],

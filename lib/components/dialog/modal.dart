@@ -33,6 +33,7 @@ class ModalDialog extends StatelessWidget {
     bool hasCloseButton = true,
     double? height,
     List<Widget>? actions,
+    bool barrierDismissible = true,
   }) {
     this.title = title;
     this.titleWidget = titleWidget;
@@ -44,12 +45,21 @@ class ModalDialog extends StatelessWidget {
     this.actions = actions ?? [];
     return showDialog(
       context: context,
-      // barrierDismissible: false,
+      barrierDismissible: barrierDismissible,
       builder: (ctx) {
-        return Container(
+        Widget dialogWidget = Container(
           alignment: Alignment.center,
           child: this,
         );
+        
+        if (!barrierDismissible) {
+          dialogWidget = PopScope(
+            canPop: false,
+            child: dialogWidget,
+          );
+        }
+        
+        return dialogWidget;
       },
     );
   }

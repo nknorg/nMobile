@@ -9,8 +9,32 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+class RecentSentPush {
+  final String nknAddress;
+  final String deviceToken;
+  final int at;
+
+  RecentSentPush({required this.nknAddress, required this.deviceToken, required this.at});
+}
+
 class RemoteNotification {
-  static Future<List<String>> send(List<String> tokens, {List<String>? uuids, String? title, String? content}) async {
+  static const int _maxRecentSent = 30;
+  static final List<RecentSentPush> recentSentList = [];
+
+  static List<RecentSentPush> get recentSentNotifications =>
+      List.unmodifiable(recentSentList);
+
+  static void _recordSent(String? targetAddress, String deviceToken) {
+    if (targetAddress == null || targetAddress.isEmpty) return;
+    recentSentList.insert(0, RecentSentPush(
+      nknAddress: targetAddress,
+      deviceToken: deviceToken,
+      at: DateTime.now().millisecondsSinceEpoch,
+    ));
+    while (recentSentList.length > _maxRecentSent) recentSentList.removeLast();
+  }
+
+  static Future<List<String>> send(List<String> tokens, {List<String>? uuids, String? title, String? content, String? targetAddress}) async {
     if (!Settings.notificationPushEnable) return [];
     if (tokens.isEmpty) return [];
     List<String> results = [];
@@ -34,6 +58,9 @@ class RemoteNotification {
       }
       if ((result != null) && result.isNotEmpty) {
         results.add(result);
+      }
+      if (targetAddress != null && targetAddress.isNotEmpty) {
+        _recordSent(targetAddress, deviceToken);
       }
     }
     if (results.length == tokens.length) {

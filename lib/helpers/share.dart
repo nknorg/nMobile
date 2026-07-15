@@ -12,7 +12,8 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:share_handler/share_handler.dart';
+import 'package:video_player/video_player.dart';
 
 class ShareHelper {
   static Future showWithTexts(BuildContext? context, List<String> shareTexts) async {
@@ -32,8 +33,8 @@ class ShareHelper {
     }
   }
 
-  static Future showWithFiles(BuildContext? context, List<SharedMediaFile> shareMedias) async {
-    if (shareMedias.isEmpty) return;
+  static Future showWithFiles(BuildContext? context, SharedMedia shareMedia) async {
+    // pick target first
     var target = await ContactHomeScreen.go(context, title: Settings.locale((s) => s.share, ctx: context), selectContact: true, selectGroup: true);
     if (target == null) return;
     // subPath
@@ -50,16 +51,27 @@ class ShareHelper {
     } else {
       return;
     }
-    await _sendShareMedias(shareMedias, target, subPath);
+    // attachments from share_handler (filter out nulls)
+    final List<SharedAttachment> attachments =
+        (shareMedia.attachments ?? const <SharedAttachment?>[]).whereType<SharedAttachment>().toList();
+    if (attachments.isEmpty) {
+      // fallback to text if present
+      final content = shareMedia.content?.trim();
+      if (content != null && content.isNotEmpty) {
+        await showWithTexts(context, [content]);
+      }
+      return;
+    }
+    await _sendShareAttachments(attachments, target, subPath);
   }
 
-  static Future _sendShareMedias(List<SharedMediaFile> shareMedias, dynamic target, String? subPath) async {
+  static Future _sendShareAttachments(List<SharedAttachment> attachments, dynamic target, String? subPath) async {
     if (target == null) return;
     // medias
     List<Map<String, dynamic>> results = [];
-    for (var i = 0; i < shareMedias.length; i++) {
-      SharedMediaFile result = shareMedias[i];
-      Map<String, dynamic>? params = await _getParamsFromShareMedia(result, subPath, Settings.sizeIpfsMax);
+    for (var i = 0; i < attachments.length; i++) {
+      SharedAttachment attachment = attachments[i];
+      Map<String, dynamic>? params = await _getParamsFromAttachment(attachment, subPath, Settings.sizeIpfsMax);
       if (params == null || params.isEmpty) continue;
       results.add(params);
     }
@@ -90,33 +102,35 @@ class ShareHelper {
     }
   }
 
-  static Future<Map<String, dynamic>?> _getParamsFromShareMedia(SharedMediaFile shareMedia, String? subPath, int? maxSize) async {
-    logger.i("ShareHelper - _getParamsFromShareMedia - SharedMediaFile:$shareMedia");
-    // path
-    if (shareMedia.path.isEmpty) {
-      logger.e("ShareHelper - _getParamsFromShareMedia - path is empty");
+  static Future<Map<String, dynamic>?> _getParamsFromAttachment(SharedAttachment attachment, String? subPath, int? maxSize) async {
+    logger.i("ShareHelper - _getParamsFromAttachment - SharedAttachment:$attachment");
+    // path from share_handler may be file:// URL
+    String rawPath = attachment.path;
+    if (rawPath.isEmpty) {
+      logger.e("ShareHelper - _getParamsFromAttachment - path is empty");
       return null;
     }
-    File file = File(shareMedia.path);
+    final String resolvedPath = rawPath.startsWith('file://') ? Uri.parse(rawPath).path : rawPath;
+    File file = File(resolvedPath);
     if (!file.existsSync()) {
-      logger.e("ShareHelper - _getParamsFromShareMedia - file is empty");
+      logger.e("ShareHelper - _getParamsFromAttachment - file not exists: $resolvedPath");
       return null;
     }
-    // type
-    String mimeType = "";
-    if (shareMedia.type == SharedMediaType.image) {
+    // type -> mime bucket
+    String mimeType = "file";
+    if (attachment.type == SharedAttachmentType.image) {
       mimeType = "image";
-    } else if (shareMedia.type == SharedMediaType.video) {
+    } else if (attachment.type == SharedAttachmentType.video) {
       mimeType = "video";
-    } else if (shareMedia.type == SharedMediaType.file) {
-      mimeType = "file";
+    } else if (attachment.type == SharedAttachmentType.audio) {
+      mimeType = "audio";
     }
     // ext
     String ext = Path.getFileExt(file, "");
     if (ext.isEmpty) {
-      if (shareMedia.type == SharedMediaType.image) {
+      if (attachment.type == SharedAttachmentType.image) {
         ext = FileHelper.DEFAULT_IMAGE_EXT;
-      } else if (shareMedia.type == SharedMediaType.video) {
+      } else if (attachment.type == SharedAttachmentType.video) {
         ext = FileHelper.DEFAULT_VIDEO_EXT;
       }
     }
@@ -141,41 +155,31 @@ class ShareHelper {
     // thumbnail
     String? thumbnailPath;
     int? thumbnailSize;
-    if ((shareMedia.thumbnail != null) && (shareMedia.thumbnail?.isNotEmpty == true)) {
-      File thumbnail = File(shareMedia.thumbnail ?? "");
-      if (thumbnail.existsSync()) {
-        thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-        File saveThumbnail = File(thumbnailPath);
-        if (!await saveThumbnail.exists()) {
-          await saveThumbnail.create(recursive: true);
-        } else {
-          await saveThumbnail.delete();
-          await saveThumbnail.create(recursive: true);
-        }
-        saveThumbnail = await thumbnail.copy(thumbnailPath);
-        thumbnailSize = saveThumbnail.lengthSync();
+    double? durationSeconds;
+    if (mimeType.contains("video") == true) {
+      thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+      Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(filePath, thumbnailPath);
+      if (res != null && res.isNotEmpty) {
+        thumbnailPath = res["path"];
+        thumbnailSize = res["size"];
       }
-    }
-    if (thumbnailPath == null || thumbnailPath.isEmpty) {
-      if (mimeType.contains("video") == true) {
-        thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-        Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(filePath, thumbnailPath);
-        if (res != null && res.isNotEmpty) {
-          thumbnailPath = res["path"];
-          thumbnailSize = res["size"];
-        }
-      } else if ((mimeType.contains("image") == true) && (size > Settings.piecesMaxSize)) {
-        thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-        File? thumbnail = await MediaPicker.compressImageBySize(File(filePath), savePath: thumbnailPath, maxSize: Settings.sizeThumbnailMax, bestSize: Settings.sizeThumbnailBest, force: true);
-        if (thumbnail != null) {
-          thumbnailPath = thumbnail.absolute.path;
-          thumbnailSize = thumbnail.lengthSync();
-        }
+      // duration
+      try {
+        var controller = VideoPlayerController.file(File(filePath));
+        await controller.initialize();
+        durationSeconds = controller.value.duration.inMilliseconds / 1000.0;
+        await controller.dispose();
+      } catch (_) {}
+    } else if ((mimeType.contains("image") == true) && (size > Settings.piecesMaxSize)) {
+      thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+      File? thumbnail = await MediaPicker.compressImageBySize(File(filePath), savePath: thumbnailPath, maxSize: Settings.sizeThumbnailMax, bestSize: Settings.sizeThumbnailBest, force: true);
+      if (thumbnail != null) {
+        thumbnailPath = thumbnail.absolute.path;
+        thumbnailSize = thumbnail.lengthSync();
       }
     }
     // map
     if (filePath.isNotEmpty) {
-      int? duration = shareMedia.duration;
       Map<String, dynamic> params = {
         "path": filePath,
         "size": size,
@@ -184,10 +188,10 @@ class ShareHelper {
         "mimeType": mimeType,
         "width": null,
         "height": null,
-        "duration": (duration != null) ? (duration / 1000) : null,
+        "duration": durationSeconds,
         "thumbnailPath": thumbnailPath,
         "thumbnailSize": thumbnailSize,
-        "message": shareMedia.message,
+        "message": null,
       };
       return params;
     }

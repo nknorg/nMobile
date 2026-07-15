@@ -64,7 +64,13 @@ class Authorization {
       String? pwd;
       try {
         pwd = await walletCommon.getPassword(walletAddress);
-        if (!authOk || pwd == null || pwd.isEmpty) {
+        // Default Account / empty password wallet: skip dialog, use empty password to login
+        if (pwd == '' && Settings.biometricsAuthentication) {
+          return null;
+        } else if (pwd == '') {
+          return '';
+        }
+        if (!authOk || pwd == null) {
           onInput?.call(true);
           String? password = await BottomDialog.of(Settings.appContext).showInput(
             title: Settings.locale((s) => s.verify_wallet_password),

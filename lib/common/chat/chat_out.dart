@@ -233,7 +233,7 @@ class ChatOutCommon with Tag {
     if (notification && (contact != null) && !contact.isMe) {
       deviceInfoCommon.queryDeviceTokenList(contact.address).then((tokens) async {
         logger.d("$TAG - _sendWithContact - push notification - count:${tokens.length} - target:${contact.address} - tokens:$tokens");
-        List<String> results = await RemoteNotification.send(tokens);
+        List<String> results = await RemoteNotification.send(tokens, targetAddress: contact.address);
         if (results.isNotEmpty) {
           message.options = MessageOptions.setPushNotifyId(message.options, results[0]);
           await messageCommon.updateMessageOptions(message, message.options, notify: false);
@@ -320,7 +320,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.address).then((tokens) {
             logger.d("$TAG - _sendWithTopic - push notification - count:${tokens.length} - target:${_contact.address} - topic:${topic.topicId} - tokens:$tokens");
-            RemoteNotification.send(tokens); // await // no need result
+            RemoteNotification.send(tokens, targetAddress: _contact.address); // await // no need result
           });
         }
       });
@@ -335,8 +335,9 @@ class ChatOutCommon with Tag {
       return null;
     }
     // me
-    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, message.sender);
-    if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
+    bool canSend = await privateGroupCommon.canSendGroupMessage(group, message.sender);
+    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItemForSelf(group.groupId);
+    if (!canSend || (_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
       logger.w("$TAG - _sendWithPrivateGroup - member me is null - type:${message.contentType} - me:$_me - group:$group - message:${message.toStringSimple()}");
       return null;
     }
@@ -347,7 +348,7 @@ class ChatOutCommon with Tag {
     for (var i = 0; i < members.length; i++) {
       String? clientAddress = members[i].invitee;
       if (clientAddress == null || clientAddress.isEmpty) continue;
-      if (clientAddress == message.sender) {
+      if (privateGroupCommon.isSameInvitee(clientAddress, message.sender)) {
         selfIsReceiver = true;
       } else if (members[i].permission > PrivateGroupItemPerm.none) {
         destList.add(clientAddress);
@@ -388,7 +389,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.address).then((tokens) {
             logger.d("$TAG - _sendWithPrivateGroup - push notification - count:${tokens.length} - target:${_contact.address} - groupId:${group.groupId} - tokens:$tokens");
-            RemoteNotification.send(tokens); // await // no need result
+            RemoteNotification.send(tokens, targetAddress: _contact.address); // await // no need result
           });
         }
       });
@@ -777,6 +778,38 @@ class ChatOutCommon with Tag {
     return result != null;
   }
 
+  /// Pull the latest OS push token, persist via [deviceInfoCommon.getMe], and if it changed, send
+  /// [sendContactOptionsToken] to every contact with [OptionsSchema.notificationOpen] so peers update.
+  Future<void> refreshDeviceTokenOnClientReady() async {
+    try {
+      if (!(await clientCommon.checkClientOk("refreshDeviceToken", ping: false))) return;
+      String? selfAddress = clientCommon.address;
+      if (selfAddress == null || selfAddress.isEmpty) return;
+      DeviceInfoSchema? before = await deviceInfoCommon.query(selfAddress, Settings.deviceId);
+      String oldToken = before?.deviceToken ?? "";
+      DeviceInfoSchema? after = await deviceInfoCommon.getMe(selfAddress: selfAddress, canAdd: true, fetchDeviceToken: true);
+      if (after == null) return;
+      if (oldToken == after.deviceToken) return;
+      logger.i("$TAG - refreshDeviceTokenOnClientReady - token changed - notify notificationOpen contacts");
+      int offset = 0;
+      const int page = 100;
+      while (true) {
+        List<ContactSchema> list = await contactCommon.queryList(offset: offset, limit: page);
+        if (list.isEmpty) break;
+        for (ContactSchema c in list) {
+          if (c.isMe) continue;
+          if (!c.options.notificationOpen) continue;
+          String? tok = after.deviceToken.isNotEmpty ? after.deviceToken : null;
+          await sendContactOptionsToken(c.address, tok);
+        }
+        if (list.length < page) break;
+        offset += page;
+      }
+    } catch (e, st) {
+      handleError(e, st);
+    }
+  }
+
   // NO DB NO display (1 to 1)
   Future<bool> sendDeviceRequest(String? targetAddress, {int gap = 0}) async {
     if (targetAddress == null || targetAddress.isEmpty) return false;
@@ -863,6 +896,41 @@ class ChatOutCommon with Tag {
     }
     logger.i("$TAG - sendText - targetId:$targetId - content:$content - data:${message.data}");
     return await _sendVisible(message, maxHoldingSeconds: maxHoldingSeconds);
+  }
+
+  Future<bool> sendRevoke(String msgId) async {
+    if (msgId.isEmpty) return false;
+    // Only allow sender to revoke
+    MessageSchema? origin = await messageCommon.query(msgId);
+    if (origin == null || !origin.isOutbound) return false;
+
+    String targetId = origin.targetId;
+    int targetType = origin.targetType;
+    // Build revoke message schema per target type
+    MessageSchema revoke = MessageSchema.fromSend(
+      targetId,
+      targetType,
+      MessageContentType.revoke,
+      msgId,
+    );
+    // no DB persistence for revoke command
+    revoke.data = MessageData.getRevoke(msgId);
+
+    // Send according to targetType
+    Uint8List? pid;
+    if (targetType == SessionType.TOPIC) {
+      TopicSchema? topic = TopicSchema.create(targetId, type: SessionType.TOPIC);
+      pid = await _sendWithTopic(topic, revoke, notification: false);
+    } else if (targetType == SessionType.PRIVATE_GROUP) {
+      PrivateGroupSchema? group = PrivateGroupSchema.create(targetId, targetId, type: SessionType.PRIVATE_GROUP);
+      pid = await _sendWithPrivateGroup(group, revoke, notification: false);
+    } else {
+      ContactSchema? contact = await chatCommon.contactHandle(revoke);
+      pid = await _sendWithContact(contact, revoke, notification: false);
+    }
+    bool ok = pid?.isNotEmpty == true;
+    logger.i("$TAG - sendRevoke - type:$targetType - dest:$targetId - msgId:$msgId - ok:$ok");
+    return ok;
   }
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {

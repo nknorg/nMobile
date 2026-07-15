@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -60,11 +61,17 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
   }
 
   Future _save() async {
-    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    if ((await Permission.storage.request()) != PermissionStatus.granted) {
-      return null;
+    if (Platform.isIOS) {
+      if ((await Permission.photos.request()) != PermissionStatus.granted) {
+        return null;
+      }
+    } else if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt <= 32) {
+        if ((await Permission.storage.request()) != PermissionStatus.granted) {
+          return null;
+        }
+      }
     }
 
     File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
@@ -74,7 +81,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
     String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
 
     Uint8List bytes = await file.readAsBytes();
-    Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: imageName, isReturnImagePathOfIOS: true);
+    Map? result = await ImageGallerySaverPlus.saveImage(bytes, quality: 100, name: imageName, isReturnImagePathOfIOS: true);
 
     logger.i("PhotoScreen - save copy file - path:${result?["filePath"]}");
     Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
