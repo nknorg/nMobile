@@ -154,6 +154,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     if (_inputControllerListener != null) {
       _inputController.removeListener(_inputControllerListener!);
     }
+    _inputFocusNode.dispose();
     super.dispose();
   }
 

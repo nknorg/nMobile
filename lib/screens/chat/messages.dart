@@ -38,6 +38,7 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:nmobile/utils/util.dart';
 import 'package:nmobile/utils/path.dart' as Path2;
 import 'package:nmobile/utils/time.dart';
 
@@ -446,7 +447,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _toggleBottomMenu() {
-    if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+    if (mounted) Util.hideKeyboard(context);
     setState(() {
       _showBottomMenu = !_showBottomMenu;
       if (_showBottomMenu) {
@@ -456,7 +457,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _hideAll() {
-    if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+    if (mounted) Util.hideKeyboard(context);
     setState(() {
       _showBottomMenu = false;
       _showEmojiPicker = false;
@@ -766,6 +767,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         ],
       ),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () {
           _hideAll();
         },
@@ -873,7 +875,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   _toggleBottomMenu();
                 },
                 onEmojiPressed: () {
-                  if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+                  if (mounted) Util.hideKeyboard(context);
                   setState(() {
                     _showBottomMenu = false;
                     _showEmojiPicker = !_showEmojiPicker;
@@ -955,7 +957,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       target: _targetId,
                       show: _showBottomMenu,
                       onPicked: (List<Map<String, dynamic>> results) async {
-                        if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+                        if (mounted) Util.hideKeyboard(context);
                         if (results.isEmpty) return;
                         for (var i = 0; i < results.length; i++) {
                           Map<String, dynamic> result = results[i];
