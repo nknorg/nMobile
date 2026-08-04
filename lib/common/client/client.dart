@@ -10,6 +10,7 @@ import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/application.dart';
+import 'package:nmobile/common/client/last_device.dart';
 import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -68,6 +69,8 @@ class ClientCommon with Tag {
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
+
+  final LastDeviceCommon lastDevice = LastDeviceCommon();
 
   // address
   String? get address => client?.address ?? _lastAddress; // == chat_id / wallet.publicKey
@@ -349,6 +352,7 @@ class ClientCommon with Tag {
       await chatInCommon.waitReceiveQueues("_signOut"); // wait db_insert from onMessage
       await chatInCommon.pause(reset: closeDB);
       client = null;
+      lastDevice.reset();
 
       if (closeDB) await dbCommon.close();
       return true;
@@ -405,6 +409,7 @@ class ClientCommon with Tag {
           status = ClientConnectStatus.connected;
           _statusSink.add(ClientConnectStatus.connected);
         }); // await
+        lastDevice.checkAfterConnected(); // await
       } else {
         _statusSink.add(ClientConnectStatus.connected);
       }

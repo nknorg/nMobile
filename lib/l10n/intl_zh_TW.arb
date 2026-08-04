@@ -466,6 +466,7 @@
   "tip_address_not_found": "該地址不存在或無法解析",
   "view_more_info": "查看更多資訊",
   "tip_custom_id_format": "自訂ID只能包含字母、數字或底線",
+  "tip_multi_device_same_id": "暫不支援多端訊息同步，僅末次登陸設備收信。",
   "new_chat": "新聊天",
   "update_app": "更新App",
   "ignore": "忽略"

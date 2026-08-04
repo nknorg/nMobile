@@ -534,6 +534,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "tip_custom_id_taken":
             MessageLookupByLibrary.simpleMessage("此自訂ID已被其他用戶佔用"),
         "tip_input_min_length": m9,
+        "tip_multi_device_same_id":
+            MessageLookupByLibrary.simpleMessage("暫不支援多端訊息同步，僅末次登陸設備收信。"),
         "tip_open_send_device_token":
             MessageLookupByLibrary.simpleMessage("是否開啟來自對方的消息通知提醒?"),
         "tip_password_error": MessageLookupByLibrary.simpleMessage("密碼錯誤"),

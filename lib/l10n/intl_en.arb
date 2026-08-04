@@ -466,6 +466,7 @@
   "tip_address_not_found": "Address not found or cannot be resolved",
   "view_more_info": "View More Info",
   "tip_custom_id_format": "Custom ID can only contain letters, numbers, or underscores",
+  "tip_multi_device_same_id": "Cross-device sync not supported; messages only on your last device.",
   "new_chat": "New Chat",
   "update_app": "Update App",
   "ignore": "Ignore"

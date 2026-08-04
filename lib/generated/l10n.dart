@@ -4520,6 +4520,16 @@ class S {
     );
   }
 
+  /// `Cross-device sync not supported; messages only on your last device.`
+  String get tip_multi_device_same_id {
+    return Intl.message(
+      'Cross-device sync not supported; messages only on your last device.',
+      name: 'tip_multi_device_same_id',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `New Chat`
   String get new_chat {
     return Intl.message(

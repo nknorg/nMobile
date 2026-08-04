@@ -128,6 +128,7 @@ class Settings {
   static double feeTopicSubscribeDefault = 0.00010009; // fee
   // block_height
   static const int blockHeightTopicSubscribeDefault = 400000; // 93day
+  static const int blockHeightTopicSubscribe7Days = 30000; // ~7day
   static const int blockHeightTopicWarnBlockExpire = 100000; // 23day
   // size
   static const int sizeMsgMax = 32 * 1000; // < 32K

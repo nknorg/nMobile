@@ -638,6 +638,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "tip_custom_id_taken": MessageLookupByLibrary.simpleMessage(
             "This custom ID is already taken by another user"),
         "tip_input_min_length": m9,
+        "tip_multi_device_same_id": MessageLookupByLibrary.simpleMessage(
+            "Cross-device sync not supported; messages only on your last device."),
         "tip_open_send_device_token": MessageLookupByLibrary.simpleMessage(
             "Whether to open the notification reminder from the other party?"),
         "tip_password_error":
