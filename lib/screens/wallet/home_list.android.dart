@@ -1,0 +1,247 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/blocs/settings/settings_bloc.dart';
+import 'package:nmobile/blocs/settings/settings_state.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_state.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
+import 'package:nmobile/components/dialog/modal.dart';
+import 'package:nmobile/components/layout/header.dart';
+import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/components/wallet/item.dart';
+import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/wallet/create_nkn.dart';
+import 'package:nmobile/screens/wallet/detail.dart';
+import 'package:nmobile/screens/wallet/export.dart';
+import 'package:nmobile/screens/wallet/import.dart';
+import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
+
+class WalletHomeListAndroidLayout extends BaseStateFulWidget {
+  @override
+  _WalletHomeListAndroidLayoutState createState() => _WalletHomeListAndroidLayoutState();
+}
+
+class _WalletHomeListAndroidLayoutState extends BaseStateFulWidgetState<WalletHomeListAndroidLayout> with Tag {
+  StreamSubscription? _settingSubscription;
+
+  WalletBloc? _walletBloc;
+  StreamSubscription? _walletSubscription;
+
+  bool _allBackedUp = true;
+
+  @override
+  void onRefreshArguments() {}
+
+  @override
+  void initState() {
+    super.initState();
+
+    SettingsBloc _settingsBloc = BlocProvider.of<SettingsBloc>(context);
+    _settingSubscription = _settingsBloc.stream.listen((state) async {
+      if (state is LocaleUpdated) {
+        Future.delayed(Duration(milliseconds: 500), () => setState(() {}));
+      }
+    });
+
+    _walletBloc = BlocProvider.of<WalletBloc>(context);
+    _walletSubscription = _walletBloc?.stream.listen((state) async {
+      if (state is WalletLoaded) {
+        _refreshBackedUp();
+      }
+    });
+
+    _refreshBackedUp();
+  }
+
+  @override
+  void dispose() {
+    _settingSubscription?.cancel();
+    _walletSubscription?.cancel();
+    super.dispose();
+  }
+
+  List<WalletSchema> _nknWallets(List<WalletSchema> wallets) {
+    return wallets.where((w) => w.type == WalletType.nkn).toList();
+  }
+
+  _refreshBackedUp() async {
+    List<WalletSchema> wallets = await walletCommon.getWallets();
+    List<WalletSchema> nknWallets = _nknWallets(wallets);
+    List<WalletSchema> noBackedUpList = nknWallets.where((element) => element.isBackedUp == false).toList();
+    bool allBackedUp = noBackedUpList.isEmpty;
+    if (allBackedUp != _allBackedUp) {
+      setState(() {
+        _allBackedUp = allBackedUp;
+      });
+    }
+  }
+
+  _onNotBackedUpTipClicked() {
+    ModalDialog dialog = ModalDialog.of(Settings.appContext);
+    dialog.show(
+      title: Settings.locale((s) => s.d_not_backed_up_title),
+      content: Settings.locale((s) => s.d_not_backed_up_desc),
+      hasCloseButton: false,
+      actions: [
+        Button(
+          text: Settings.locale((s) => s.go_backup, ctx: context),
+          width: double.infinity,
+          onPressed: () async {
+            await dialog.close();
+            WalletSchema? result = await BottomDialog.of(Settings.appContext).showWalletSelect(title: Settings.locale((s) => s.select_asset_to_backup, ctx: context));
+            if (result != null && result.type != WalletType.nkn) return;
+            _readyExport(result);
+          },
+        ),
+      ],
+    );
+  }
+
+  _readyExport(WalletSchema? schema) {
+    logger.i("$TAG - backup picked - $schema");
+    if (schema == null || schema.address.isEmpty || schema.type != WalletType.nkn) return;
+
+    authorization.getWalletPassword(schema.address).then((String? password) async {
+      if (password == null || password.isEmpty) {
+        password = '';
+      }
+      String keystore = await walletCommon.getKeystore(schema.address);
+
+      Loading.show();
+      Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password));
+      Loading.dismiss();
+
+      if (nkn.address.isEmpty || nkn.address != schema.address) {
+        Toast.show(Settings.locale((s) => s.password_wrong));
+        return;
+      }
+
+      WalletExportScreen.go(
+        context,
+        WalletType.nkn,
+        schema.name,
+        nkn.address,
+        hexEncode(nkn.publicKey),
+        hexEncode(nkn.seed),
+        nkn.keystore,
+      );
+    }).onError((e, st) {
+      Loading.dismiss();
+      handleError(e, st);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Layout(
+      headerColor: application.theme.primaryColor,
+      header: Header(
+        titleChild: Padding(
+          padding: EdgeInsets.only(left: 20),
+          child: Label(
+            Settings.locale((s) => s.my_wallets, ctx: context),
+            type: LabelType.h2,
+            color: application.theme.fontLightColor,
+          ),
+        ),
+        childTail: _allBackedUp
+            ? SizedBox.shrink()
+            : TextButton(
+                onPressed: _onNotBackedUpTipClicked,
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.warning_rounded,
+                      color: Color(0xFFF5B800),
+                      size: 20,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      Settings.locale((s) => s.not_backed_up, ctx: context),
+                      textAlign: TextAlign.end,
+                      style: TextStyle(fontSize: application.theme.bodyText3.fontSize, color: application.theme.strongColor),
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+              ),
+        actions: [
+          PopupMenuButton(
+            icon: Asset.iconSvg('more', width: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            onSelected: (int result) {
+              switch (result) {
+                case 0:
+                  WalletCreateNKNScreen.go(context);
+                  break;
+                case 1:
+                  WalletImportScreen.go(context, WalletType.nkn);
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+              PopupMenuItem<int>(
+                value: 0,
+                child: Label(
+                  Settings.locale((s) => s.no_wallet_create, ctx: context),
+                  type: LabelType.display,
+                ),
+              ),
+              PopupMenuItem<int>(
+                value: 1,
+                child: Label(
+                  Settings.locale((s) => s.import_wallet, ctx: context),
+                  type: LabelType.display,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: BlocBuilder<WalletBloc, WalletState>(
+        builder: (context, state) {
+          if (state is WalletLoaded) {
+            final nknWallets = _nknWallets(state.wallets);
+            return ListView.builder(
+              padding: EdgeInsets.only(top: 22, bottom: 80 + Settings.screenHeight() * 0.05),
+              itemCount: nknWallets.length,
+              itemBuilder: (context, index) {
+                if (index < 0 || index >= nknWallets.length) return SizedBox.shrink();
+                WalletSchema wallet = nknWallets[index];
+                return Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+                  child: WalletItem(
+                    wallet: wallet,
+                    walletType: wallet.type,
+                    showBalance: false,
+                    onTap: () {
+                      WalletDetailScreen.go(context, wallet, listIndex: index);
+                    },
+                    bgColor: application.theme.backgroundLightColor,
+                    radius: BorderRadius.circular(8),
+                  ),
+                );
+              },
+            );
+          }
+          return SizedBox.shrink();
+        },
+      ),
+    );
+  }
+}

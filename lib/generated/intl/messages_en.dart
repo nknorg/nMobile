@@ -23,15 +23,23 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m0(time) =>
       "Messages sent and received in this conversation will disappear ${time} after they have been seen.";
 
-  static String m1(field) => "${field} is required.";
+  static String m1(name) => "Are you sure you want to delete \"${name}\"?";
 
-  static String m2(limit) => "Upload up to ${limit} images at a time";
+  static String m2(error) => "Error deleting file: ${error}";
 
-  static String m3(other) => "${other} invites You to join group";
+  static String m3(field) => "${field} is required.";
 
-  static String m4(other) => "You invites ${other} to join group";
+  static String m4(error) => "Error loading files: ${error}";
 
-  static String m5(other) => "${other} have already accepted";
+  static String m5(limit) => "Upload up to ${limit} images at a time";
+
+  static String m6(other) => "${other} invites You to join group";
+
+  static String m7(other) => "You invites ${other} to join group";
+
+  static String m8(other) => "${other} have already accepted";
+
+  static String m9(length) => "Please enter at least ${length} characters.";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -78,6 +86,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "balance_not_enough":
             MessageLookupByLibrary.simpleMessage("Balance not enough"),
         "biometrics": MessageLookupByLibrary.simpleMessage("Biometrics"),
+        "block": MessageLookupByLibrary.simpleMessage("Block"),
+        "block_tips": MessageLookupByLibrary.simpleMessage(
+            "After enabling, messages from this user will be blocked."),
         "blocked_user_disallow_invite": MessageLookupByLibrary.simpleMessage(
             "The user has been blocked, and ordinary members are not allowed to invite"),
         "burn_10_minutes": MessageLookupByLibrary.simpleMessage("10 minutes"),
@@ -144,8 +155,18 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Confirm Password"),
         "confirm_resend":
             MessageLookupByLibrary.simpleMessage("Confirm resend?"),
+        "confirm_revoke": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to revoke this message?"),
         "confirm_unsubscribe_group": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to leave the group chat?"),
+        "conn_state_connected":
+            MessageLookupByLibrary.simpleMessage("Connected"),
+        "conn_state_connecting":
+            MessageLookupByLibrary.simpleMessage("Connecting"),
+        "conn_state_disconnected":
+            MessageLookupByLibrary.simpleMessage("Disconnected"),
+        "conn_state_not_connected":
+            MessageLookupByLibrary.simpleMessage("Not connected"),
         "connect": MessageLookupByLibrary.simpleMessage("Connect"),
         "connected": MessageLookupByLibrary.simpleMessage("Connected"),
         "connecting": MessageLookupByLibrary.simpleMessage("Connecting"),
@@ -177,6 +198,31 @@ class MessageLookup extends MessageLookupByLibrary {
         "create_private_group":
             MessageLookupByLibrary.simpleMessage("Create Private Group"),
         "create_wallet": MessageLookupByLibrary.simpleMessage("Create Account"),
+        "cross_send_policy":
+            MessageLookupByLibrary.simpleMessage("Cross Send Policy"),
+        "cross_send_policy_desc_all_connected":
+            MessageLookupByLibrary.simpleMessage(
+                "All connected sub-clients send (redundant sending)."),
+        "cross_send_policy_desc_any_connected":
+            MessageLookupByLibrary.simpleMessage(
+                "Any connected sub-client can send (cross send)."),
+        "cross_send_policy_desc_none": MessageLookupByLibrary.simpleMessage(
+            "Do not use cross send policy."),
+        "cross_send_policy_desc_prefer_stable":
+            MessageLookupByLibrary.simpleMessage(
+                "Use the most stable / lowest latency sub-client (recommended)."),
+        "cross_send_policy_restart_hint":
+            MessageLookupByLibrary.simpleMessage("Restart client to apply"),
+        "cross_send_policy_restart_tip": MessageLookupByLibrary.simpleMessage(
+            "Changing policy takes effect after restarting the client."),
+        "cross_send_policy_sub_client_refresh":
+            MessageLookupByLibrary.simpleMessage("Refresh"),
+        "cross_send_policy_sub_client_status":
+            MessageLookupByLibrary.simpleMessage(
+                "Sub-client connection status"),
+        "custom_id": MessageLookupByLibrary.simpleMessage("Custom ID"),
+        "custom_id_tips": MessageLookupByLibrary.simpleMessage(
+            "You can set a custom ID so that others can add you as a friend using this ID."),
         "d_chat": MessageLookupByLibrary.simpleMessage("D-Chat"),
         "d_chat_address": MessageLookupByLibrary.simpleMessage("D-Chat ID"),
         "d_chat_not_login":
@@ -200,6 +246,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to clear the database?"),
         "delete_device_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this device?"),
+        "delete_file_confirm_title": m1,
         "delete_friend_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this friend?"),
         "delete_mapping_address_confirm_title":
@@ -228,6 +275,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "done": MessageLookupByLibrary.simpleMessage("Done"),
         "edit": MessageLookupByLibrary.simpleMessage("Edit"),
         "edit_contact": MessageLookupByLibrary.simpleMessage("Edit Contact"),
+        "edit_custom_id":
+            MessageLookupByLibrary.simpleMessage("Edit Custom ID"),
         "edit_name": MessageLookupByLibrary.simpleMessage("Edit Name"),
         "edit_nickname": MessageLookupByLibrary.simpleMessage("Edit Nickname"),
         "edit_notes": MessageLookupByLibrary.simpleMessage("Edit Notes"),
@@ -247,9 +296,11 @@ class MessageLookup extends MessageLookupByLibrary {
             "Client address format does not match."),
         "error_confirm_password":
             MessageLookupByLibrary.simpleMessage("Password does not match."),
-        "error_field_required": m1,
+        "error_deleting_file": m2,
+        "error_field_required": m3,
         "error_keystore_format": MessageLookupByLibrary.simpleMessage(
             "Keystore format does not match."),
+        "error_loading_files": m4,
         "error_nkn_address_format":
             MessageLookupByLibrary.simpleMessage("Invalid wallet address."),
         "error_required":
@@ -268,17 +319,20 @@ class MessageLookup extends MessageLookupByLibrary {
         "expiration": MessageLookupByLibrary.simpleMessage("Expiration"),
         "expired": MessageLookupByLibrary.simpleMessage("Expired"),
         "export": MessageLookupByLibrary.simpleMessage("Export"),
+        "export_contacts":
+            MessageLookupByLibrary.simpleMessage("Export Contacts"),
         "export_wallet": MessageLookupByLibrary.simpleMessage("Export Account"),
         "face_id": MessageLookupByLibrary.simpleMessage("Face ID"),
         "failure": MessageLookupByLibrary.simpleMessage("Failure"),
         "fast": MessageLookupByLibrary.simpleMessage("Fast"),
         "featured": MessageLookupByLibrary.simpleMessage("Featured"),
         "fee": MessageLookupByLibrary.simpleMessage("Fee"),
+        "file_manager": MessageLookupByLibrary.simpleMessage("File Manager"),
         "file_not_exist":
             MessageLookupByLibrary.simpleMessage("The file does not exist"),
         "file_too_big":
             MessageLookupByLibrary.simpleMessage("The file is too big"),
-        "file_too_many": m2,
+        "file_too_many": m5,
         "files": MessageLookupByLibrary.simpleMessage("Files"),
         "first_name": MessageLookupByLibrary.simpleMessage("First Name"),
         "friends": MessageLookupByLibrary.simpleMessage("Friend"),
@@ -287,6 +341,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "gas_price": MessageLookupByLibrary.simpleMessage("Gas Price"),
         "general": MessageLookupByLibrary.simpleMessage("General"),
         "go_backup": MessageLookupByLibrary.simpleMessage("Go Backup"),
+        "go_to_set": MessageLookupByLibrary.simpleMessage("Go to set"),
         "group_chat": MessageLookupByLibrary.simpleMessage("Group"),
         "group_member_already": MessageLookupByLibrary.simpleMessage(
             "The member is in group already"),
@@ -299,7 +354,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "hint_enter_wallet_name":
             MessageLookupByLibrary.simpleMessage("Enter wallet name"),
         "hours": MessageLookupByLibrary.simpleMessage("hours"),
+        "id": MessageLookupByLibrary.simpleMessage("ID"),
+        "ignore": MessageLookupByLibrary.simpleMessage("Ignore"),
         "image": MessageLookupByLibrary.simpleMessage("Image"),
+        "import_contacts":
+            MessageLookupByLibrary.simpleMessage("Import Contacts"),
         "import_ethereum_wallet":
             MessageLookupByLibrary.simpleMessage("Import Ethereum Account"),
         "import_nkn_wallet":
@@ -315,6 +374,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile."),
         "import_with_seed_title":
             MessageLookupByLibrary.simpleMessage("Import with Seed"),
+        "input_custom_id":
+            MessageLookupByLibrary.simpleMessage("Please input Custom ID"),
         "input_d_chat_address":
             MessageLookupByLibrary.simpleMessage("Please input D-Chat ID"),
         "input_keystore":
@@ -351,8 +412,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "You have already invited this member,still invite?"),
         "invitee_already_exists":
             MessageLookupByLibrary.simpleMessage("Invitee already exists"),
-        "invites_desc_me": m3,
-        "invites_desc_other": m4,
+        "invites_desc_me": m6,
+        "invites_desc_other": m7,
         "inviting": MessageLookupByLibrary.simpleMessage("inviting"),
         "join_but_not_invite":
             MessageLookupByLibrary.simpleMessage("not invited"),
@@ -413,6 +474,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Need microphone permission"),
         "need_re_subscribe":
             MessageLookupByLibrary.simpleMessage("Need to re-subscribe"),
+        "new_chat": MessageLookupByLibrary.simpleMessage("New Chat"),
         "new_message": MessageLookupByLibrary.simpleMessage("New Message"),
         "new_private_group":
             MessageLookupByLibrary.simpleMessage("New Private Group"),
@@ -424,6 +486,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "nkn": MessageLookupByLibrary.simpleMessage("NKN"),
         "nkn_mainnet": MessageLookupByLibrary.simpleMessage("NKN Mainnet"),
         "no": MessageLookupByLibrary.simpleMessage("No"),
+        "no_files_found":
+            MessageLookupByLibrary.simpleMessage("No files found"),
         "no_permission_action": MessageLookupByLibrary.simpleMessage(
             "Not authorized to perform this operation"),
         "no_permission_join_group": MessageLookupByLibrary.simpleMessage(
@@ -454,7 +518,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "only_owner_can_modify": MessageLookupByLibrary.simpleMessage(
             "Only the group owner can modify this item"),
         "optional": MessageLookupByLibrary.simpleMessage("optional"),
-        "other_accepted_already": m5,
+        "other_accepted_already": m8,
         "owner": MessageLookupByLibrary.simpleMessage("Owner"),
         "password_wrong": MessageLookupByLibrary.simpleMessage(
             "Account password or keystore file is wrong."),
@@ -497,6 +561,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "rename": MessageLookupByLibrary.simpleMessage("Rename"),
         "request_processed": MessageLookupByLibrary.simpleMessage(
             "Requests still being processed, please try again later"),
+        "revoke": MessageLookupByLibrary.simpleMessage("Revoke"),
         "save": MessageLookupByLibrary.simpleMessage("Save"),
         "save_contact": MessageLookupByLibrary.simpleMessage("Save Contact"),
         "save_to_album": MessageLookupByLibrary.simpleMessage("Save To Album"),
@@ -543,6 +608,15 @@ class MessageLookup extends MessageLookupByLibrary {
         "start_chat": MessageLookupByLibrary.simpleMessage("Start Chat"),
         "storage_text": MessageLookupByLibrary.simpleMessage("Storage"),
         "stranger": MessageLookupByLibrary.simpleMessage("Stranger"),
+        "subclient_conn_duration":
+            MessageLookupByLibrary.simpleMessage("Duration"),
+        "subclient_duration_na": MessageLookupByLibrary.simpleMessage("—"),
+        "subclient_reconnect_count":
+            MessageLookupByLibrary.simpleMessage("Reconnects"),
+        "subclient_score": MessageLookupByLibrary.simpleMessage("Score"),
+        "subclient_send_failure_count":
+            MessageLookupByLibrary.simpleMessage("Send failures"),
+        "submitting": MessageLookupByLibrary.simpleMessage("Submitting..."),
         "subscribe": MessageLookupByLibrary.simpleMessage("Subscribe"),
         "subscribe_or_waiting":
             MessageLookupByLibrary.simpleMessage("Subscribe or Waiting..."),
@@ -553,12 +627,25 @@ class MessageLookup extends MessageLookupByLibrary {
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
         "terms": MessageLookupByLibrary.simpleMessage("Terms"),
         "tip": MessageLookupByLibrary.simpleMessage("Tips"),
+        "tip_address_not_found": MessageLookupByLibrary.simpleMessage(
+            "Address not found or cannot be resolved"),
         "tip_ask_group_owner_permission": MessageLookupByLibrary.simpleMessage(
             "You are not in this group,ask the group owner for permission"),
+        "tip_custom_id_already_set": MessageLookupByLibrary.simpleMessage(
+            "This custom ID is already set as your current ID"),
+        "tip_custom_id_format": MessageLookupByLibrary.simpleMessage(
+            "Custom ID can only contain letters, numbers, or underscores"),
+        "tip_custom_id_taken": MessageLookupByLibrary.simpleMessage(
+            "This custom ID is already taken by another user"),
+        "tip_input_min_length": m9,
+        "tip_multi_device_same_id": MessageLookupByLibrary.simpleMessage(
+            "Cross-device sync not supported; messages only on your last device."),
         "tip_open_send_device_token": MessageLookupByLibrary.simpleMessage(
             "Whether to open the notification reminder from the other party?"),
         "tip_password_error":
             MessageLookupByLibrary.simpleMessage("Wrong password"),
+        "tip_submit_failed":
+            MessageLookupByLibrary.simpleMessage("Submit failed"),
         "tip_switch_success":
             MessageLookupByLibrary.simpleMessage("Switch Success!"),
         "tips": MessageLookupByLibrary.simpleMessage("Tips"),
@@ -580,6 +667,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Public group renewal"),
         "topic_subscribe_enable":
             MessageLookupByLibrary.simpleMessage("Public group subscription"),
+        "total": MessageLookupByLibrary.simpleMessage("Total"),
         "total_balance": MessageLookupByLibrary.simpleMessage("TOTAL BALANCE"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
         "tracker": MessageLookupByLibrary.simpleMessage("Tracker"),
@@ -599,6 +687,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("unsupported device"),
         "unsubscribe": MessageLookupByLibrary.simpleMessage("Leave"),
         "unsubscribed": MessageLookupByLibrary.simpleMessage("Leaved"),
+        "update_app": MessageLookupByLibrary.simpleMessage("Update App"),
         "update_burn_after_reading": MessageLookupByLibrary.simpleMessage(
             "set the disappearing message timer"),
         "updated_at": MessageLookupByLibrary.simpleMessage("Updated at"),
@@ -610,6 +699,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "video": MessageLookupByLibrary.simpleMessage("Video"),
         "view_all": MessageLookupByLibrary.simpleMessage("View All"),
         "view_channel_members": MessageLookupByLibrary.simpleMessage("Members"),
+        "view_more_info":
+            MessageLookupByLibrary.simpleMessage("View More Info"),
         "view_profile": MessageLookupByLibrary.simpleMessage("View Profile"),
         "view_qrcode": MessageLookupByLibrary.simpleMessage("View QR Code"),
         "waiting_for_data_to_sync":

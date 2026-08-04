@@ -9,6 +9,7 @@ import 'package:nmobile/utils/logger.dart';
 typedef Func = Future Function();
 
 class Application {
+  static const env = String.fromEnvironment("APP_ENV", defaultValue: "production");
   List<Func> _initializeFutures = <Func>[];
   List<Func> _mountedFutures = <Func>[];
 
@@ -33,6 +34,10 @@ class Application {
   int goBackgroundAt = 0;
   int goForegroundAt = 0;
 
+
+  bool get isDev => env == "development";
+  bool get isProd => env == "production";
+  
   Application();
 
   void init() {
@@ -48,7 +53,20 @@ class Application {
         goForegroundAt = DateTime.now().millisecondsSinceEpoch;
         _appLifeSink.add(false);
       } else {
-        logger.d("Application - appLifeStream - nothing - states:$states");
+        if (states.length >= 2 && states[1] == AppLifecycleState.paused && !inBackGround && !inSystemSelecting) {
+          logger.i("Application - appLifeStream - in background (missed detection) - states:$states");
+          inBackGround = true;
+          goBackgroundAt = DateTime.now().millisecondsSinceEpoch;
+          _appLifeSink.add(true);
+        }
+        else if (states.length >= 2 && states[1] == AppLifecycleState.resumed && inBackGround) {
+          logger.i("Application - appLifeStream - in foreground (missed detection) - states:$states");
+          inBackGround = false;
+          goForegroundAt = DateTime.now().millisecondsSinceEpoch;
+          _appLifeSink.add(false);
+        } else {
+          logger.d("Application - appLifeStream - nothing - states:$states");
+        }
       }
     });
   }
@@ -77,11 +95,14 @@ class Application {
     await Future.wait(futures);
   }
 
-  // resumed -> inactive -> paused
+  // resumed -> inactive -> hidden -> paused (iOS with hidden state)
+  // resumed -> inactive -> paused (iOS without hidden state / Android)
   bool _isGoBackground(List<AppLifecycleState> states) {
     if (states.length >= 2) {
       if (Platform.isIOS) {
-        return !inSystemSelecting && (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
+        return !inSystemSelecting && 
+               ((states[0] == AppLifecycleState.inactive && states[1] == AppLifecycleState.paused) ||
+                (states[0] == AppLifecycleState.hidden && states[1] == AppLifecycleState.paused));
       } else if (Platform.isAndroid) {
         return !inSystemSelecting && (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
       }
@@ -89,12 +110,18 @@ class Application {
     return false;
   }
 
-  // paused -> inactive(just ios) -> resumed
+  // paused -> hidden -> inactive -> resumed (iOS with hidden state)
+  // paused -> inactive -> resumed (iOS without hidden state)
+  // paused -> resumed (Android)
   bool _isFromBackground(List<AppLifecycleState> states) {
     if (states.length >= 2) {
       if (Platform.isIOS) {
-        return inBackGround && (states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.inactive);
+        return inBackGround && 
+               ((states[0] == AppLifecycleState.paused && states[1] == AppLifecycleState.resumed) ||
+                (states[0] == AppLifecycleState.hidden && states[1] == AppLifecycleState.resumed) ||
+                (states[0] == AppLifecycleState.inactive && states[1] == AppLifecycleState.resumed));
       } else if (Platform.isAndroid) {
+        // Android: paused -> resumed
         return inBackGround && (states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed);
       }
     }

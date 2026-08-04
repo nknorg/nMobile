@@ -22,6 +22,8 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/util.dart';
 
+import '../../components/text/fixed_text_field.dart';
+
 class ChatSessionListLayout extends BaseStateFulWidget {
   ContactSchema current;
 
@@ -41,6 +43,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   StreamSubscription? _onMessageUpdateStreamSubscription;
   StreamSubscription? _onMessageDeleteStreamSubscription;
 
+  TextEditingController _searchController = TextEditingController();
+  FocusNode _searchFocusNode = FocusNode();
+
   ContactSchema? _current;
 
   ParallelQueue _queue = ParallelQueue("session_list", onLog: (log, error) => error ? logger.w(log) : null);
@@ -48,6 +53,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   bool _moreLoading = false;
   ScrollController _scrollController = ScrollController();
   List<SessionSchema> _sessionList = [];
+  List<SessionSchema> _filteredSessionList = [];
+  String _searchQuery = "";
 
   int clientConnectStatus = ClientConnectStatus.connecting;
   bool clientConnectingVisible = false;
@@ -59,9 +66,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   void onRefreshArguments() {
     bool sameUser = _current?.id == widget.current.id;
     _current = widget.current;
-    if (!sameUser) {
+    if (_current == null || !sameUser) {
       _getDataSessions(true);
     }
+
+    _searchFocusNode.unfocus();
   }
 
   @override
@@ -140,6 +149,17 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // unread
     _refreshBadge(delayMs: 1000);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.unfocus();
+    });
+  }
+
+  @override
+  void activate() {
+    super.activate();
+
+    _searchFocusNode.unfocus();
   }
 
   @override
@@ -152,6 +172,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     _sessionUpdateSubscription?.cancel();
     _onMessageUpdateStreamSubscription?.cancel();
     _onMessageDeleteStreamSubscription?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -173,6 +195,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       _isLoaded = true;
       _sessionList += sessions;
     });
+    _performSearch(_searchQuery);
   }
 
   Future _onMessageUpdate(MessageSchema msg) async {
@@ -196,12 +219,15 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       }
       _sessionList.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageAt).compareTo((a.lastMessageAt)) : -1) : (b.isTop ? 1 : b.lastMessageAt.compareTo(a.lastMessageAt)));
     });
+    _performSearch(_searchQuery);
   }
 
   Future _sessionDel(String targetId, int targetType) async {
     await _queue.add(() async {
       _sessionList = _sessionList.where((element) => !((element.targetId == targetId) && (element.type == targetType))).toList();
     });
+
+    _performSearch(_searchQuery);
   }
 
   Future<SessionSchema?> _sessionQuery(String msgId) async {
@@ -215,6 +241,26 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         }
       }
       return session;
+    });
+  }
+
+  Future _clearUnreadAndBadge(String targetId, int targetType) async {
+    await sessionCommon.setUnReadCount(targetId, targetType, 0, notify: true);
+    SessionSchema? session = await sessionCommon.query(targetId, targetType);
+    Badge.Badge.onCountDown(session?.unReadCount ?? 0); // await
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _filteredSessionList = List.from(_sessionList);
+      });
+      return;
+    }
+
+    List<SessionSchema> filtered = await sessionCommon.queryListBySearch(query);
+    setState(() {
+      _filteredSessionList = filtered;
     });
   }
 
@@ -269,7 +315,10 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                     backgroundColor: application.theme.strongColor,
                     onPressed: () async {
                       if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                      // Delete session
                       await sessionCommon.delete(item.targetId, item.type, notify: true);
+                      await _clearUnreadAndBadge(item.targetId, item.type); // await
+                      _refreshBadge();
                     },
                   ),
                 );
@@ -286,14 +335,20 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     if (_isLoaded && _sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }
-    return Column(
-      children: [
-        _getClientStatusView(),
-        _isShowTip ? _getTipView() : SizedBox.shrink(),
-        Expanded(
-          child: _sessionListView(),
-        ),
-      ],
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      behavior: HitTestBehavior.translucent,
+      child: Column(
+        children: [
+          _getClientStatusView(),
+          _isShowTip ? _getTipView() : SizedBox.shrink(),
+          Expanded(
+            child: _sessionListView(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -390,30 +445,101 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   Widget _sessionListView() {
-    return ListView.builder(
-      padding: EdgeInsets.only(bottom: 80 + Settings.screenHeight() * 0.05),
-      controller: _scrollController,
-      itemCount: _sessionList.length,
-      itemBuilder: (BuildContext context, int index) {
-        if (index < 0 || index >= _sessionList.length) return SizedBox.shrink();
-        var session = _sessionList[index];
-        return Column(
-          children: [
-            ChatSessionItem(
-              session: session,
-              onTap: (who) {
-                ChatMessagesScreen.go(context, who).then((value) {
-                  _refreshBadge(delayMs: 0);
-                });
-              },
-              onLongPress: (who) {
-                _popItemMenu(session, index);
-              },
-            ),
-            Divider(color: session.isTop ? application.theme.backgroundColor3.withAlpha(120) : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
-          ],
-        );
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
       },
+      behavior: HitTestBehavior.translucent,
+      child: ListView.builder(
+        padding: EdgeInsets.only(bottom: 80 + Settings.screenHeight() * 0.05),
+        controller: _scrollController,
+        itemCount: _filteredSessionList.length + 1,
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0) {
+            return Container(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: application.theme.backgroundColor2,
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      child: Asset.iconSvg(
+                        'search',
+                        color: application.theme.fontColor2,
+                      ),
+                    ),
+                    Expanded(
+                      child: FixedTextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        onChanged: (val) {
+                          _searchQuery = val;
+                          _performSearch(val);
+                          setState(() {});
+                        },
+                        style: TextStyle(fontSize: 14, height: 1.5),
+                        decoration: InputDecoration(
+                          hintText: Settings.locale((s) => s.search, ctx: context),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? SizedBox(
+                                  height: 38,
+                                  child: IconButton(
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _searchQuery = "";
+                                        _performSearch("");
+                                        _searchFocusNode.unfocus();
+                                        setState(() {});
+                                      },
+                                      icon: Asset.iconSvg(
+                                        'close',
+                                        width: 16,
+                                        color: application.theme.fontColor2,
+                                      )),
+                                )
+                              : null,
+                          suffixIconConstraints: BoxConstraints(minHeight: 24, minWidth: 24),
+                          border: UnderlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                            borderSide: const BorderSide(width: 0, style: BorderStyle.none),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          int sessionIndex = index - 1;
+          if (sessionIndex < 0 || sessionIndex >= _filteredSessionList.length) return SizedBox.shrink();
+          var session = _filteredSessionList[sessionIndex];
+          return Column(
+            children: [
+              ChatSessionItem(
+                session: session,
+                onTap: (who) async {
+                  FocusScope.of(context).unfocus();
+                  ChatMessagesScreen.go(context, who).then((value) {
+                    _refreshBadge(delayMs: 0);
+                  });
+                },
+                onLongPress: (who) {
+                  _popItemMenu(session, sessionIndex);
+                },
+              ),
+              Divider(color: session.isTop ? application.theme.backgroundColor3.withAlpha(120) : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
+            ],
+          );
+        },
+      ),
     );
   }
 }

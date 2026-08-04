@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/services.dart';
 
 const String DEFAULT_SEED_RPC_SERVER = 'http://seed.nkn.org:30003';
@@ -36,6 +35,9 @@ class Wallet {
   /// NKN wallet public key
   late Uint8List publicKey;
 
+  /// NKN wallet program hash
+  late Uint8List programHash;
+
   /// NKN wallet keystore
   late String keystore;
 
@@ -62,7 +64,7 @@ class Wallet {
       });
       return result;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -84,9 +86,10 @@ class Wallet {
       wallet.address = data['address'];
       wallet.seed = data['seed'];
       wallet.publicKey = data['publicKey'];
+      wallet.programHash = data['programHash'];
       return wallet;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -104,9 +107,10 @@ class Wallet {
       wallet.address = data['address'];
       wallet.seed = data['seed'];
       wallet.publicKey = data['publicKey'];
+      wallet.programHash = data['programHash'];
       return wallet;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -118,7 +122,7 @@ class Wallet {
         'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -143,7 +147,7 @@ class Wallet {
         'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -173,7 +177,7 @@ class Wallet {
         'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -196,15 +200,38 @@ class Wallet {
         'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
   /// [pubKeyToWalletAddr] converts a public key to its NKN wallet address
-  static Future<String?> pubKeyToWalletAddr(String publicKey) async {
+  static Future<String?> pubKeyToWalletAddr(Uint8List pubkey) async {
     try {
       final String address = await _methodChannel.invokeMethod('pubKeyToWalletAddr', {
-        'publicKey': publicKey,
+        'pubKey': pubkey,
+      });
+      return address;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// [pubKeyToProgram] converts a public key to its NKN program hash
+  static Future<String?> pubKeyToProgram(Uint8List pubkey) async {
+    try {
+      final String program = await _methodChannel.invokeMethod('pubKeyToProgram', {
+        'pubKey': pubkey,
+      });
+      return program;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<String?> programToAddr(Uint8List pubkey) async {
+    try {
+      final String address = await _methodChannel.invokeMethod('programToAddr', {
+        'pubKey': pubkey,
       });
       return address;
     } catch (e) {
@@ -227,7 +254,7 @@ class Wallet {
       });
       return count;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -244,7 +271,7 @@ class Wallet {
       }
       return Map<String, dynamic>.from(resp);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -278,7 +305,7 @@ class Wallet {
       }
       return Map<String, dynamic>.from(resp);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -289,7 +316,7 @@ class Wallet {
         'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -304,7 +331,7 @@ class Wallet {
         'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -317,7 +344,7 @@ class Wallet {
         'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

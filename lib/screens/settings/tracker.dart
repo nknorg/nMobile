@@ -76,7 +76,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _pushEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.CLOSE_NOTIFICATION_PUSH_API}', !value);
                                     Settings.notificationPushEnable = value;
@@ -130,7 +130,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _bugEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.CLOSE_BUG_UPLOAD_API}', !value);
                                     Settings.sentryEnable = value;

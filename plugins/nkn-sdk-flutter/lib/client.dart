@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 
 /// NKN message's PayloadType
@@ -69,9 +68,75 @@ class OnMessage {
         'maxHoldingSeconds': maxHoldingSeconds,
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
+}
+
+/// Message event type constants
+class MessageEventType {
+  static const int SEND = 0;
+  static const int SEND_SUCCESS = 1;
+  static const int SEND_FAILED = 2;
+  static const int RECEIVE = 3;
+  static const int RECEIVE_REPLY = 4;
+}
+
+/// Event emitting channel for message send/receive events for monitoring and reporting.
+class OnMessageEvent {
+  /// Client ID
+  String? _id;
+
+  /// Event type (MessageEventType)
+  int? type;
+
+  /// Client address that sent/received the message
+  String? clientAddr;
+
+  /// Sub-client ID (nil for Client, set for MultiClient)
+  int? subClientID;
+
+  /// Destination addresses (for send events)
+  List<String>? destinations;
+
+  /// Source address (for receive events)
+  String? src;
+
+  /// Message ID
+  Uint8List? messageId;
+
+  /// Message type (BinaryType, TextType, etc.)
+  int? messageType;
+
+  /// Whether message is encrypted
+  bool? encrypted;
+
+  /// Data size in bytes
+  int? dataSize;
+
+  /// Whether message has NoReply flag
+  bool? noReply;
+
+  /// Error if operation failed (for send events)
+  String? error;
+
+  /// Event timestamp in milliseconds
+  int? timestamp;
+
+  OnMessageEvent({
+    this.type,
+    this.clientAddr,
+    this.subClientID,
+    this.destinations,
+    this.src,
+    this.messageId,
+    this.messageType,
+    this.encrypted,
+    this.dataSize,
+    this.noReply,
+    this.error,
+    this.timestamp,
+  });
 }
 
 /// EthResolver Config
@@ -90,6 +155,69 @@ class DnsResolverConfig {
   DnsResolverConfig({this.dnsServer});
 }
 
+/// CrossSendPolicy constants for MultiClient (match nkn-sdk-go).
+class CrossSendPolicy {
+  /// No cross send
+  static const int none = 0;
+  /// Any connected line sends (cross)
+  static const int anyConnected = 1;
+  /// All connected lines (redundant sending)
+  static const int allConnected = 2;
+  /// Select the most stable/low latency line
+  static const int preferStable = 3;
+}
+
+/// Connection state of a sub-client (match nkn-sdk-go ConnState).
+class ConnState {
+  static const int connecting = 0;
+  static const int connected = 1;
+  static const int disconnected = 2;
+}
+
+/// Connection state for one sub-client.
+class SubClientConnectionState {
+  final int index;
+  final int state; // ConnState
+  /// Reconnect count (from ClientStats).
+  final int reconnectCount;
+  /// Send failure count (from ClientStats).
+  final int sendFailureCount;
+  /// Connection start time in milliseconds since epoch (0 if not available).
+  final int connectTimeMs;
+
+  SubClientConnectionState({
+    required this.index,
+    required this.state,
+    this.reconnectCount = 0,
+    this.sendFailureCount = 0,
+    this.connectTimeMs = 0,
+  });
+
+  /// Connection duration in seconds (0 if not connected or unknown).
+  int get connectionDurationSeconds {
+    if (connectTimeMs <= 0 || state != ConnState.connected) return 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return ((now - connectTimeMs) / 1000).round();
+  }
+
+  /// Stability score 0..1 (same formula as nkn-sdk-go CalculateClientScore, without duration if connectTimeMs missing).
+  double get stabilityScore {
+    if (state != ConnState.connected) return 0.0;
+    double score = 0.5;
+    final durationSec = connectionDurationSeconds;
+    if (durationSec > 0) {
+      const oneHour = 3600.0;
+      final durationScore = (durationSec / oneHour).clamp(0.0, 1.0);
+      score += durationScore * 0.4;
+    }
+    final reconnectPenalty = (reconnectCount * 0.02).clamp(0.0, 0.1);
+    score -= reconnectPenalty;
+    final sendFailurePenalty = (sendFailureCount * 0.01).clamp(0.0, 0.1);
+    score -= sendFailurePenalty;
+    return score.clamp(0.0, 1.0);
+  }
+}
+
 /// Client config
 class ClientConfig {
   /// Seed RPC server address that client uses to find its node and make RPC requests (e.g. get subscribers).
@@ -101,10 +229,14 @@ class ClientConfig {
   /// DnsResolver Config
   final List<DnsResolverConfig>? dnsResolverConfig;
 
+  /// Cross send policy for MultiClient. One of [CrossSendPolicy].
+  final int? crossSendPolicy;
+
   ClientConfig({
     this.seedRPCServerAddr,
     this.ethResolverConfig,
     this.dnsResolverConfig,
+    this.crossSendPolicy,
   });
 }
 
@@ -145,6 +277,12 @@ class Client {
 
   Stream<OnMessage> get onMessage => _onMessageStreamController.stream;
 
+  StreamController<OnMessageEvent> _onMessageEventStreamController = StreamController<OnMessageEvent>.broadcast();
+
+  StreamSink<OnMessageEvent> get _onMessageEventStreamSink => _onMessageEventStreamController.sink;
+
+  Stream<OnMessageEvent> get onMessageEvent => _onMessageEventStreamController.stream;
+
   StreamController<dynamic> _onErrorStreamController = StreamController<dynamic>.broadcast();
 
   StreamSink<dynamic> get _onErrorStreamSink => _onErrorStreamController.sink;
@@ -161,16 +299,9 @@ class Client {
   /// clients created. For any zero value field in config, the default client
   /// config value will be used. If config is nil, the default client config will
   /// be used.
-  static Future<Client> create(
-    Uint8List seed, {
-    String identifier = '',
-    int? numSubClients,
-    int connectRetries = -1,
-    int maxReconnectInterval = 5 * 1000,
-    ClientConfig? config,
-  }) async {
+  static Future<Client> create(Uint8List seed, {String identifier = '', int? numSubClients, ClientConfig? config}) async {
     List<Map>? ethResolverConfigArray;
-    if ((config?.ethResolverConfig != null) && (config?.ethResolverConfig?.isNotEmpty == true)) {
+    if (config?.ethResolverConfig != null) {
       ethResolverConfigArray = <Map>[];
       config?.ethResolverConfig?.forEach((item) {
         ethResolverConfigArray?.add({'prefix': item.prefix, 'contractAddress': item.contractAddress, 'rpcServer': item.rpcServer});
@@ -178,7 +309,7 @@ class Client {
     }
 
     List<Map>? dnsResolverConfigArray;
-    if ((config?.dnsResolverConfig != null) && (config?.dnsResolverConfig?.isNotEmpty == true)) {
+    if (config?.dnsResolverConfig != null) {
       dnsResolverConfigArray = <Map>[];
       config?.dnsResolverConfig?.forEach((item) {
         dnsResolverConfigArray?.add({
@@ -194,10 +325,9 @@ class Client {
         'seed': seed,
         'numSubClients': numSubClients,
         'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
-        'connectRetries': connectRetries,
-        'maxReconnectInterval': maxReconnectInterval,
         'ethResolverConfigArray': ethResolverConfigArray,
         'dnsResolverConfigArray': dnsResolverConfigArray,
+        'crossSendPolicy': config?.crossSendPolicy,
       });
       client.address = resp['address'];
       client.publicKey = resp['publicKey'];
@@ -217,6 +347,25 @@ class Client {
             onMsg._id = res['_id'];
             client._onMessageStreamSink.add(onMsg);
             break;
+          case 'onMessageEvent':
+            Map data = res['data'];
+            var onMsgEvent = OnMessageEvent(
+              type: data['type'],
+              clientAddr: data['clientAddr'],
+              subClientID: data['subClientID'],
+              destinations: data['destinations']?.cast<String>(),
+              src: data['src'],
+              messageId: data['messageId'],
+              messageType: data['messageType'],
+              encrypted: data['encrypted'],
+              dataSize: data['dataSize'],
+              noReply: data['noReply'],
+              error: data['error'],
+              timestamp: data['timestamp'],
+            );
+            onMsgEvent._id = res['_id'];
+            client._onMessageEventStreamSink.add(onMsgEvent);
+            break;
           default:
             break;
         }
@@ -228,18 +377,18 @@ class Client {
       });
       return client;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
   Future<void> recreate(
-    Uint8List seed, {
-    String identifier = '',
-    int? numSubClients,
-    int connectRetries = -1,
-    int maxReconnectInterval = 5 * 1000,
-    ClientConfig? config,
-  }) async {
+      Uint8List seed, {
+        String identifier = '',
+        int? numSubClients,
+        int connectRetries = -1,
+        int maxReconnectInterval = 5 * 1000,
+        ClientConfig? config,
+      }) async {
     List<Map>? ethResolverConfigArray;
     if (config?.ethResolverConfig != null) {
       ethResolverConfigArray = <Map>[];
@@ -294,10 +443,33 @@ class Client {
       return;
     }
     await _methodChannel.invokeMethod('close', {'_id': this.address});
-    await eventChannelStreamSubscription.cancel();
-    await _onConnectStreamController.close();
-    await _onMessageStreamController.close();
-    await _onErrorStreamController.close();
+    _onConnectStreamController.close();
+    _onMessageStreamController.close();
+    _onMessageEventStreamController.close();
+    _onErrorStreamController.close();
+    eventChannelStreamSubscription.cancel();
+  }
+
+  /// Returns connection state for each sub-client. Empty if client not found.
+  Future<List<SubClientConnectionState>> getSubClientConnectionStates() async {
+    if (!(this.address.isNotEmpty == true)) {
+      return [];
+    }
+    try {
+      final List<dynamic> list = await _methodChannel.invokeMethod('getSubClientConnectionStates', {'_id': this.address});
+      return list.map((e) {
+        final m = Map<String, dynamic>.from(e as Map);
+        return SubClientConnectionState(
+          index: m['index'] as int,
+          state: m['state'] as int,
+          reconnectCount: (m['reconnectCount'] as int?) ?? 0,
+          sendFailureCount: (m['sendFailureCount'] as int?) ?? 0,
+          connectTimeMs: (m['connectTime'] as int?) ?? (m['connectTimeMs'] as int?) ?? 0,
+        );
+      }).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   /// [sendText] sends bytes or string data to one or multiple destinations with an
@@ -322,7 +494,7 @@ class Client {
       );
       return message;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -349,7 +521,7 @@ class Client {
       );
       return message;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -379,7 +551,7 @@ class Client {
       });
       return hash;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -402,7 +574,7 @@ class Client {
       });
       return hash;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -421,7 +593,7 @@ class Client {
       });
       return count;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -438,7 +610,7 @@ class Client {
       }
       return Map<String, dynamic>.from(resp);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -471,7 +643,7 @@ class Client {
       }
       return Map<String, dynamic>.from(resp);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -481,7 +653,7 @@ class Client {
       int? resp = await _methodChannel.invokeMethod('getHeight', {'_id': this.address});
       return resp;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -489,9 +661,8 @@ class Client {
   /// false, result only counts transactions in ledger; if txPool is true,
   /// transactions in txPool are also counted.
   Future<int?> getNonce({bool txPool = true}) async {
-    if (this.publicKey == null || this.publicKey.isEmpty) return null;
     try {
-      String? walletAddr = await Wallet.pubKeyToWalletAddr(hexEncode(this.publicKey));
+      String? walletAddr = await Wallet.pubKeyToWalletAddr(this.publicKey);
       int? resp = await _methodChannel.invokeMethod('getNonce', {
         '_id': this.address,
         'address': walletAddr,
@@ -499,7 +670,7 @@ class Client {
       });
       return resp;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -513,7 +684,7 @@ class Client {
       });
       return resp;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

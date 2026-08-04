@@ -10,9 +10,11 @@ import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/application.dart';
+import 'package:nmobile/common/client/last_device.dart';
 import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
@@ -67,6 +69,8 @@ class ClientCommon with Tag {
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
+
+  final LastDeviceCommon lastDevice = LastDeviceCommon();
 
   // address
   String? get address => client?.address ?? _lastAddress; // == chat_id / wallet.publicKey
@@ -151,6 +155,12 @@ class ClientCommon with Tag {
     return client?.seed;
   }
 
+  /// Returns connection state for each sub-client. Empty if not connected.
+  Future<List<SubClientConnectionState>> getSubClientConnectionStates() async {
+    if (client == null) return [];
+    return client!.getSubClientConnectionStates();
+  }
+
   /// **************************************************************************************** ///
   /// ***************************************   Sign   *************************************** ///
   /// **************************************************************************************** ///
@@ -163,7 +173,7 @@ class ClientCommon with Tag {
           await authorization.getWalletPassword(
             wallet.address,
             onInput: (visible) => loading?.call(true, visible, false),
-          );
+          ) ?? '';
       // status (just updated(connecting) in this func)
       if (status == ClientConnectStatus.connecting) return false;
       status = ClientConnectStatus.connecting;
@@ -188,15 +198,12 @@ class ClientCommon with Tag {
           }
         }
         if (c != null) {
-          logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
           break;
         } else if (!canTry) {
-          logger.e("$TAG - signIn - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
           await signOut(clearWallet: true, closeDB: true, lock: false);
           break;
         }
-        logger.w("$TAG - signIn - try again - tryTimes:$tryTimes - wallet:$wallet - password:$password");
         if ((tryTimes > 0) && isNetworkOk) await RPC.setRpcServers(wallet.address, []);
         tryTimes++;
         _statusSink.add(ClientConnectStatus.connecting); // need flush
@@ -215,11 +222,11 @@ class ClientCommon with Tag {
       logger.w("$TAG - _signIn - wait network ok");
       await Future.delayed(Duration(milliseconds: 500));
     }
-    // password
+    // password (allow empty string if stored password is empty)
     try {
-      if ((password == null) || password.isEmpty) {
+      if (password == null) {
         logger.w("$TAG - _signIn - password is null - wallet:$wallet");
-        return {"client": null, "canTry": false}; // , "text": "password empty"
+        return {"client": null, "canTry": false};
       }
       if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
         logger.w("$TAG - _signIn - password error - wallet:$wallet");
@@ -275,7 +282,12 @@ class ClientCommon with Tag {
     // client
     try {
       List<String> seedRpcList = await RPC.getRpcServers(wallet.address, measure: true);
-      _lastClientConfig = ClientConfig(seedRPCServerAddr: seedRpcList);
+      // int? crossSendPolicy = await SettingsStorage.getSettings(SettingsStorage.CROSS_SEND_POLICY).then((v) {
+      //   if (v == null) return CrossSendPolicy.preferStable;
+      //   return v is int ? v : int.tryParse(v.toString());
+      // });
+      // Release: Use allConnected as default cross send policy
+      _lastClientConfig = ClientConfig(seedRPCServerAddr: seedRpcList, crossSendPolicy: CrossSendPolicy.allConnected);
       if (client == null) {
         while ((client?.address == null) || (client?.address.isEmpty == true)) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: _lastClientConfig); // network
@@ -340,7 +352,8 @@ class ClientCommon with Tag {
       await chatInCommon.waitReceiveQueues("_signOut"); // wait db_insert from onMessage
       await chatInCommon.pause(reset: closeDB);
       client = null;
-      if (clearWallet) BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(null));
+      lastDevice.reset();
+
       if (closeDB) await dbCommon.close();
       return true;
     } catch (e, st) {
@@ -396,6 +409,7 @@ class ClientCommon with Tag {
           status = ClientConnectStatus.connected;
           _statusSink.add(ClientConnectStatus.connected);
         }); // await
+        lastDevice.checkAfterConnected(); // await
       } else {
         _statusSink.add(ClientConnectStatus.connected);
       }
@@ -470,15 +484,12 @@ class ClientCommon with Tag {
         bool canTry = result["canTry"];
         password = result["password"]?.toString();
         if (c != null) {
-          logger.i("$TAG - reconnect - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
           break;
         } else if (!canTry) {
-          logger.e("$TAG - reconnect - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
           await signOut(clearWallet: true, closeDB: true, lock: false);
           break;
         }
-        logger.w("$TAG - reconnect - try again - tryTimes:$tryTimes - wallet:$wallet - password:$password");
         if ((tryTimes > 0) && isNetworkOk) await RPC.setRpcServers(wallet.address, []);
         tryTimes++;
         _statusSink.add(ClientConnectStatus.connecting); // need first flush

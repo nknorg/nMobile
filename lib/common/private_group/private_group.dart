@@ -13,6 +13,7 @@ import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/session.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/private_group.dart';
 import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/utils/hash.dart';
@@ -549,35 +550,38 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     schemaGroup.options = options;
-    // signature
-    Uint8List? clientSeed = clientCommon.getSeed();
-    if (clientSeed == null) return false;
-    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
-    String? signatureData = await genSignature(ownerPrivateKey, jsonEncode(schemaGroup.getRawDataMap()));
-    if (signatureData == null || signatureData.isEmpty) {
-      logger.e('$TAG - setOptionsBurning - group sign create fail. - pk:$ownerPrivateKey - group:$schemaGroup');
-      return false;
-    }
-    schemaGroup.data["signature"] = signatureData;
-    var data = await setGroupSignature(groupId, schemaGroup.signature, notify: true);
-    if (data == null) {
-      logger.e('$TAG - setOptionsBurning - signature sql fail.');
-      return false;
-    }
-    // version
-    int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
-    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
-    schemaGroup.data["version"] = genPrivateGroupVersion(commits, schemaGroup.signature, members);
-    data = await setGroupVersion(schemaGroup.groupId, schemaGroup.version, notify: notify);
-    if (data == null) {
-      logger.e('$TAG - setOptionsBurning - version sql fail.');
-      return false;
-    }
     logger.i('$TAG - setOptionsBurning - success - options:${schemaGroup.options}');
-    // sync members
-    members.removeWhere((m) => m.invitee == selfAddress);
-    List<String> addressList = members.map((e) => e.invitee ?? "").toList()..removeWhere((element) => element.isEmpty);
-    return await chatOutCommon.sendPrivateGroupOptionResponse(addressList, schemaGroup);
+    return await resignOwnerGroupMetadata(schemaGroup, bumpVersion: true, notify: notify, broadcast: true);
+  }
+
+  Future<bool> setGroupName(String? groupId, String? name, {bool notify = false, bool toast = false}) async {
+    if (groupId == null || groupId.isEmpty) return false;
+    String newName = name?.trim() ?? "";
+    if (newName.isEmpty) {
+      if (toast) Toast.show(Settings.locale((s) => s.error_required));
+      return false;
+    }
+    PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
+    if (schemaGroup == null) {
+      logger.e('$TAG - setGroupName - has no group. - groupId:$groupId');
+      if (toast) Toast.show(Settings.locale((s) => s.group_no_exist));
+      return false;
+    }
+    if (newName == schemaGroup.name) return true;
+    String? selfAddress = clientCommon.address;
+    if ((selfAddress == null) || selfAddress.isEmpty || !isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
+      logger.w('$TAG - setGroupName - no permission.');
+      if (toast) Toast.show(Settings.locale((s) => s.only_owner_can_modify));
+      return false;
+    }
+    bool success = await setNameType(groupId, newName, schemaGroup.type, notify: notify);
+    if (!success) {
+      logger.e('$TAG - setGroupName - name sql fail.');
+      return false;
+    }
+    schemaGroup.name = newName;
+    logger.i('$TAG - setGroupName - success - name:$newName - groupId:$groupId');
+    return await resignOwnerGroupMetadata(schemaGroup, bumpVersion: true, notify: notify, broadcast: true);
   }
 
   ///****************************************** Sync *******************************************
@@ -598,8 +602,10 @@ class PrivateGroupCommon with Tag {
     // item
     PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
     if (privateGroupItem == null) {
-      logger.e('$TAG - pushPrivateGroupOptions - request is not in group.');
-      return false;
+      if (!await isKnownGroupMember(groupId, target)) {
+        logger.e('$TAG - pushPrivateGroupOptions - request is not in group.');
+        return false;
+      }
     } else if (privateGroupItem.permission <= PrivateGroupItemPerm.none) {
       return await pushPrivateGroupMembers(target, groupId, remoteVersion, force: true);
     }
@@ -624,7 +630,8 @@ class PrivateGroupCommon with Tag {
     // check
     PrivateGroupSchema? exists = await queryGroup(groupId);
     if (exists == null) {
-      PrivateGroupSchema? _newGroup = PrivateGroupSchema.create(groupId, infos['name'], type: infos['type']);
+      String resolvedName = resolveGroupName(groupId, infos['name']?.toString());
+      PrivateGroupSchema? _newGroup = PrivateGroupSchema.create(groupId, resolvedName, type: infos['type']);
       if (_newGroup == null) return null;
       _newGroup.count = count;
       _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']?.toString() ?? ""));
@@ -633,13 +640,15 @@ class PrivateGroupCommon with Tag {
       exists = await addPrivateGroup(_newGroup, notify: true);
       logger.i('$TAG - updatePrivateGroupOptions - group create - group:$exists');
     } else {
+      String? remoteName = resolveGroupName(groupId, infos['name']?.toString());
+      int? remoteType = int.tryParse(infos['type']?.toString() ?? "");
       int nativeVersionCommits = getPrivateGroupVersionCommits(exists.version) ?? 0;
       int remoteVersionCommits = getPrivateGroupVersionCommits(version) ?? 0;
       if (nativeVersionCommits < remoteVersionCommits) {
         bool verifiedGroup = await verifiedSignature(exists.ownerPublicKey, jsonEncode(exists.getRawDataMap()), signature);
         if ((exists.signature != signature) || !verifiedGroup) {
-          String? name = infos['name'];
-          int? type = int.tryParse(infos['type']?.toString() ?? "");
+          String? name = remoteName;
+          int? type = remoteType;
           int? deleteAfterSeconds = int.tryParse(infos['deleteAfterSeconds']?.toString() ?? "");
           if ((name != exists.name) || (type != exists.type)) {
             exists.name = name ?? exists.name;
@@ -665,6 +674,17 @@ class PrivateGroupCommon with Tag {
         }
         logger.i('$TAG - updatePrivateGroupOptions - group modify - group:$exists');
       } else {
+        // Recovery path: group may be created with placeholder name == groupId.
+        bool shouldRecoverName = PrivateGroupSchema.isPlaceholderGroupName(exists.groupId, exists.name) &&
+            remoteName.isNotEmpty &&
+            (remoteName != exists.name);
+        bool shouldRecoverType = (remoteType != null) && (remoteType != exists.type);
+        if (shouldRecoverName || shouldRecoverType) {
+          exists.name = shouldRecoverName ? remoteName : exists.name;
+          exists.type = shouldRecoverType ? remoteType : exists.type;
+          await setNameType(groupId, exists.name, exists.type, notify: true);
+          logger.i('$TAG - updatePrivateGroupOptions - recovered name/type in same version. - group:$exists');
+        }
         logger.d('$TAG - updatePrivateGroupOptions - group version same - remote_version:$version - exists:$exists');
       }
     }
@@ -690,8 +710,10 @@ class PrivateGroupCommon with Tag {
     // item
     PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
     if (privateGroupItem == null) {
-      logger.e('$TAG - pushPrivateGroupMembers - request is not in group.');
-      return false;
+      if (!await isKnownGroupMember(groupId, target)) {
+        logger.e('$TAG - pushPrivateGroupMembers - request is not in group.');
+        return false;
+      }
     } else if (privateGroupItem.permission <= PrivateGroupItemPerm.none) {
       return await chatOutCommon.sendPrivateGroupMemberResponse([target], privateGroup, [privateGroupItem]);
     }
@@ -742,12 +764,20 @@ class PrivateGroupCommon with Tag {
       if (isOwner(schemaGroup.ownerPublicKey, sender)) {
         // nothing
       } else {
-        logger.w('$TAG - updatePrivateGroupMembers - sender no owner. - group:$schemaGroup - item:$senderItem');
-        return null;
+        bool incomplete = await isPrivateGroupStateIncomplete(schemaGroup);
+        if (incomplete && (remoteCommits > nativeCommits)) {
+          logger.i('$TAG - updatePrivateGroupMembers - sender unknown but allow recovery sync. - sender:$sender - group:$schemaGroup');
+        } else {
+          logger.w('$TAG - updatePrivateGroupMembers - sender no owner. - group:$schemaGroup - item:$senderItem');
+          return null;
+        }
       }
     } else if (isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
-      logger.d('$TAG - updatePrivateGroupMembers - self is owner. - group:$schemaGroup - item:$senderItem');
-      return null;
+      if (!await isPrivateGroupStateIncomplete(schemaGroup)) {
+        logger.d('$TAG - updatePrivateGroupMembers - self is owner. - group:$schemaGroup - item:$senderItem');
+        return null;
+      }
+      logger.i('$TAG - updatePrivateGroupMembers - self is owner, apply sync for recovery. - group:$schemaGroup');
     } else if (senderItem.permission <= PrivateGroupItemPerm.none) {
       logger.w('$TAG - updatePrivateGroupMembers - sender no permission. - group:$schemaGroup - item:$senderItem');
       return null;
@@ -797,7 +827,7 @@ class PrivateGroupCommon with Tag {
         if (success) exists.permission = member.permission;
         logger.i('$TAG - updatePrivateGroupMembers - update item permission - i$i - member:$exists');
       }
-      if ((member.invitee?.isNotEmpty == true) && (member.invitee == selfAddress)) {
+      if ((member.invitee?.isNotEmpty == true) && isSameInvitee(member.invitee, selfAddress)) {
         selfJoined = (member.permission <= PrivateGroupItemPerm.none) ? -1 : 1;
         if (schemaGroup.quitCommits != null) {
           logger.i('$TAG - updatePrivateGroupMembers - update item quitCommits - i$i - member:$exists');
@@ -818,7 +848,548 @@ class PrivateGroupCommon with Tag {
       if (!success) schemaGroup.joined = true;
       logger.i('$TAG - updatePrivateGroupMembers - update self joined - false - group:$schemaGroup');
     }
+    await syncPrivateGroupCountFromItems(schemaGroup);
     return schemaGroup;
+  }
+
+  String resolveGroupName(String groupId, String? name) {
+    String trimmed = name?.trim() ?? "";
+    if (trimmed.isEmpty || PrivateGroupSchema.isPlaceholderGroupName(groupId, trimmed)) {
+      return PrivateGroupSchema.defaultNameFromGroupId(groupId);
+    }
+    return trimmed;
+  }
+
+  Future<void> fixPlaceholderGroupNameIfNeeded(PrivateGroupSchema group, {bool notify = true}) async {
+    if (!PrivateGroupSchema.isPlaceholderGroupName(group.groupId, group.name)) return;
+    String defaultName = PrivateGroupSchema.defaultNameFromGroupId(group.groupId);
+    if (defaultName.isEmpty || defaultName == group.name) return;
+    bool success = await setNameType(group.groupId, defaultName, group.type, notify: notify);
+    if (success) {
+      group.name = defaultName;
+      logger.i('$TAG - fixPlaceholderGroupNameIfNeeded - groupId:${group.groupId} - name:$defaultName');
+    }
+  }
+
+  ///****************************************** Recovery *******************************************
+
+  bool isSameInvitee(String? a, String? b) {
+    if (a == null || b == null || a.isEmpty || b.isEmpty) return false;
+    if (a == b) return true;
+    String? pkA = getPubKeyFromTopicOrChatId(a);
+    String? pkB = getPubKeyFromTopicOrChatId(b);
+    return (pkA?.isNotEmpty == true) && (pkA == pkB);
+  }
+
+  Future<bool> isKnownGroupMember(String? groupId, String? address) async {
+    if (groupId == null || groupId.isEmpty || address == null || address.isEmpty) return false;
+    PrivateGroupSchema? group = await queryGroup(groupId);
+    if (group == null) return false;
+    if (isOwner(group.ownerPublicKey, address)) return true;
+    PrivateGroupItemSchema? item = await queryGroupItem(groupId, address);
+    if (item != null && item.permission > PrivateGroupItemPerm.none) return true;
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId, all: true);
+    for (int i = 0; i < members.length; i++) {
+      if (members[i].permission <= PrivateGroupItemPerm.none) continue;
+      if (isSameInvitee(members[i].invitee, address)) return true;
+    }
+    return false;
+  }
+
+  Future<PrivateGroupItemSchema?> queryGroupItemForSelf(String? groupId) async {
+    if (groupId == null || groupId.isEmpty) return null;
+    String? selfAddress = clientCommon.address;
+    if (selfAddress == null || selfAddress.isEmpty) return null;
+    PrivateGroupItemSchema? me = await queryGroupItem(groupId, selfAddress);
+    if (me != null) return me;
+    String? selfPubKey = clientCommon.getPublicKey();
+    if (selfPubKey == null || selfPubKey.isEmpty) return null;
+    me = await queryGroupItem(groupId, selfPubKey);
+    if (me != null) return me;
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId, all: true);
+    for (int i = 0; i < members.length; i++) {
+      if (isSameInvitee(members[i].invitee, selfAddress)) return members[i];
+    }
+    return null;
+  }
+
+  Future<bool> isPrivateGroupStateIncomplete(PrivateGroupSchema? group) async {
+    if (group == null || group.groupId.isEmpty) return true;
+    String? selfAddress = clientCommon.address;
+    if (selfAddress == null || selfAddress.isEmpty) return true;
+    PrivateGroupItemSchema? me = await queryGroupItemForSelf(group.groupId);
+    if (me == null || me.permission <= PrivateGroupItemPerm.none) return true;
+    if (!group.joined) return true;
+    if (isOwner(group.ownerPublicKey, selfAddress)) {
+      int activeCount = await countActiveMembersFromItems(group.groupId);
+      if (activeCount <= 1) return true;
+      if (group.signature.isEmpty || group.version.isEmpty) return true;
+      if (!(await isOwnerGroupSignatureValid(group))) return true;
+    }
+    return false;
+  }
+
+  Future<PrivateGroupSchema?> recoverPrivateGroupFromMessage(PrivateGroupSchema? group, MessageSchema? message) async {
+    if (group == null || message == null || message.isGroupAction) return group;
+    await ensurePrivateGroupMembersMatchChain(group);
+    group = (await queryGroup(group.groupId)) ?? group;
+    await fixPlaceholderGroupNameIfNeeded(group);
+    group = (await queryGroup(group.groupId)) ?? group;
+    if (!await isPrivateGroupStateIncomplete(group)) return group;
+    logger.i('$TAG - recoverPrivateGroupFromMessage - start - groupId:${group.groupId} - sender:${message.sender}');
+    String? selfAddress = clientCommon.address;
+    if ((selfAddress != null) && isOwner(group.ownerPublicKey, selfAddress)) {
+      return await recoverOwnerPrivateGroup(group, message);
+    }
+    await recoverMemberPrivateGroup(group, message);
+    return await queryGroup(group.groupId);
+  }
+
+  Future<PrivateGroupSchema?> recoverOwnerPrivateGroup(PrivateGroupSchema group, MessageSchema? message) async {
+    await fixPlaceholderGroupNameIfNeeded(group);
+    group = (await queryGroup(group.groupId)) ?? group;
+    await ensureOwnerMemberRecord(group);
+    if (!group.joined) {
+      await setJoined(group.groupId, true, notify: true);
+      group.joined = true;
+    }
+    int activeCount = await ensurePrivateGroupMembersMatchChain(group);
+    group = (await queryGroup(group.groupId)) ?? group;
+    await syncPrivateGroupCountFromItems(group);
+    await rebuildOwnerGroupMetadataIfNeeded(group, message);
+    group = (await queryGroup(group.groupId)) ?? group;
+    String? remoteVersion = message != null ? (MessageOptions.getPrivateGroupVersion(message.options) ?? "") : "";
+    int remoteCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
+    int nativeCommits = getPrivateGroupVersionCommits(group.version) ?? 0;
+    if (activeCount <= 1 || nativeCommits < remoteCommits) {
+      await requestPrivateGroupMemberSync(group, message?.sender);
+    }
+    logger.i('$TAG - recoverOwnerPrivateGroup - done - groupId:${group.groupId} - activeCount:$activeCount');
+    return await queryGroup(group.groupId);
+  }
+
+  Future<void> recoverMemberPrivateGroup(PrivateGroupSchema group, MessageSchema message) async {
+    await ensurePrivateGroupMembersMatchChain(group);
+    group = (await queryGroup(group.groupId)) ?? group;
+    await fixPlaceholderGroupNameIfNeeded(group);
+    group = (await queryGroup(group.groupId)) ?? group;
+    String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
+    int remoteCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
+    int nativeCommits = getPrivateGroupVersionCommits(group.version) ?? 0;
+    PrivateGroupItemSchema? me = await queryGroupItemForSelf(group.groupId);
+    if (nativeCommits < remoteCommits || me == null || me.permission <= PrivateGroupItemPerm.none || !group.joined) {
+      await chatOutCommon.sendPrivateGroupOptionRequest(group.ownerPublicKey, group.groupId, gap: 0);
+      if (remoteVersion.isNotEmpty) {
+        await setGroupOptionsRequestInfo(group.groupId, remoteVersion, notify: false);
+      }
+    }
+    if (message.sender.isNotEmpty && !isSameInvitee(message.sender, clientCommon.address)) {
+      if (isOwner(group.ownerPublicKey, message.sender)) {
+        await chatOutCommon.sendPrivateGroupMemberRequest(message.sender, group.groupId, gap: 0);
+      } else {
+        await chatOutCommon.sendPrivateGroupOptionRequest(message.sender, group.groupId, gap: 0);
+      }
+    }
+    logger.i('$TAG - recoverMemberPrivateGroup - requested sync - groupId:${group.groupId} - sender:${message.sender}');
+  }
+
+  Future<void> requestPrivateGroupMemberSync(PrivateGroupSchema group, String? preferredSender) async {
+    if (preferredSender?.isNotEmpty == true && !isSameInvitee(preferredSender, clientCommon.address)) {
+      await chatOutCommon.sendPrivateGroupMemberRequest(preferredSender, group.groupId, gap: 0);
+    }
+    List<PrivateGroupItemSchema> members = await getMembersAll(group.groupId);
+    for (int i = 0; i < members.length; i++) {
+      String? invitee = members[i].invitee;
+      if (invitee == null || invitee.isEmpty) continue;
+      if (members[i].permission <= PrivateGroupItemPerm.none) continue;
+      if (isSameInvitee(invitee, clientCommon.address)) continue;
+      await chatOutCommon.sendPrivateGroupMemberRequest(invitee, group.groupId, gap: 0);
+      break;
+    }
+  }
+
+  Future<bool> isOwnerGroupSignatureValid(PrivateGroupSchema group) async {
+    if (group.signature.isEmpty) return false;
+    String rawData = jsonEncode(group.getRawDataMap());
+    return await verifiedSignature(group.ownerPublicKey, rawData, group.signature);
+  }
+
+  /// Re-sign group options payload and bump version; optionally broadcast to members.
+  Future<bool> resignOwnerGroupMetadata(PrivateGroupSchema schemaGroup, {bool bumpVersion = true, bool notify = true, bool broadcast = true}) async {
+    String? groupId = schemaGroup.groupId;
+    if (groupId.isEmpty) return false;
+    Uint8List? clientSeed = clientCommon.getSeed();
+    if (clientSeed == null) return false;
+    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
+    String rawData = jsonEncode(schemaGroup.getRawDataMap());
+    String? signatureData = await genSignature(ownerPrivateKey, rawData);
+    if (signatureData == null || signatureData.isEmpty) {
+      logger.e('$TAG - resignOwnerGroupMetadata - sign fail - groupId:$groupId');
+      return false;
+    }
+    schemaGroup.data["signature"] = signatureData;
+    if (await setGroupSignature(groupId, schemaGroup.signature, notify: notify) == null) {
+      logger.e('$TAG - resignOwnerGroupMetadata - signature sql fail - groupId:$groupId');
+      return false;
+    }
+    int commits = getPrivateGroupVersionCommits(schemaGroup.version) ?? 0;
+    if (commits <= 0) {
+      commits = 1;
+    } else if (bumpVersion) {
+      commits += 1;
+    }
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
+    schemaGroup.data["version"] = genPrivateGroupVersion(commits, schemaGroup.signature, members);
+    if (await setGroupVersion(groupId, schemaGroup.version, notify: notify) == null) {
+      logger.e('$TAG - resignOwnerGroupMetadata - version sql fail - groupId:$groupId');
+      return false;
+    }
+    logger.i('$TAG - resignOwnerGroupMetadata - done - groupId:$groupId - bumpVersion:$bumpVersion - name:${schemaGroup.name}');
+    if (!broadcast) return true;
+    PrivateGroupSchema? latest = await queryGroup(groupId);
+    if (latest == null) return false;
+    String? selfAddress = clientCommon.address;
+    members = await getMembersAll(groupId);
+    members.removeWhere((m) => isSameInvitee(m.invitee, selfAddress));
+    List<String> addressList = members.map((e) => e.invitee ?? "").toList()..removeWhere((element) => element.isEmpty);
+    if (addressList.isEmpty) return true;
+    bool synced = await chatOutCommon.sendPrivateGroupOptionResponse(addressList, latest);
+    if (!synced) {
+      logger.w('$TAG - resignOwnerGroupMetadata - option sync fail - groupId:$groupId');
+    }
+    return synced;
+  }
+
+  Future<bool> rebuildOwnerGroupMetadataIfNeeded(PrivateGroupSchema group, MessageSchema? message) async {
+    if (message != null && message.canBurning) {
+      int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
+      if (((burnAfterSeconds ?? 0) > 0) && (group.options.deleteAfterSeconds != burnAfterSeconds)) {
+        var options = await setGroupOptionsBurn(group.groupId, burnAfterSeconds, notify: true);
+        if (options != null) group.options = options;
+      }
+    }
+    String? selfAddress = clientCommon.address;
+    if (selfAddress == null || selfAddress.isEmpty || !isOwner(group.ownerPublicKey, selfAddress)) {
+      return false;
+    }
+    bool needsResign = group.signature.isEmpty;
+    if (!needsResign) {
+      needsResign = !(await isOwnerGroupSignatureValid(group));
+    }
+    if (!needsResign) return true;
+    bool bumpVersion = group.signature.isNotEmpty;
+    logger.i('$TAG - rebuildOwnerGroupMetadataIfNeeded - resign - groupId:${group.groupId} - bumpVersion:$bumpVersion');
+    return await resignOwnerGroupMetadata(group, bumpVersion: bumpVersion, notify: true, broadcast: true);
+  }
+
+  String? _memberIdentityKey(String? address) {
+    if (address == null || address.isEmpty) return null;
+    return getPubKeyFromTopicOrChatId(address) ?? address;
+  }
+
+  Future<List<SubscriberSchema>> _fetchChainSubscribedMembers(PrivateGroupSchema group, {bool txPool = true}) async {
+    List<SubscriberSchema> nodeMembers = await subscriberCommon.mergeSubscribersAndPermissionsFromNode(
+      group.groupId,
+      group.ownerPublicKey,
+      meta: true,
+      txPool: txPool,
+    );
+    return nodeMembers.where((m) => m.contactAddress.isNotEmpty && m.status == SubscriberStatus.Subscribed).toList();
+  }
+
+  /// Active members in [private_group_item] (permission > none), deduped by identity key.
+  Future<Set<String>> _activeMemberKeySet(String? groupId) async {
+    if (groupId == null || groupId.isEmpty) return {};
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
+    Set<String> keys = {};
+    for (int i = 0; i < members.length; i++) {
+      if (members[i].permission <= PrivateGroupItemPerm.none) continue;
+      String? key = _memberIdentityKey(members[i].invitee);
+      if (key != null && key.isNotEmpty) keys.add(key);
+    }
+    return keys;
+  }
+
+  Future<int> countActiveMembersFromItems(String? groupId) async {
+    return (await _activeMemberKeySet(groupId)).length;
+  }
+
+  Future<List<String>> _localActiveMemberKeys(String? groupId) async {
+    return (await _activeMemberKeySet(groupId)).toList();
+  }
+
+  /// Sync [private_group].count from [private_group_item] rows (never from chain snapshot).
+  Future<int> syncPrivateGroupCountFromItems(PrivateGroupSchema group, {bool notify = true}) async {
+    int activeCount = await countActiveMembersFromItems(group.groupId);
+    if (activeCount != group.count) {
+      group.count = activeCount;
+      await setCount(group.groupId, activeCount, notify: notify);
+      logger.i('$TAG - syncPrivateGroupCountFromItems - groupId:${group.groupId} - count:$activeCount');
+    }
+    return activeCount;
+  }
+
+  List<String> _chainMemberKeys(List<SubscriberSchema> chainMembers) {
+    List<String> keys = [];
+    for (int i = 0; i < chainMembers.length; i++) {
+      String? key = _memberIdentityKey(chainMembers[i].contactAddress);
+      if (key != null && key.isNotEmpty) keys.add(key);
+    }
+    return keys;
+  }
+
+  bool isPrivateGroupMemberSetMismatch(List<String> chainKeys, List<String> localKeys) {
+    if (chainKeys.isEmpty) return false;
+    if (chainKeys.length != localKeys.length) return true;
+    for (int i = 0; i < chainKeys.length; i++) {
+      if (!localKeys.contains(chainKeys[i])) return true;
+    }
+    for (int i = 0; i < localKeys.length; i++) {
+      if (!chainKeys.contains(localKeys[i])) return true;
+    }
+    return false;
+  }
+
+  /// Read chain snapshot, reconcile [private_group_item] when member set differs, then refresh [private_group].count from items.
+  Future<int> ensurePrivateGroupMembersMatchChain(PrivateGroupSchema group, {bool txPool = true, bool force = false}) async {
+    int itemActiveCount = await countActiveMembersFromItems(group.groupId);
+    bool countOutOfSync = group.count != itemActiveCount;
+
+    List<SubscriberSchema> chainMembers = await _fetchChainSubscribedMembers(group, txPool: txPool);
+    if (chainMembers.isEmpty) {
+      if (countOutOfSync) {
+        logger.i('$TAG - ensurePrivateGroupMembersMatchChain - fix group count from items - groupId:${group.groupId} - groupCount:${group.count} - itemCount:$itemActiveCount');
+        return await syncPrivateGroupCountFromItems(group);
+      }
+      logger.d('$TAG - ensurePrivateGroupMembersMatchChain - no chain data - groupId:${group.groupId}');
+      return itemActiveCount;
+    }
+
+    List<String> chainKeys = _chainMemberKeys(chainMembers);
+    List<String> localKeys = await _localActiveMemberKeys(group.groupId);
+    bool memberSetMismatch = isPrivateGroupMemberSetMismatch(chainKeys, localKeys);
+
+    if (!force && !memberSetMismatch && !countOutOfSync) {
+      logger.d('$TAG - ensurePrivateGroupMembersMatchChain - local matches chain - groupId:${group.groupId} - itemCount:$itemActiveCount');
+      return itemActiveCount;
+    }
+
+    if (memberSetMismatch || force) {
+      logger.i('$TAG - ensurePrivateGroupMembersMatchChain - reconcile items from chain - groupId:${group.groupId} - local:${localKeys.length} - chain:${chainKeys.length} - groupCount:${group.count} - itemCount:$itemActiveCount');
+      await _reconcilePrivateGroupMembersFromChain(group, chainMembers, chainKeys);
+    } else if (countOutOfSync) {
+      logger.i('$TAG - ensurePrivateGroupMembersMatchChain - member set ok, fix group count - groupId:${group.groupId} - groupCount:${group.count} - itemCount:$itemActiveCount');
+    }
+    return await syncPrivateGroupCountFromItems(group);
+  }
+
+  Future<int> _reconcilePrivateGroupMembersFromChain(PrivateGroupSchema group, List<SubscriberSchema> chainMembers, List<String> chainKeys) async {
+    Set<String> chainKeySet = chainKeys.toSet();
+    int upsertCount = 0;
+    for (int i = 0; i < chainMembers.length; i++) {
+      SubscriberSchema nodeMember = chainMembers[i];
+      int permission = isOwner(group.ownerPublicKey, nodeMember.contactAddress) ? PrivateGroupItemPerm.owner : PrivateGroupItemPerm.normal;
+      if (await _upsertMemberFromChain(group.groupId, nodeMember.contactAddress, permission)) upsertCount++;
+    }
+    String? selfAddress = clientCommon.address;
+    if ((selfAddress != null) && isOwner(group.ownerPublicKey, selfAddress)) {
+      if (await _upsertMemberFromChain(group.groupId, selfAddress, PrivateGroupItemPerm.owner)) upsertCount++;
+    }
+    List<PrivateGroupItemSchema> locals = await getMembersAll(group.groupId, all: true);
+    for (int i = 0; i < locals.length; i++) {
+      PrivateGroupItemSchema local = locals[i];
+      if (local.permission <= PrivateGroupItemPerm.none) continue;
+      String? key = _memberIdentityKey(local.invitee);
+      if (key == null || key.isEmpty) continue;
+      if (!chainKeySet.contains(key)) {
+        local.permission = PrivateGroupItemPerm.none;
+        await updateGroupItemPermission(local, false, notify: true);
+        logger.i('$TAG - _reconcilePrivateGroupMembersFromChain - demote local not on chain - invitee:${local.invitee}');
+      }
+    }
+    if (!group.joined && upsertCount > 0) {
+      await setJoined(group.groupId, true, notify: true);
+      group.joined = true;
+    }
+    int activeCount = await countActiveMembersFromItems(group.groupId);
+    logger.i('$TAG - _reconcilePrivateGroupMembersFromChain - done - groupId:${group.groupId} - upsertCount:$upsertCount - itemCount:$activeCount');
+    return activeCount;
+  }
+
+  Future<int> syncPrivateGroupMembersFromChainSnapshot(PrivateGroupSchema group, {bool txPool = true}) async {
+    return await ensurePrivateGroupMembersMatchChain(group, txPool: txPool);
+  }
+
+  Future<bool> _upsertMemberFromChain(String groupId, String invitee, int permission) async {
+    if (groupId.isEmpty || invitee.isEmpty) return false;
+    PrivateGroupItemSchema? exists = await queryGroupItem(groupId, invitee);
+    if (exists == null) {
+      List<PrivateGroupItemSchema> all = await getMembersAll(groupId, all: true);
+      for (int i = 0; i < all.length; i++) {
+        if (isSameInvitee(all[i].invitee, invitee)) {
+          exists = all[i];
+          break;
+        }
+      }
+    }
+    int nextPermission = permission;
+    if (exists != null && exists.permission == PrivateGroupItemPerm.owner && nextPermission != PrivateGroupItemPerm.owner) {
+      nextPermission = PrivateGroupItemPerm.owner;
+    }
+    if (exists != null && exists.permission > PrivateGroupItemPerm.none && exists.permission == nextPermission && exists.invitee == invitee) {
+      return true;
+    }
+    String inviter = clientCommon.address ?? invitee;
+    Uint8List? clientSeed = clientCommon.getSeed();
+    if (clientSeed == null) {
+      logger.w('$TAG - _upsertMemberFromChain - no seed - groupId:$groupId - invitee:$invitee');
+      return false;
+    }
+    Uint8List privateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
+    if (exists == null) {
+      PrivateGroupItemSchema? created = createInvitationModel(groupId, invitee, inviter, permission: nextPermission);
+      if (created == null) return false;
+      created.inviterSignature = await genSignature(privateKey, created.inviterRawData);
+      if ((created.inviterSignature == null) || (created.inviterSignature?.isEmpty == true)) return false;
+      created.inviteeRawData = jsonEncode(created.createRawDataMap());
+      created.inviteeSignature = await genSignature(privateKey, created.inviteeRawData);
+      if ((created.inviteeSignature == null) || (created.inviteeSignature?.isEmpty == true)) return false;
+      PrivateGroupItemSchema? added = await addPrivateGroupItem(created, false, notify: true);
+      if (added == null) {
+        logger.w('$TAG - _upsertMemberFromChain - insert fail - groupId:$groupId - invitee:$invitee');
+        return false;
+      }
+      logger.i('$TAG - _upsertMemberFromChain - insert - groupId:$groupId - invitee:$invitee - permission:$nextPermission');
+      return true;
+    }
+    exists.permission = nextPermission;
+    exists.inviter = exists.inviter ?? inviter;
+    exists.invitee = invitee;
+    exists.inviterRawData = exists.inviterRawData ?? jsonEncode(exists.createRawDataMap());
+    exists.inviteeRawData = exists.inviteeRawData ?? jsonEncode(exists.createRawDataMap());
+    exists.inviterSignature = exists.inviterSignature ?? await genSignature(privateKey, exists.inviterRawData);
+    exists.inviteeSignature = exists.inviteeSignature ?? await genSignature(privateKey, exists.inviteeRawData);
+    bool success = await updateGroupItemPermission(exists, false, notify: true);
+    if (!success) {
+      logger.w('$TAG - _upsertMemberFromChain - update fail - groupId:$groupId - invitee:$invitee');
+      return false;
+    }
+    logger.i('$TAG - _upsertMemberFromChain - update - groupId:$groupId - invitee:$invitee - permission:$nextPermission');
+    return true;
+  }
+
+  Future<PrivateGroupItemSchema?> ensureOwnerMemberRecord(PrivateGroupSchema group) async {
+    String? selfAddress = clientCommon.address;
+    if (selfAddress == null || selfAddress.isEmpty) return null;
+    if (!isOwner(group.ownerPublicKey, selfAddress)) return null;
+    PrivateGroupItemSchema? me = await queryGroupItemForSelf(group.groupId);
+    if (me != null && me.permission >= PrivateGroupItemPerm.owner) return me;
+    List<PrivateGroupItemSchema> owners = await queryMembers(group.groupId, perm: PrivateGroupItemPerm.owner, limit: 20);
+    for (int i = 0; i < owners.length; i++) {
+      if (isSameInvitee(owners[i].invitee, selfAddress)) {
+        if (owners[i].permission >= PrivateGroupItemPerm.owner) return owners[i];
+        owners[i].permission = PrivateGroupItemPerm.owner;
+        await updateGroupItemPermission(owners[i], false, notify: true);
+        return owners[i];
+      }
+    }
+    Uint8List? clientSeed = clientCommon.getSeed();
+    if (clientSeed == null) return null;
+    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
+    for (int i = 0; i < owners.length; i++) {
+      if (!isSameInvitee(owners[i].invitee, selfAddress)) {
+        owners[i].permission = PrivateGroupItemPerm.none;
+        await updateGroupItemPermission(owners[i], false, notify: true);
+      }
+    }
+    PrivateGroupItemSchema? schemaItem = createInvitationModel(group.groupId, selfAddress, selfAddress, permission: PrivateGroupItemPerm.owner);
+    if (schemaItem == null) return null;
+    schemaItem.inviterSignature = await genSignature(ownerPrivateKey, schemaItem.inviterRawData);
+    if ((schemaItem.inviterSignature == null) || (schemaItem.inviterSignature?.isEmpty == true)) return null;
+    schemaItem.inviteeRawData = jsonEncode(schemaItem.createRawDataMap());
+    schemaItem.inviteeSignature = await genSignature(ownerPrivateKey, schemaItem.inviteeRawData);
+    if ((schemaItem.inviteeSignature == null) || (schemaItem.inviteeSignature?.isEmpty == true)) {
+      schemaItem = await acceptInvitation(schemaItem, inviteePrivateKey: ownerPrivateKey);
+    }
+    schemaItem = await addPrivateGroupItem(schemaItem, false, notify: true);
+    if (schemaItem == null) {
+      logger.w('$TAG - ensureOwnerMemberRecord - insert fail - groupId:${group.groupId} - invitee:$selfAddress');
+      return null;
+    }
+    await syncPrivateGroupCountFromItems(group);
+    logger.i('$TAG - ensureOwnerMemberRecord - created owner item - groupId:${group.groupId} - invitee:$selfAddress');
+    return schemaItem;
+  }
+
+  Future<void> syncPrivateGroupMembersToAll(PrivateGroupSchema group) async {
+    String? selfAddress = clientCommon.address;
+    List<PrivateGroupItemSchema> members = await getMembersAll(group.groupId, all: true);
+    List<String> addressList = [];
+    for (int i = 0; i < members.length; i++) {
+      String? invitee = members[i].invitee;
+      if (invitee == null || invitee.isEmpty) continue;
+      if (members[i].permission <= PrivateGroupItemPerm.none) continue;
+      if (isSameInvitee(invitee, selfAddress)) continue;
+      addressList.add(invitee);
+    }
+    if (addressList.isEmpty) return;
+    group = (await queryGroup(group.groupId)) ?? group;
+    bool success = await chatOutCommon.sendPrivateGroupOptionResponse(addressList, group);
+    if (!success) {
+      logger.w('$TAG - syncPrivateGroupMembersToAll - options sync fail - groupId:${group.groupId}');
+    }
+    for (int i = 0; i < members.length; i += 10) {
+      List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
+      await chatOutCommon.sendPrivateGroupMemberResponse(addressList, group, memberSplits);
+    }
+    logger.i('$TAG - syncPrivateGroupMembersToAll - pushed to ${addressList.length} members - groupId:${group.groupId}');
+  }
+
+  Future<bool> canReceiveGroupMessage(PrivateGroupSchema group, MessageSchema received) async {
+    if (received.isGroupAction) return true;
+    await recoverPrivateGroupFromMessage(group, received);
+    group = (await queryGroup(group.groupId)) ?? group;
+    String? selfAddress = clientCommon.address;
+    if ((selfAddress != null) && isOwner(group.ownerPublicKey, selfAddress)) {
+      await ensureOwnerMemberRecord(group);
+      if (!group.joined) {
+        await setJoined(group.groupId, true, notify: true);
+        group.joined = true;
+      }
+    }
+    PrivateGroupItemSchema? me = await queryGroupItemForSelf(group.groupId);
+    if (me != null && me.permission > PrivateGroupItemPerm.none) {
+      if (!group.joined) {
+        await setJoined(group.groupId, true, notify: true);
+        group.joined = true;
+      }
+    } else if ((selfAddress != null) && isOwner(group.ownerPublicKey, selfAddress)) {
+      // owner recovery above
+    } else {
+      PrivateGroupItemSchema? sender = await queryGroupItem(group.groupId, received.sender);
+      if ((sender == null || sender.permission <= PrivateGroupItemPerm.none) && !isOwner(group.ownerPublicKey, received.sender)) {
+        await recoverMemberPrivateGroup(group, received);
+        return false;
+      }
+      await recoverMemberPrivateGroup(group, received);
+      return true;
+    }
+    PrivateGroupItemSchema? senderItem = await queryGroupItem(group.groupId, received.sender);
+    if ((senderItem == null || senderItem.permission <= PrivateGroupItemPerm.none) && !isOwner(group.ownerPublicKey, received.sender)) {
+      logger.w('$TAG - canReceiveGroupMessage - sender no permission - sender:$senderItem - group:${group.groupId}');
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> canSendGroupMessage(PrivateGroupSchema group, String? sender) async {
+    if (sender == null || sender.isEmpty) return false;
+    if (isOwner(group.ownerPublicKey, sender)) {
+      await ensureOwnerMemberRecord(group);
+      return true;
+    }
+    PrivateGroupItemSchema? me = await queryGroupItemForSelf(group.groupId);
+    return (me != null) && (me.permission > PrivateGroupItemPerm.none);
   }
 
   ///****************************************** Common *******************************************

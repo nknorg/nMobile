@@ -44,9 +44,24 @@ class PrivateGroupSchema {
     if (updateAt == 0) updateAt = DateTime.now().millisecondsSinceEpoch;
   }
 
+  /// Default display name when recovering or creating without a real title (uuid suffix after '.').
+  static String defaultNameFromGroupId(String groupId) {
+    if (groupId.isEmpty) return groupId;
+    int index = groupId.lastIndexOf('.');
+    if (index < 0 || index >= groupId.length - 1) return groupId;
+    return groupId.substring(index + 1);
+  }
+
+  static bool isPlaceholderGroupName(String groupId, String name) {
+    if (name.isEmpty) return true;
+    return name == groupId;
+  }
+
   static PrivateGroupSchema? create(String? groupId, String? name, {int? type, bool? joined}) {
     if (groupId == null || groupId.isEmpty) return null;
-    if (name == null || name.isEmpty) name = groupId;
+    if (name == null || name.isEmpty || isPlaceholderGroupName(groupId, name)) {
+      name = defaultNameFromGroupId(groupId);
+    }
     return PrivateGroupSchema(
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,

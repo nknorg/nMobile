@@ -207,6 +207,33 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     privateGroupCommon.setOptionsBurning(_privateGroup?.groupId, _burnValue, notify: true); // await
   }
 
+  _modifyGroupName() async {
+    if (_privateGroup == null) return;
+    if (!_isOwner) {
+      Toast.show(Settings.locale((s) => s.only_owner_can_modify, ctx: context));
+      return;
+    }
+    String? newName = await BottomDialog.of(Settings.appContext).showInput(
+      title: Settings.locale((s) => s.edit_nickname, ctx: context),
+      inputTip: Settings.locale((s) => s.edit_nickname, ctx: context),
+      inputHint: Settings.locale((s) => s.input_name, ctx: context),
+      value: _privateGroup?.name,
+      actionText: Settings.locale((s) => s.save, ctx: context),
+      maxLength: 20,
+      canTapClose: true,
+    );
+    if (newName == null) return;
+    newName = newName.trim();
+    if (newName.isEmpty || newName == _privateGroup?.name) return;
+    Loading.show();
+    bool success = await privateGroupCommon.setGroupName(_privateGroup?.groupId, newName, notify: true, toast: true);
+    Loading.dismiss();
+    if (success) {
+      await _refreshPrivateGroupSchema();
+      Toast.show(Settings.locale((s) => s.success, ctx: context));
+    }
+  }
+
   _invitee() async {
     if (_privateGroup == null) return;
     String? address = await BottomDialog.of(Settings.appContext).showInput(
@@ -285,8 +312,17 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                 TextButton(
                   style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                   onPressed: () {
-                    Util.copyText(_privateGroup?.name);
+                    if (_isOwner) {
+                      _modifyGroupName();
+                    } else {
+                      Util.copyText(_privateGroup?.name);
+                    }
                   },
+                  onLongPress: _isOwner
+                      ? () {
+                          Util.copyText(_privateGroup?.name);
+                        }
+                      : null,
                   child: Row(
                     children: <Widget>[
                       Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
@@ -408,7 +444,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                       _isOwner
                           ? CupertinoSwitch(
                               value: _burnOpen,
-                              activeColor: application.theme.primaryColor,
+                        activeTrackColor: application.theme.primaryColor,
                               onChanged: (value) {
                                 setState(() {
                                   _burnOpen = value;

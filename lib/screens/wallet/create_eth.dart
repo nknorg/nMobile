@@ -66,7 +66,6 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
 
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.i("$TAG - name:$name, password:$password");
 
       final eth = Ethereum.create(name: name, password: password);
       String ethAddress = (await eth.address).hex;

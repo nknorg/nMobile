@@ -91,7 +91,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       });
     });
     // draft
-    _updateDraftSubscription = memoryCache.draftUpdateStream.where((event) => event == widget.session.targetId).listen((String event) {
+    _updateDraftSubscription = appCache.draftUpdateStream.where((event) => event == '${clientCommon.address ?? ''}|${widget.session.targetId}').listen((String event) {
       setState(() {});
     });
   }
@@ -365,7 +365,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       }
     }
 
-    String? draft = memoryCache.getDraft(session.targetId);
+    String? draft = appCache.getDraft(clientCommon.address, session.targetId, clientCommon.getSeed());
     String contactName = _contact?.displayName ?? " ";
     String senderName = widget.session.data["senderName"]?.toString() ?? ContactSchema.getDefaultName(_contact?.address ?? session.lastMessageOptions?["sender"]);
     String who = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? senderName : contactName);

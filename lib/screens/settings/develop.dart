@@ -6,7 +6,11 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/screens/settings/files.dart';
+import 'package:nmobile/screens/settings/cross_send_policy.dart';
+import 'package:nmobile/screens/settings/push_token_debug.dart';
 import 'package:nmobile/storages/settings.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class SettingsDevelopScreen extends BaseStateFulWidget {
   static const String routeName = '/settings/develop';
@@ -54,52 +58,153 @@ class _SettingsDevelopScreenState extends BaseStateFulWidgetState<SettingsDevelo
               ),
               child: Column(
                 children: <Widget>[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: TextButton(
-                      style: _buttonStyle(top: true, bottom: true),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: application.theme.backgroundLightColor,
+                      ),
+                      child: Column(
                         children: <Widget>[
-                          Label(
-                            Settings.locale((s) => s.message_debug_info, ctx: context),
-                            type: LabelType.bodyRegular,
-                            color: application.theme.fontColor1,
-                            fontWeight: FontWeight.bold,
-                            height: 1,
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: TextButton(
+                              style: _buttonStyle(),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Label(
+                                    Settings.locale((s) => s.message_debug_info, ctx: context),
+                                    type: LabelType.bodyRegular,
+                                    color: application.theme.fontColor1,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
+                                  ),
+                                  Row(
+                                    children: <Widget>[
+                                      CupertinoSwitch(
+                                          value: _bubbleEnable,
+                                          activeTrackColor: application.theme.primaryColor,
+                                          onChanged: (bool value) async {
+                                            Settings.messageDebugInfo = value;
+                                            SettingsStorage.setSettings('${SettingsStorage.OPEN_DEVELOP_OPTIONS_MESSAGE_DEBUG}', value);
+                                            setState(() {
+                                              _bubbleEnable = value;
+                                            });
+                                          }),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              onPressed: () {
+
+                              },
+                            ),
                           ),
-                          Row(
-                            children: <Widget>[
-                              CupertinoSwitch(
-                                  value: _bubbleEnable,
-                                  activeColor: application.theme.primaryColor,
-                                  onChanged: (bool value) async {
-                                    Settings.messageDebugInfo = value;
-                                    SettingsStorage.setSettings('${SettingsStorage.OPEN_DEVELOP_OPTIONS_MESSAGE_DEBUG}', value);
-                                    setState(() {
-                                      _bubbleEnable = value;
-                                    });
-                                  }),
-                            ],
+                          Divider(height: 0, color: application.theme.dividerColor),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: TextButton(
+                              style: _buttonStyle(bottom: false),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Label(
+                                    Settings.locale((s) => s.cross_send_policy, ctx: context),
+                                    type: LabelType.bodyRegular,
+                                    color: application.theme.fontColor1,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
+                                  ),
+                                  Row(
+                                    children: <Widget>[
+                                      Asset.iconSvg(
+                                        'right',
+                                        width: 24,
+                                        color: application.theme.fontColor2,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              onPressed: () {
+                                Navigator.pushNamed(context, SettingsCrossSendPolicyScreen.routeName);
+                              },
+                            ),
+                          ),
+                          Divider(height: 0, color: application.theme.dividerColor),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: TextButton(
+                              style: _buttonStyle(bottom: false),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Label(
+                                    'Push / Device Token',
+                                    type: LabelType.bodyRegular,
+                                    color: application.theme.fontColor1,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
+                                  ),
+                                  Row(
+                                    children: <Widget>[
+                                      Asset.iconSvg(
+                                        'right',
+                                        width: 24,
+                                        color: application.theme.fontColor2,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              onPressed: () {
+                                Navigator.pushNamed(context, SettingsPushTokenDebugScreen.routeName);
+                              },
+                            ),
+                          ),
+                          Divider(height: 0, color: application.theme.dividerColor),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: TextButton(
+                              style: _buttonStyle(bottom: true),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Label(
+                                    Settings.locale((s) => s.file_manager, ctx: context),
+                                    type: LabelType.bodyRegular,
+                                    color: application.theme.fontColor1,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
+                                  ),
+                                  Row(
+                                    children: <Widget>[
+                                      Asset.iconSvg(
+                                        'right',
+                                        width: 24,
+                                        color: application.theme.fontColor2,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              onPressed: () {
+                                Navigator.pushNamed(context, SettingsFilesScreen.routeName);
+                              },
+                            ),
                           ),
                         ],
                       ),
-                      onPressed: () {},
                     ),
                   ),
                 ],
               ),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.only(left: 18, right: 18, top: 6),
-            //   child: Label(
-            //     Settings.locale((s) => _bubbleEnable ? s.allow_push_message_notifications_to_others : s.do_not_allow_push_message_notifications_to_others, ctx: context),
-            //     type: LabelType.bodySmall,
-            //     fontWeight: FontWeight.w600,
-            //     softWrap: true,
-            //   ),
-            // ),
           ],
         ),
       ),

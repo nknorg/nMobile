@@ -10,6 +10,7 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 import org.nkn.mobile.app.channels.impl.Common
 import org.nkn.mobile.app.channels.impl.nameService.DnsResolver
 import org.nkn.mobile.app.channels.impl.nameService.EthResolver
+import org.nkn.mobile.app.channels.impl.searchService.SearchService
 import org.nkn.mobile.app.crypto.Crypto
 import org.nkn.mobile.app.push.APNSPush
 
@@ -74,6 +75,7 @@ class MainActivity : FlutterFragmentActivity() {
         Crypto.register(flutterEngine)
         EthResolver.register(flutterEngine)
         DnsResolver.register(flutterEngine)
+        SearchService.register(flutterEngine)
 
         APNSPush.openClient(assets)
     }

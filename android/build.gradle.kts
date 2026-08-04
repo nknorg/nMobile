@@ -4,8 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.1.4")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
+        classpath("com.android.tools.build:gradle:8.12.3")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21")
     }
 }
 
@@ -39,7 +39,7 @@ subprojects {
                 }
                 
                 val javaVersion = JavaVersion.VERSION_21
-                val androidApiVersion = 35
+                val androidApiVersion = 36
                 
                 android.compileSdkVersion(androidApiVersion)
                 android.defaultConfig.targetSdk = androidApiVersion
@@ -48,8 +48,10 @@ subprojects {
                 android.compileOptions.targetCompatibility = javaVersion
                 
                 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
-                    kotlinOptions {
-                        jvmTarget = javaVersion.toString()
+                    compilerOptions {
+                        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+                        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
+                        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
                     }
                 }
                 

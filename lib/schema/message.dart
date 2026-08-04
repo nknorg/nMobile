@@ -64,6 +64,9 @@ class MessageContentType {
   static const String privateGroupMemberRequest = 'privateGroup:memberRequest'; // .
   static const String privateGroupMemberResponse = 'privateGroup:memberResponse'; // .
 
+  // revoke message
+  static const String revoke = 'revoke';
+
   // SUPPORT:START
   static const String msgStatus = 'msgStatus';
 // SUPPORT:END
@@ -264,6 +267,9 @@ class MessageSchema {
       case MessageContentType.deviceInfo:
         schema.content = data;
         break;
+      case MessageContentType.revoke:
+        schema.content = data['targetId'];
+        break;
       case MessageContentType.ipfs:
         schema.content = null;
         break;
@@ -441,6 +447,9 @@ class MessageSchema {
       case MessageContentType.piece:
         if (isContentFile) map['content'] = Path.convert2Local((content as File).path);
         break;
+      case MessageContentType.revoke:
+        map['content'] = content;
+        break;
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupQuit:
@@ -513,6 +522,9 @@ class MessageSchema {
         } else {
           schema.content = e['content'];
         }
+        break;
+      case MessageContentType.revoke:
+        schema.content = e['content'];
         break;
       default:
         schema.content = e['content'];
@@ -1222,6 +1234,14 @@ class MessageData {
     Map data = _base(MessageContentType.queue);
     data.addAll({
       'queueIds': queueIds,
+    });
+    return jsonEncode(data);
+  }
+
+  static String getRevoke(String targetMsgId) {
+    Map data = _base(MessageContentType.revoke);
+    data.addAll({
+      'targetId': targetMsgId,
     });
     return jsonEncode(data);
   }

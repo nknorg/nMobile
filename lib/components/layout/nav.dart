@@ -28,6 +28,7 @@ class _NavState extends BaseStateFulWidgetState<Nav> {
   }
 
   void _onItemTapped(int index) {
+    FocusScope.of(context).unfocus();
     setState(() {
       widget.currentIndex = index;
       widget.controller.jumpToPage(index);

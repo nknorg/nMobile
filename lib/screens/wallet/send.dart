@@ -207,9 +207,11 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       logger.i("$TAG - amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
       authorization.getWalletPassword(_wallet.address).then((String? password) async {
-        if (password == null || password.isEmpty) return;
+        if (password == null || password.isEmpty) {
+          password = '';
+        }
         String keystore = await walletCommon.getKeystore(_wallet.address);
-        if (keystore.isEmpty || password.isEmpty) {
+        if (keystore.isEmpty) {
           Toast.show(Settings.locale((s) => s.password_wrong));
           return;
         }

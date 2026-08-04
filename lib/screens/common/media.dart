@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -284,12 +285,17 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   }
 
   Future _save(int index) async {
-    // permission
-    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    if ((await Permission.storage.request()) != PermissionStatus.granted) {
-      return null;
+    if (Platform.isIOS) {
+      if ((await Permission.photos.request()) != PermissionStatus.granted) {
+        return null;
+      }
+    } else if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt <= 32) {
+        if ((await Permission.storage.request()) != PermissionStatus.granted) {
+          return null;
+        }
+      }
     }
     // data
     if ((index < 0) || (index >= _medias.length)) return null;
@@ -307,7 +313,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         Uint8List bytes = await file.readAsBytes();
         String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
         String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-        Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: mediaName, isReturnImagePathOfIOS: true);
+        Map? result = await ImageGallerySaverPlus.saveImage(bytes, quality: 100, name: mediaName, isReturnImagePathOfIOS: true);
         logger.i("MediaScreen - save copy image - path:${result?["filePath"]}");
         Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
       }
@@ -318,7 +324,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         logger.i("MediaScreen - save video file - path:${file.path}");
         String ext = Path.getFileExt(file, FileHelper.DEFAULT_VIDEO_EXT);
         String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-        Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: mediaName, isReturnPathOfIOS: true);
+        Map? result = await ImageGallerySaverPlus.saveFile(file.absolute.path, name: mediaName, isReturnPathOfIOS: true);
         logger.i("MediaScreen - save copy video - path:${result?["filePath"]}");
         Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
       }

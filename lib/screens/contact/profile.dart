@@ -1,10 +1,15 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -31,6 +36,9 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
+
+import '../../providers/connected_provider.dart';
+import '../../providers/custom_id_provider.dart';
 
 class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
@@ -114,6 +122,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   int _burnProgress = -1;
 
   bool _notificationOpen = false;
+  bool _blocked = false;
 
   bool _profileFetched = false;
 
@@ -129,13 +138,57 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     _updateContactSubscription = contactCommon.updateStream.where((event) => event.address == _contact?.address).listen((ContactSchema event) {
       _initBurning(event);
       _initNotification(event);
+      _initBlocked(event);
       setState(() {
         _contact = event;
       });
+      // Reload custom ID when contact is updated
+      _loadCustomId();
     });
 
     // init
     _refreshDefaultWallet();
+  }
+
+  /// Load custom ID from server
+  void _loadCustomId() async {
+    // Only load if it's the current user's profile
+    if (_contact?.isMe == true) {
+      // Delay to ensure context is available
+      await Future.delayed(Duration.zero);
+      if (!mounted) return;
+
+      // Extract public key from contact address (handles "identifier.publickey" format)
+      String? contactAddress = _contact?.address;
+      if (contactAddress == null || contactAddress.isEmpty) return;
+
+      // Split by '.' and take the last part (public key)
+      String publicKey = contactAddress.split('.').last;
+
+      // Convert public key to wallet address
+      String? walletAddress = await Wallet.pubKeyToWalletAddr(hexDecode(publicKey));
+      if (walletAddress == null || walletAddress.isEmpty) return;
+
+      // Get seed from secure storage
+      String? seedHex = await walletCommon.getSeed(walletAddress);
+      if (seedHex == null || seedHex.isEmpty) return;
+
+      // Convert seed hex to Uint8List
+      Uint8List seed;
+      try {
+        seed = hexDecode(seedHex);
+      } catch (e) {
+        logger.w("$TAG - _loadCustomId - invalid seed format: $e");
+        return;
+      }
+
+      // Get NKN client address - use clientCommon.address if available, otherwise use publicKey
+      // This allows loading even when NKN client is not connected yet
+      String nknAddress = clientCommon.address ?? publicKey;
+
+      final container = ProviderScope.containerOf(context, listen: false);
+      await container.read(customIdProvider.notifier).loadCustomId(seed, nknAddress);
+    }
   }
 
   @override
@@ -170,6 +223,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
     _initBurning(this._contact);
     _initNotification(this._contact);
+    await _initBlocked(this._contact);
 
     setState(() {});
 
@@ -181,6 +235,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         if (value) contactCommon.setDeviceInfoRequestAt(_contact?.address);
       }); // await
     }
+
+    // Load custom ID after contact is initialized
+    _loadCustomId();
   }
 
   _initBurning(ContactSchema? schema) {
@@ -204,6 +261,13 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       } else {
         _notificationOpen = false;
       }
+    }
+  }
+
+  _initBlocked(ContactSchema? schema) async {
+    if (schema?.isMe == false) {
+      bool b = await contactCommon.isBlocked(schema?.address);
+      _blocked = b;
     }
   }
 
@@ -247,6 +311,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         ContactSchema? _me = await contactCommon.getMe(canAdd: true, fetchWalletAddress: true);
         await _refreshContactSchema(schema: _me);
         contactCommon.meUpdateSink.add(_me);
+      } else {
+        try {
+          final container = ProviderScope.containerOf(context, listen: false);
+          container.read(connectedProvider.notifier).setConnected(false);
+        } catch (_) {}
       }
       if (mounted) {
         AppScreen.go(this.context);
@@ -302,8 +371,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       value: _contact?.displayName,
       actionText: Settings.locale((s) => s.save, ctx: context),
       maxLength: 20,
-      canTapClose: false,
+      canTapClose: true,
     );
+    if (newName == null) return;
     if (_contact?.type == ContactType.me) {
       contactCommon.setSelfFullName(_contact?.address, newName?.trim(), null, notify: true); // await
     } else {
@@ -392,6 +462,19 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     return '';
   }
 
+  /// Get display text - show custom ID if available, otherwise show address
+  String _getDisplayText(CustomIdState customIdState) {
+    // If it's the current user, try to get custom ID by address
+    if (_contact?.isMe == true && _contact?.address != null) {
+      final customId = customIdState.getCustomId(_contact!.address);
+      if (customId != null && customId.isNotEmpty) {
+        return customId;
+      }
+    }
+    // Otherwise show address
+    return _getClientAddressShow();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Layout(
@@ -431,7 +514,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       mappedWidget.add(Slidable(
         key: ObjectKey(mappeds[i]),
         direction: Axis.horizontal,
-
         child: TextButton(
           style: _buttonStyle(topRadius: false, botRadius: false, topPad: 15, botPad: 10),
           onPressed: () {
@@ -488,7 +570,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(Icons.delete, color: application.theme.fontLightColor, size: 24,),
+                  Icon(
+                    Icons.delete,
+                    color: application.theme.fontLightColor,
+                    size: 24,
+                  ),
                   Label(
                     Settings.locale((s) => s.delete, ctx: context),
                     color: application.theme.fontLightColor,
@@ -542,6 +628,68 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     ),
                     SizedBox(height: 24),
 
+                    /// address or custom ID
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final customIdState = ref.watch(customIdProvider);
+                        final displayText = _getDisplayText(customIdState);
+                        // Check if customId exists for this contact's address
+                        final customId = _contact?.address != null ? customIdState.getCustomId(_contact!.address) : null;
+                        final hasCustomId = customId != null && customId.isNotEmpty;
+
+                        return TextButton(
+                          style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
+                          onPressed: () {
+                            if (this._contact == null) return;
+                            ContactChatProfileScreen.go(this.context, this._contact!);
+                          },
+                          child: Row(
+                            children: <Widget>[
+                              // Show fingerprint icon for custom ID, chat-id icon for D-Chat address
+                              Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
+                              SizedBox(width: 10),
+                              Label(
+                                Settings.locale((s) => s.id, ctx: context),
+                                type: LabelType.bodyRegular,
+                                color: application.theme.fontColor1,
+                              ),
+                              Spacer(),
+                              // Only show loading when there's no cached customId for this address
+                              (customIdState.isLoading && customId == null)
+                                  ? SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : Label(
+                                      displayText,
+                                      type: LabelType.bodyRegular,
+                                      color: application.theme.fontColor2,
+                                      overflow: TextOverflow.fade,
+                                      textAlign: TextAlign.right,
+                                    ),
+                              Asset.iconSvg(
+                                'right',
+                                width: 24,
+                                color: application.theme.fontColor2,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 20, right: 20),
+                      child: Label(
+                        Settings.locale((s) => s.custom_id_tips, ctx: context),
+                        type: LabelType.bodySmall,
+                        color: application.theme.fontColor2,
+                        fontWeight: FontWeight.w600,
+                        softWrap: true,
+                      ),
+                    ),
+                    SizedBox(height: 24),
+
                     /// name
                     TextButton(
                       style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
@@ -561,41 +709,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           Expanded(
                             child: Label(
                               _contact?.displayName ?? "",
-                              type: LabelType.bodyRegular,
-                              color: application.theme.fontColor2,
-                              overflow: TextOverflow.fade,
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          Asset.iconSvg(
-                            'right',
-                            width: 24,
-                            color: application.theme.fontColor2,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    /// address
-                    TextButton(
-                      style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
-                      onPressed: () {
-                        if (this._contact == null) return;
-                        ContactChatProfileScreen.go(this.context, this._contact!);
-                      },
-                      child: Row(
-                        children: <Widget>[
-                          Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
-                          SizedBox(width: 10),
-                          Label(
-                            Settings.locale((s) => s.d_chat_address, ctx: context),
-                            type: LabelType.bodyRegular,
-                            color: application.theme.fontColor1,
-                          ),
-                          SizedBox(width: 20),
-                          Expanded(
-                            child: Label(
-                              _getClientAddressShow(),
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               overflow: TextOverflow.fade,
@@ -720,7 +833,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(Icons.delete, color: application.theme.fontLightColor, size: 24,),
+                  Icon(
+                    Icons.delete,
+                    color: application.theme.fontLightColor,
+                    size: 24,
+                  ),
                   Label(
                     Settings.locale((s) => s.delete, ctx: context),
                     color: application.theme.fontLightColor,
@@ -815,7 +932,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
                     SizedBox(width: 10),
                     Label(
-                      Settings.locale((s) => s.d_chat_address, ctx: context),
+                      Settings.locale((s) => s.id, ctx: context),
                       type: LabelType.bodyRegular,
                       color: application.theme.fontColor1,
                     ),
@@ -838,6 +955,33 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 ),
               ),
             ],
+          ),
+          SizedBox(height: 28),
+
+          /// sendMsg
+          TextButton(
+            style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
+            onPressed: () {
+              _updateBurnIfNeed();
+              ChatMessagesScreen.go(this.context, _contact);
+            },
+            child: Row(
+              children: <Widget>[
+                Asset.iconSvg('chat', color: application.theme.primaryColor, width: 24),
+                SizedBox(width: 10),
+                Label(
+                  Settings.locale((s) => s.send_message, ctx: context),
+                  type: LabelType.bodyRegular,
+                  color: application.theme.fontColor1,
+                ),
+                Spacer(),
+                Asset.iconSvg(
+                  'right',
+                  width: 24,
+                  color: application.theme.fontColor2,
+                ),
+              ],
+            ),
           ),
           SizedBox(height: 28),
 
@@ -864,7 +1008,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     Spacer(),
                     CupertinoSwitch(
                       value: _burnOpen,
-                      activeColor: application.theme.primaryColor,
+                      activeTrackColor: application.theme.primaryColor,
                       onChanged: (value) {
                         setState(() {
                           _burnOpen = value;
@@ -958,7 +1102,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 Spacer(),
                 CupertinoSwitch(
                   value: _notificationOpen,
-                  activeColor: application.theme.primaryColor,
+                  activeTrackColor: application.theme.primaryColor,
                   onChanged: (value) {
                     setState(() {
                       _notificationOpen = value;
@@ -980,38 +1124,49 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           ),
           SizedBox(height: 28),
 
-          /// sendMsg
+          /// block (blacklist)
           TextButton(
-            style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
-            onPressed: () {
-              _updateBurnIfNeed();
-              ChatMessagesScreen.go(this.context, _contact);
-            },
+            style: _buttonStyle(topRadius: true, botRadius: true, topPad: 8, botPad: 8),
+            onPressed: () {},
             child: Row(
               children: <Widget>[
-                Asset.iconSvg('chat', color: application.theme.primaryColor, width: 24),
+                Icon(FontAwesomeIcons.userSlash, size: 24, color: application.theme.primaryColor),
                 SizedBox(width: 10),
                 Label(
-                  Settings.locale((s) => s.send_message, ctx: context),
+                  Settings.locale((s) => s.block, ctx: context),
                   type: LabelType.bodyRegular,
                   color: application.theme.fontColor1,
                 ),
                 Spacer(),
-                Asset.iconSvg(
-                  'right',
-                  width: 24,
-                  color: application.theme.fontColor2,
+                CupertinoSwitch(
+                  value: _blocked,
+                  activeTrackColor: application.theme.primaryColor,
+                  onChanged: (value) async {
+                    setState(() {
+                      _blocked = value;
+                    });
+                    await contactCommon.setBlocked(_contact?.address, value, notify: true);
+                  },
                 ),
               ],
             ),
           ),
-          // SizedBox(height: 28),
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 20, right: 20),
+            child: Label(
+              Settings.locale((s) => s.block_tips, ctx: context),
+              type: LabelType.bodySmall,
+              color: application.theme.fontColor2,
+              fontWeight: FontWeight.w600,
+              softWrap: true,
+            ),
+          ),
 
           /// AddContact
           _contact?.type != ContactType.friend
               ? Column(
                   children: [
-                    SizedBox(height: 10),
+                    SizedBox(height: 28),
                     TextButton(
                       style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
                       onPressed: () {
@@ -1035,7 +1190,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
               : SizedBox.shrink(),
 
           /// delete
-          (_contact?.type == ContactType.friend) || (_contact?.type == ContactType.stranger)
+          (_contact?.type == ContactType.friend)
               ? Column(
                   children: [
                     SizedBox(height: 28),

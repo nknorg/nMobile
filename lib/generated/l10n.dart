@@ -2090,6 +2090,26 @@ class S {
     );
   }
 
+  /// `Export Contacts`
+  String get export_contacts {
+    return Intl.message(
+      'Export Contacts',
+      name: 'export_contacts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Contacts`
+  String get import_contacts {
+    return Intl.message(
+      'Import Contacts',
+      name: 'import_contacts',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Type a message`
   String get type_a_message {
     return Intl.message(
@@ -2335,6 +2355,16 @@ class S {
     return Intl.message(
       'Please input Notes',
       name: 'input_notes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input Custom ID`
+  String get input_custom_id {
+    return Intl.message(
+      'Please input Custom ID',
+      name: 'input_custom_id',
       desc: '',
       args: [],
     );
@@ -4075,6 +4105,456 @@ class S {
     return Intl.message(
       'message debug information',
       name: 'message_debug_info',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `File Manager`
+  String get file_manager {
+    return Intl.message(
+      'File Manager',
+      name: 'file_manager',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cross Send Policy`
+  String get cross_send_policy {
+    return Intl.message(
+      'Cross Send Policy',
+      name: 'cross_send_policy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restart client to apply`
+  String get cross_send_policy_restart_hint {
+    return Intl.message(
+      'Restart client to apply',
+      name: 'cross_send_policy_restart_hint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Changing policy takes effect after restarting the client.`
+  String get cross_send_policy_restart_tip {
+    return Intl.message(
+      'Changing policy takes effect after restarting the client.',
+      name: 'cross_send_policy_restart_tip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Do not use cross send policy.`
+  String get cross_send_policy_desc_none {
+    return Intl.message(
+      'Do not use cross send policy.',
+      name: 'cross_send_policy_desc_none',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Any connected sub-client can send (cross send).`
+  String get cross_send_policy_desc_any_connected {
+    return Intl.message(
+      'Any connected sub-client can send (cross send).',
+      name: 'cross_send_policy_desc_any_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All connected sub-clients send (redundant sending).`
+  String get cross_send_policy_desc_all_connected {
+    return Intl.message(
+      'All connected sub-clients send (redundant sending).',
+      name: 'cross_send_policy_desc_all_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use the most stable / lowest latency sub-client (recommended).`
+  String get cross_send_policy_desc_prefer_stable {
+    return Intl.message(
+      'Use the most stable / lowest latency sub-client (recommended).',
+      name: 'cross_send_policy_desc_prefer_stable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sub-client connection status`
+  String get cross_send_policy_sub_client_status {
+    return Intl.message(
+      'Sub-client connection status',
+      name: 'cross_send_policy_sub_client_status',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh`
+  String get cross_send_policy_sub_client_refresh {
+    return Intl.message(
+      'Refresh',
+      name: 'cross_send_policy_sub_client_refresh',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connecting`
+  String get conn_state_connecting {
+    return Intl.message(
+      'Connecting',
+      name: 'conn_state_connecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connected`
+  String get conn_state_connected {
+    return Intl.message(
+      'Connected',
+      name: 'conn_state_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Disconnected`
+  String get conn_state_disconnected {
+    return Intl.message(
+      'Disconnected',
+      name: 'conn_state_disconnected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not connected`
+  String get conn_state_not_connected {
+    return Intl.message(
+      'Not connected',
+      name: 'conn_state_not_connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Duration`
+  String get subclient_conn_duration {
+    return Intl.message(
+      'Duration',
+      name: 'subclient_conn_duration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reconnects`
+  String get subclient_reconnect_count {
+    return Intl.message(
+      'Reconnects',
+      name: 'subclient_reconnect_count',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send failures`
+  String get subclient_send_failure_count {
+    return Intl.message(
+      'Send failures',
+      name: 'subclient_send_failure_count',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Score`
+  String get subclient_score {
+    return Intl.message(
+      'Score',
+      name: 'subclient_score',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `—`
+  String get subclient_duration_na {
+    return Intl.message(
+      '—',
+      name: 'subclient_duration_na',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete "{name}"?`
+  String delete_file_confirm_title(Object name) {
+    return Intl.message(
+      'Are you sure you want to delete "$name"?',
+      name: 'delete_file_confirm_title',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `Total`
+  String get total {
+    return Intl.message(
+      'Total',
+      name: 'total',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No files found`
+  String get no_files_found {
+    return Intl.message(
+      'No files found',
+      name: 'no_files_found',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Error loading files: {error}`
+  String error_loading_files(Object error) {
+    return Intl.message(
+      'Error loading files: $error',
+      name: 'error_loading_files',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Error deleting file: {error}`
+  String error_deleting_file(Object error) {
+    return Intl.message(
+      'Error deleting file: $error',
+      name: 'error_deleting_file',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Block`
+  String get block {
+    return Intl.message(
+      'Block',
+      name: 'block',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `After enabling, messages from this user will be blocked.`
+  String get block_tips {
+    return Intl.message(
+      'After enabling, messages from this user will be blocked.',
+      name: 'block_tips',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Revoke`
+  String get revoke {
+    return Intl.message(
+      'Revoke',
+      name: 'revoke',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to revoke this message?`
+  String get confirm_revoke {
+    return Intl.message(
+      'Are you sure you want to revoke this message?',
+      name: 'confirm_revoke',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit Custom ID`
+  String get edit_custom_id {
+    return Intl.message(
+      'Edit Custom ID',
+      name: 'edit_custom_id',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `ID`
+  String get id {
+    return Intl.message(
+      'ID',
+      name: 'id',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Custom ID`
+  String get custom_id {
+    return Intl.message(
+      'Custom ID',
+      name: 'custom_id',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You can set a custom ID so that others can add you as a friend using this ID.`
+  String get custom_id_tips {
+    return Intl.message(
+      'You can set a custom ID so that others can add you as a friend using this ID.',
+      name: 'custom_id_tips',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter at least {length} characters.`
+  String tip_input_min_length(Object length) {
+    return Intl.message(
+      'Please enter at least $length characters.',
+      name: 'tip_input_min_length',
+      desc: '',
+      args: [length],
+    );
+  }
+
+  /// `Go to set`
+  String get go_to_set {
+    return Intl.message(
+      'Go to set',
+      name: 'go_to_set',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Submitting...`
+  String get submitting {
+    return Intl.message(
+      'Submitting...',
+      name: 'submitting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Submit failed`
+  String get tip_submit_failed {
+    return Intl.message(
+      'Submit failed',
+      name: 'tip_submit_failed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This custom ID is already taken by another user`
+  String get tip_custom_id_taken {
+    return Intl.message(
+      'This custom ID is already taken by another user',
+      name: 'tip_custom_id_taken',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This custom ID is already set as your current ID`
+  String get tip_custom_id_already_set {
+    return Intl.message(
+      'This custom ID is already set as your current ID',
+      name: 'tip_custom_id_already_set',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Address not found or cannot be resolved`
+  String get tip_address_not_found {
+    return Intl.message(
+      'Address not found or cannot be resolved',
+      name: 'tip_address_not_found',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View More Info`
+  String get view_more_info {
+    return Intl.message(
+      'View More Info',
+      name: 'view_more_info',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Custom ID can only contain letters, numbers, or underscores`
+  String get tip_custom_id_format {
+    return Intl.message(
+      'Custom ID can only contain letters, numbers, or underscores',
+      name: 'tip_custom_id_format',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cross-device sync not supported; messages only on your last device.`
+  String get tip_multi_device_same_id {
+    return Intl.message(
+      'Cross-device sync not supported; messages only on your last device.',
+      name: 'tip_multi_device_same_id',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New Chat`
+  String get new_chat {
+    return Intl.message(
+      'New Chat',
+      name: 'new_chat',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update App`
+  String get update_app {
+    return Intl.message(
+      'Update App',
+      name: 'update_app',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ignore`
+  String get ignore {
+    return Intl.message(
+      'Ignore',
+      name: 'ignore',
       desc: '',
       args: [],
     );

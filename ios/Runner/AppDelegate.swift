@@ -1,6 +1,6 @@
 import UIKit
 import Flutter
-import receive_sharing_intent
+import Firebase
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -9,6 +9,8 @@ import receive_sharing_intent
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         super.application(application, didFinishLaunchingWithOptions: launchOptions)
+        
+        FirebaseApp.configure()
         
         if #available(iOS 10.0, *) {
             UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
@@ -23,25 +25,14 @@ import receive_sharing_intent
         Crypto.register(controller: controller)
         EthResolver.register(controller: controller)
         DnsResolver.register(controller: controller)
-        
+        SearchService.register(controller: controller)
+
         registerNotification();
-        
-        // NotificationCenter.default.addObserver(self, selector:#selector(becomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
-        // NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.didEnterBackgroundNotification, object: nil)
-        
+
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-        // return true; // FIXED: with no share data
     }
     
     override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        let sharingIntent = SwiftReceiveSharingIntentPlugin.instance
-        if sharingIntent.hasMatchingSchemePrefix(url: url) {
-            return sharingIntent.application(app, open: url, options: options)
-        }
-
-        // For example
-        // return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: options[.sourceApplication] as? String)
-        // return false
         return super.application(app, open: url, options:options)
     }
 
@@ -67,35 +58,12 @@ import receive_sharing_intent
         }
     }
     
-//    @objc func becomeActive(noti:Notification) {
-//        //APNSPushService.shared().connectAPNS()
-//    }
-
-//    @objc func becomeDeath(noti:Notification) {
-//        APNSPushService.shared().disConnectAPNS()
-//    }
-    
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         // deviceToken = 32 bytes
         let formatDeviceToken = deviceToken.map { String(format: "%02.2hhx", arguments: [$0]) }.joined()
         print("Application - GetDeviceToken - token = \(formatDeviceToken)")
         UserDefaults.standard.setValue(formatDeviceToken, forKey: "nkn_device_token")
-        
-//        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-//            APNSPushService.shared().connectAPNS();
-//        }
     }
-    
-//    override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-//        print("Application - didReceiveRemoteNotification - onReceive - userInfo = \(userInfo)")
-//        let aps = userInfo["aps"] as? [String: Any]
-//        let alert = aps?["alert"] as? [String: Any]
-//        var resultMap: [String: Any] = [String: Any]()
-//        resultMap["title"] = alert?["title"]
-//        resultMap["content"] = alert?["body"]
-//        resultMap["isApplicationForeground"] = application.applicationState == UIApplication.State.active
-//        Common.eventAdd(name: "onRemoteMessageReceived", map: resultMap)
-//    }
     
     override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
     {
@@ -108,25 +76,10 @@ import receive_sharing_intent
         resultMap["content"] = alert?["body"]
         resultMap["isApplicationForeground"] = UIApplication.shared.applicationState == UIApplication.State.active
         Common.eventAdd(name: "onRemoteMessageReceived", map: resultMap)
-        // completionHandler([.alert, .badge, .sound]) // show notification on flutter, not here
     }
-    
-//    override func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-//        let userInfo = response.notification.request.content.userInfo
-//        print("Application - userNotificationCenter - onClick - userInfo = \(userInfo)")
-//        let aps = userInfo["aps"] as? [String: Any]
-//        let alert = aps?["alert"] as? [String: Any]
-//        var resultMap: [String: Any] = [String: Any]()
-//        resultMap["title"] = alert?["title"]
-//        resultMap["content"] = alert?["body"]
-//        resultMap["isApplicationForeground"] = UIApplication.shared.applicationState == UIApplication.State.active
-//        Common.eventAdd(name: "onNotificationClick", map: resultMap)
-//        completionHandler()
-//    }
     
     override func applicationWillResignActive(_ application: UIApplication) {
         window?.addSubview(self.visualEffectView)
-        
     }
     
     override func applicationDidEnterBackground(_ application: UIApplication) {

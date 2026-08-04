@@ -4,8 +4,11 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/settings/settings_bloc.dart';
@@ -18,11 +21,18 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/native/crypto.dart';
 import 'package:nmobile/routes/routes.dart';
+import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/storages/settings.dart' as settings_storage;
+import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import 'upgrade.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: '.env');
 
   if (Platform.isAndroid) {
     SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
@@ -49,8 +59,37 @@ void main() async {
   application.registerInitialize(() async {
     Routes.init();
     await Settings.init();
+    await appCache.init();
+    await Upgrade.run();
   });
   await application.initialize();
+  // Auto create default wallet on first launch
+  try {
+    final createdFlag = await settings_storage.SettingsStorage.getSettings(settings_storage.SettingsStorage.DEFAULT_WALLET_CREATED);
+    if (!(createdFlag == true || createdFlag?.toString() == 'true')) {
+      final WalletStorage walletStorage = WalletStorage();
+      final List<WalletSchema> existingWallets = await walletStorage.getAll();
+      if (existingWallets.isNotEmpty) {
+        await settings_storage.SettingsStorage.setSettings(settings_storage.SettingsStorage.DEFAULT_WALLET_CREATED, true);
+      } else {
+        // create NKN wallet with empty password
+        final Wallet nkn = await Wallet.create(null, config: WalletConfig(password: ''));
+        if (nkn.address.isNotEmpty && nkn.keystore.isNotEmpty) {
+          final WalletSchema wallet = WalletSchema(
+            type: WalletType.nkn,
+            address: nkn.address,
+            publicKey: hexEncode(nkn.publicKey),
+            name: 'Default Account',
+          );
+          await walletStorage.add(wallet, nkn.keystore, '', hexEncode(nkn.seed));
+          await walletStorage.setDefaultAddress(wallet.address);
+          await settings_storage.SettingsStorage.setSettings(settings_storage.SettingsStorage.DEFAULT_WALLET_CREATED, true);
+        }
+      }
+    }
+  } catch (e, st) {
+    handleError(e, st, upload: false);
+  }
 
   if (Settings.sentryEnable) {
     await SentryFlutter.init(
@@ -81,11 +120,11 @@ void main() async {
         options.enableUserInteractionBreadcrumbs = true;
         // options.beforeSend = (SentryEvent event, {Hint? hint}) {};
       },
-      appRunner: () => runApp(Main()),
+      appRunner: () => runApp(ProviderScope(child: Main())),
     );
   } else {
     catchGlobalError(() async {
-      runApp(Main());
+      runApp(ProviderScope(child: Main()));
     }, onZoneError: (Object error, StackTrace stack) {
       if (Settings.debug) logger.e(error);
       if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stack);
