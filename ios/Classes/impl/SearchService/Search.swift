@@ -18,8 +18,8 @@ class SearchService : ChannelBase, FlutterStreamHandler {
     private var clients: [String: SearchSearchClient] = [:]
     private let clientsLock = NSLock()
     
-    public static func register(controller: FlutterViewController) {
-        instance.install(binaryMessenger: controller as! FlutterBinaryMessenger)
+    public static func register(messenger: FlutterBinaryMessenger) {
+        instance.install(binaryMessenger: messenger)
     }
     
     func install(binaryMessenger: FlutterBinaryMessenger) {

@@ -3,37 +3,36 @@ import Flutter
 import Firebase
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        super.application(application, didFinishLaunchingWithOptions: launchOptions)
-        
         FirebaseApp.configure()
-        
+
         if #available(iOS 10.0, *) {
             UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
         }
-        
-        signal(SIGPIPE, SIG_IGN)
-        
-        GeneratedPluginRegistrant.register(with: self)
-        
-        let controller : FlutterViewController = window?.rootViewController as! FlutterViewController;
-        Common.register(controller: controller)
-        Crypto.register(controller: controller)
-        EthResolver.register(controller: controller)
-        DnsResolver.register(controller: controller)
-        SearchService.register(controller: controller)
 
-        registerNotification();
+        signal(SIGPIPE, SIG_IGN)
+        registerNotification()
 
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
-    
+
+    func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+        GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+        let messenger = engineBridge.applicationRegistrar.messenger()
+        Common.register(messenger: messenger)
+        Crypto.register(messenger: messenger)
+        EthResolver.register(messenger: messenger)
+        DnsResolver.register(messenger: messenger)
+        SearchService.register(messenger: messenger)
+    }
+
     override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        return super.application(app, open: url, options:options)
+        return super.application(app, open: url, options: options)
     }
 
     func registerNotification() {
@@ -43,7 +42,7 @@ import Firebase
             }
             UserDefaults.standard.set(true, forKey: "Notification")
         }
-        
+
         let center = UNUserNotificationCenter.current()
         center.delegate = self
         center.requestAuthorization(options: [.alert, .badge, .sound]) { (isSucceseed: Bool, error:Error?) in
@@ -57,14 +56,14 @@ import Firebase
             }
         }
     }
-    
+
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         // deviceToken = 32 bytes
         let formatDeviceToken = deviceToken.map { String(format: "%02.2hhx", arguments: [$0]) }.joined()
         print("Application - GetDeviceToken - token = \(formatDeviceToken)")
         UserDefaults.standard.setValue(formatDeviceToken, forKey: "nkn_device_token")
     }
-    
+
     override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
     {
         let userInfo = notification.request.content.userInfo
@@ -77,26 +76,4 @@ import Firebase
         resultMap["isApplicationForeground"] = UIApplication.shared.applicationState == UIApplication.State.active
         Common.eventAdd(name: "onRemoteMessageReceived", map: resultMap)
     }
-    
-    override func applicationWillResignActive(_ application: UIApplication) {
-        window?.addSubview(self.visualEffectView)
-    }
-    
-    override func applicationDidEnterBackground(_ application: UIApplication) {
-    }
-    
-    override func applicationWillEnterForeground(_ application: UIApplication) {
-    }
-    
-    override func applicationDidBecomeActive(_ application: UIApplication) {
-        // UIApplication.shared.applicationIconBadgeNumber = 0
-        self.visualEffectView.removeFromSuperview()
-    }
-    
-    lazy var visualEffectView: UIVisualEffectView = {
-           let blur = UIBlurEffect.init(style: UIBlurEffect.Style.light)
-           let view = UIVisualEffectView.init(effect: blur)
-           view.frame = UIScreen.main.bounds
-           return view
-       }()
 }

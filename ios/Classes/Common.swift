@@ -16,8 +16,8 @@ class Common : ChannelBase, FlutterStreamHandler {
     let EVENT_CHANNEL_NAME = "org.nkn.mobile/native/common_event"
     var eventSink: FlutterEventSink?
     
-    public static func register(controller: FlutterViewController) {
-        instance.install(binaryMessenger: controller as! FlutterBinaryMessenger)
+    public static func register(messenger: FlutterBinaryMessenger) {
+        instance.install(binaryMessenger: messenger)
     }
     
     public static func eventAdd(name: String, map: [String: Any]) {

@@ -69,7 +69,17 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    // Phone stays portrait. iPad follows the device, including landscape.
+    // Read the view directly: MediaQuery is not available in initState.
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final logicalSize = view.physicalSize / view.devicePixelRatio;
+    final isTablet = logicalSize.shortestSide >= 600;
+    SystemChrome.setPreferredOrientations(
+      isTablet
+          ? DeviceOrientation.values
+          : const [DeviceOrientation.portraitUp],
+    );
 
     // init
     Settings.appContext = context; // before at mounted
