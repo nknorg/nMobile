@@ -2,16 +2,19 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
@@ -132,6 +135,41 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
 
   bool hideComponents = false;
 
+  final Map<String, String> _opened = <String, String>{};
+  final Map<String, Future<String?>> _pinning = <String, Future<String?>>{};
+  bool _cryptoDisposed = false;
+
+  Future<String?> _pin(String stored) {
+    if (stored.isEmpty) return Future<String?>.value(null);
+    final cached = _opened[stored];
+    if (cached != null) return Future<String?>.value(cached);
+    final pending = _pinning[stored];
+    if (pending != null) return pending;
+    final future = FileCrypto.openForRead(stored).then((plain) {
+      if (plain == null || plain.isEmpty) return null;
+      if (_cryptoDisposed) {
+        FileCrypto.release(stored);
+        return plain;
+      }
+      _opened[stored] = plain;
+      return plain;
+    }).catchError((Object e, StackTrace st) {
+      handleError(e, st);
+      return null;
+    }).whenComplete(() {
+      _pinning.remove(stored);
+    });
+    _pinning[stored] = future;
+    return future;
+  }
+
+  void _scheduleOpen(String stored) {
+    if (stored.isEmpty || _opened.containsKey(stored) || _pinning.containsKey(stored)) return;
+    _pin(stored).then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   @override
   void onRefreshArguments() {
     _target = widget.arguments?[MediaScreen.argTarget]?.toString();
@@ -185,11 +223,17 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
 
   @override
   void dispose() {
-    super.dispose();
+    _cryptoDisposed = true;
     _videoController?.dispose();
     _imageScaleController?.dispose();
     _pageController?.dispose();
     _onFetchMediasSubscription?.cancel();
+    final storedPaths = _opened.keys.toList();
+    _opened.clear();
+    for (var i = 0; i < storedPaths.length; i++) {
+      FileCrypto.release(storedPaths[i]);
+    }
+    super.dispose();
   }
 
   void _tryFetchMedias() {
@@ -243,8 +287,10 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         await _videoController?.dispose();
         _videoController = null;
         if (contentType == "path") {
-          File file = File(content);
-          if (file.existsSync()) {
+          final plain = await _pin(content);
+          if (_cryptoDisposed || !mounted) return;
+          File file = File(plain ?? "");
+          if (plain != null && plain.isNotEmpty && file.existsSync()) {
             _videoController = VideoPlayerController.file(file);
           }
         } else {
@@ -284,12 +330,17 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   }
 
   Future _save(int index) async {
-    // permission
-    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    if ((await Permission.storage.request()) != PermissionStatus.granted) {
-      return null;
+    if (Platform.isIOS) {
+      if ((await Permission.photos.request()) != PermissionStatus.granted) {
+        return null;
+      }
+    } else if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt <= 32) {
+        if ((await Permission.storage.request()) != PermissionStatus.granted) {
+          return null;
+        }
+      }
     }
     // data
     if ((index < 0) || (index >= _medias.length)) return null;
@@ -301,24 +352,26 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     // save
     if (mediaType == "image") {
       if ((contentType == "path") && content.isNotEmpty) {
-        File file = File(content);
-        if (!file.existsSync()) return;
+        final plain = await _pin(content);
+        File file = File(plain ?? "");
+        if (plain == null || plain.isEmpty || !file.existsSync()) return;
         logger.i("MediaScreen - save image file - path:${file.path}");
         Uint8List bytes = await file.readAsBytes();
         String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
         String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-        Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: mediaName, isReturnImagePathOfIOS: true);
+        Map? result = await ImageGallerySaverPlus.saveImage(bytes, quality: 100, name: mediaName, isReturnImagePathOfIOS: true);
         logger.i("MediaScreen - save copy image - path:${result?["filePath"]}");
         Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
       }
     } else if (mediaType == "video") {
       if ((contentType == "path") && content.isNotEmpty) {
-        File file = File(content);
-        if (!file.existsSync()) return;
+        final plain = await _pin(content);
+        File file = File(plain ?? "");
+        if (plain == null || plain.isEmpty || !file.existsSync()) return;
         logger.i("MediaScreen - save video file - path:${file.path}");
         String ext = Path.getFileExt(file, FileHelper.DEFAULT_VIDEO_EXT);
         String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-        Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: mediaName, isReturnPathOfIOS: true);
+        Map? result = await ImageGallerySaverPlus.saveFile(file.absolute.path, name: mediaName, isReturnPathOfIOS: true);
         logger.i("MediaScreen - save copy video - path:${result?["filePath"]}");
         Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
       }
@@ -336,8 +389,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     // share
     if (mediaType == "image") {
       if ((contentType == "path") && content.isNotEmpty) {
-        File file = File(content);
-        if (!file.existsSync()) return;
+        final plain = await _pin(content);
+        File file = File(plain ?? "");
+        if (plain == null || plain.isEmpty || !file.existsSync()) return;
         logger.i("MediaScreen - share image file - path:${file.path}");
         String mimeType = Platform.isAndroid ? "image/*" : "image/jpeg";
         XFile xFile = XFile(file.path, mimeType: mimeType);
@@ -345,8 +399,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       }
     } else if (mediaType == "video") {
       if ((contentType == "path") && content.isNotEmpty) {
-        File file = File(content);
-        if (!file.existsSync()) return;
+        final plain = await _pin(content);
+        File file = File(plain ?? "");
+        if (plain == null || plain.isEmpty || !file.existsSync()) return;
         logger.i("MediaScreen - share video file - path:${file.path}");
         String mimeType = Platform.isAndroid ? "video/*" : "video/mp4";
         XFile xFile = XFile(file.path, mimeType: mimeType);
@@ -417,20 +472,30 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                   child = SizedBox.shrink();
                 } else if (mediaType == "image") {
                   if (contentType == "path") {
-                    child = PhotoView(
-                        onTapUp: (BuildContext context, TapUpDetails details, PhotoViewControllerValue controllerValue) {
-                          if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                        },
-                        imageProvider: FileImage(File(content)),
-                        backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-                        scaleStateController: _imageScaleController,
-                        loadingBuilder: (context, event) {
-                          return SpinKitRing(
-                            color: Colors.white,
-                            lineWidth: btnSize / 10,
-                            size: btnSize,
-                          );
-                        });
+                    final plain = _opened[content];
+                    if (plain == null) {
+                      _scheduleOpen(content);
+                      child = SpinKitRing(
+                        color: Colors.white,
+                        lineWidth: btnSize / 10,
+                        size: btnSize,
+                      );
+                    } else {
+                      child = PhotoView(
+                          onTapUp: (BuildContext context, TapUpDetails details, PhotoViewControllerValue controllerValue) {
+                            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                          },
+                          imageProvider: FileImage(File(plain)),
+                          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+                          scaleStateController: _imageScaleController,
+                          loadingBuilder: (context, event) {
+                            return SpinKitRing(
+                              color: Colors.white,
+                              lineWidth: btnSize / 10,
+                              size: btnSize,
+                            );
+                          });
+                    }
                   } else {
                     child = SizedBox.shrink();
                   }
@@ -438,8 +503,12 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                   if (contentType == "path") {
                     bool isReady = (index == _dataIndex) && (_videoController?.value.isInitialized == true);
                     bool isPlaying = (index == _dataIndex) && (_videoController?.value.isPlaying == true);
+                    final plainThumb = _opened[thumbnail];
+                    if (thumbnail.isNotEmpty && plainThumb == null) {
+                      _scheduleOpen(thumbnail);
+                    }
                     child = Stack(children: [
-                      (!isPlaying && thumbnail.isNotEmpty)
+                      (!isPlaying && plainThumb != null && plainThumb.isNotEmpty)
                           ? Positioned(
                               left: 0,
                               right: 0,
@@ -448,7 +517,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                               child: Container(
                                 constraints: BoxConstraints(),
                                 child: Image.file(
-                                  File(thumbnail),
+                                  File(plainThumb),
                                   fit: BoxFit.contain,
                                 ),
                               ),

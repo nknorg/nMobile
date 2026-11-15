@@ -8,6 +8,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
@@ -63,6 +64,9 @@ class MessageContentType {
   static const String privateGroupOptionResponse = 'privateGroup:optionResponse'; // .
   static const String privateGroupMemberRequest = 'privateGroup:memberRequest'; // .
   static const String privateGroupMemberResponse = 'privateGroup:memberResponse'; // .
+
+  // revoke message
+  static const String revoke = 'revoke';
 
   // SUPPORT:START
   static const String msgStatus = 'msgStatus';
@@ -264,6 +268,9 @@ class MessageSchema {
       case MessageContentType.deviceInfo:
         schema.content = data;
         break;
+      case MessageContentType.revoke:
+        schema.content = data['targetId'];
+        break;
       case MessageContentType.ipfs:
         schema.content = null;
         break;
@@ -441,6 +448,9 @@ class MessageSchema {
       case MessageContentType.piece:
         if (isContentFile) map['content'] = Path.convert2Local((content as File).path);
         break;
+      case MessageContentType.revoke:
+        map['content'] = content;
+        break;
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupQuit:
@@ -514,6 +524,9 @@ class MessageSchema {
           schema.content = e['content'];
         }
         break;
+      case MessageContentType.revoke:
+        schema.content = e['content'];
+        break;
       default:
         schema.content = e['content'];
         break;
@@ -525,10 +538,11 @@ class MessageSchema {
     if (!msg.isContentFile) return {};
     File? file = msg.content as File?;
     if (file == null || !file.existsSync()) return {};
-    int length = await file.length();
+    Uint8List? fileBytes = await FileCrypto.readPlainBytes(file.path);
+    if (fileBytes == null || fileBytes.isEmpty) return {};
+    int length = fileBytes.length;
     if (length <= Settings.piecesPreMinLen) return {};
     // data
-    Uint8List fileBytes = await file.readAsBytes();
     String base64Data = base64.encode(fileBytes);
     int bytesLength = base64Data.length;
     // total (2~192)
@@ -578,9 +592,9 @@ class MessageSchema {
         logger.e("Message - combinePiecesData - combine sub_file no exists - item:$item - file:${file?.path}");
         continue;
       }
-      Uint8List itemBytes = file.readAsBytesSync();
+      Uint8List? itemBytes = await FileCrypto.readPlainBytes(file.path);
       int? pieceIndex = item.options?[MessageOptions.KEY_PIECE_INDEX];
-      if (itemBytes.isNotEmpty && (pieceIndex != null) && (pieceIndex >= 0) && (pieceIndex < recoverList.length)) {
+      if (itemBytes != null && itemBytes.isNotEmpty && (pieceIndex != null) && (pieceIndex >= 0) && (pieceIndex < recoverList.length)) {
         recoverList[pieceIndex] = itemBytes;
         recoverCount++;
       }
@@ -1226,6 +1240,14 @@ class MessageData {
     return jsonEncode(data);
   }
 
+  static String getRevoke(String targetMsgId) {
+    Map data = _base(MessageContentType.revoke);
+    data.addAll({
+      'targetId': targetMsgId,
+    });
+    return jsonEncode(data);
+  }
+
   static String getContactProfileRequest(String requestType, String? profileVersion) {
     Map data = _base(MessageSchema.supportContentType(MessageContentType.contactProfile));
     data.addAll({
@@ -1252,7 +1274,8 @@ class MessageData {
     });
     Map<String, dynamic> content = Map();
     if (avatar != null && await avatar.exists()) {
-      String base64 = base64Encode(await avatar.readAsBytes());
+      Uint8List? bytes = await FileCrypto.readPlainBytes(avatar.path);
+      String base64 = bytes == null ? "" : base64Encode(bytes);
       if (base64.isNotEmpty == true) {
         content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, FileHelper.DEFAULT_IMAGE_EXT)};
       }
@@ -1278,13 +1301,15 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactOptionsToken(String msgId, String? deviceToken) {
+  static String getContactOptionsToken(String msgId, String? deviceToken, {bool silent = false}) {
+    Map<String, dynamic> content = {
+      'deviceToken': deviceToken,
+    };
+    if (silent) content['silent'] = true;
     Map data = _base(MessageSchema.supportContentType(MessageContentType.contactOptions), id: msgId);
     data.addAll({
       'optionType': '1',
-      'content': {
-        'deviceToken': deviceToken,
-      },
+      'content': content,
     });
     return jsonEncode(data);
   }

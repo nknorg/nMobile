@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/components/base/plain_circle_avatar.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -17,6 +19,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -77,6 +80,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;
     }
+    await FileCrypto.encryptInPlace(picked.path);
 
     setState(() {
       _headImage = picked;
@@ -91,7 +95,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     try {
       String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
       if (Validate.isNknPublicKey(pubKey)) {
-        walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+        walletAddress = await Wallet.pubKeyToWalletAddr(hexDecode(pubKey!));
       }
     } catch (e, st) {
       handleError(e, st);
@@ -213,9 +217,14 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                                       backgroundColor: application.theme.backgroundColor2,
                                       child: Asset.iconSvg('user', color: application.theme.fontColor2),
                                     )
-                                  : CircleAvatar(
+                                  : PlainCircleAvatar(
+                                      path: _headImage!.path,
                                       radius: avatarSize / 2,
-                                      backgroundImage: FileImage(_headImage!),
+                                      fallback: CircleAvatar(
+                                        radius: avatarSize / 2,
+                                        backgroundColor: application.theme.backgroundColor2,
+                                        child: Asset.iconSvg('user', color: application.theme.fontColor2),
+                                      ),
                                     ),
                               InkWell(
                                 onTap: _selectAvatarPicture,

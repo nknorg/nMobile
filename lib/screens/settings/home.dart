@@ -28,6 +28,7 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/util.dart';
 
+import '../../common/application.dart';
 import '../wallet/home.dart';
 
 class SettingsHomeScreen extends BaseStateFulWidget {
@@ -317,7 +318,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                           children: <Widget>[
                             CupertinoSwitch(
                                 value: _biometricsSelected,
-                                activeColor: application.theme.primaryColor,
+                                activeTrackColor: application.theme.primaryColor,
                                 onChanged: (bool value) async {
                                   WalletSchema? _wallet = await walletCommon.getDefault();
                                   if (_wallet == null || _wallet.address.isEmpty) {
@@ -459,7 +460,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                   width: double.infinity,
                   height: 50,
                   child: TextButton(
-                    style: _buttonStyle(top: true),
+                    style: _buttonStyle(top: true, bottom: true),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
@@ -481,39 +482,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     onPressed: () {},
                   ),
                 ),
-                Divider(height: 0, color: application.theme.dividerColor),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    style: _buttonStyle(bottom: true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          Settings.locale((s) => s.contact_us, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor1,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Label(
-                              'nmobile@nkn.org',
-                              type: LabelType.bodyRegular,
-                              color: application.theme.fontColor2,
-                              height: 1,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onPressed: () async {
-                      Util.launchUrl('mailto:nmobile@nkn.org');
-                    },
-                  ),
-                ),
+
               ],
             ),
           ),
@@ -532,141 +501,145 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
               ],
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: application.theme.backgroundLightColor,
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            child: Column(
-              children: <Widget>[
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    style: _buttonStyle(top: true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          Settings.locale((s) => s.Accelerate, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor1,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                        Row(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: application.theme.backgroundLightColor,
+              ),
+              child: Column(
+                children: <Widget>[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: TextButton(
+                      style: _buttonStyle(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            Settings.locale((s) => s.Accelerate, ctx: context),
+                            type: LabelType.bodyRegular,
+                            color: application.theme.fontColor1,
+                            fontWeight: FontWeight.bold,
+                            height: 1,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              Asset.iconSvg(
+                                'right',
+                                width: 24,
+                                color: application.theme.fontColor2,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, SettingsAccelerateScreen.routeName);
+                      },
+                    ),
+                  ),
+                  Divider(height: 0, color: application.theme.dividerColor),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: TextButton(
+                      style: _buttonStyle(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            Settings.locale((s) => s.cache, ctx: context),
+                            type: LabelType.bodyRegular,
+                            color: application.theme.fontColor1,
+                            fontWeight: FontWeight.bold,
+                            height: 1,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              Asset.iconSvg(
+                                'right',
+                                width: 24,
+                                color: application.theme.fontColor2,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, SettingsCacheScreen.routeName);
+                      },
+                    ),
+                  ),
+                  Divider(height: 0, color: application.theme.dividerColor),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: TextButton(
+                      style: _buttonStyle(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            Settings.locale((s) => s.tracker, ctx: context),
+                            type: LabelType.bodyRegular,
+                            color: application.theme.fontColor1,
+                            fontWeight: FontWeight.bold,
+                            height: 1,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              Asset.iconSvg(
+                                'right',
+                                width: 24,
+                                color: application.theme.fontColor2,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, SettingsTrackerScreen.routeName);
+                      },
+                    ),
+                  ),
+                  if (!application.isProd) ...[
+                    Divider(height: 0, color: application.theme.dividerColor),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: TextButton(
+                        style: _buttonStyle(bottom: true),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
-                            Asset.iconSvg(
-                              'right',
-                              width: 24,
-                              color: application.theme.fontColor2,
+                            Label(
+                              Settings.locale((s) => s.developer_options, ctx: context),
+                              type: LabelType.bodyRegular,
+                              color: application.theme.fontColor1,
+                              fontWeight: FontWeight.bold,
+                              height: 1,
+                            ),
+                            Row(
+                              children: <Widget>[
+                                Asset.iconSvg(
+                                  'right',
+                                  width: 24,
+                                  color: application.theme.fontColor2,
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                        onPressed: () {
+                          Navigator.pushNamed(context, SettingsDevelopScreen.routeName);
+                        },
+                      ),
                     ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, SettingsAccelerateScreen.routeName);
-                    },
-                  ),
-                ),
-                Divider(height: 0, color: application.theme.dividerColor),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    style: _buttonStyle(bottom: true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          Settings.locale((s) => s.cache, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor1,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Asset.iconSvg(
-                              'right',
-                              width: 24,
-                              color: application.theme.fontColor2,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, SettingsCacheScreen.routeName);
-                    },
-                  ),
-                ),
-                Divider(height: 0, color: application.theme.dividerColor),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    style: _buttonStyle(bottom: true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          Settings.locale((s) => s.tracker, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor1,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Asset.iconSvg(
-                              'right',
-                              width: 24,
-                              color: application.theme.fontColor2,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, SettingsTrackerScreen.routeName);
-                    },
-                  ),
-                ),
-                Divider(height: 0, color: application.theme.dividerColor),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    style: _buttonStyle(bottom: true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          Settings.locale((s) => s.developer_options, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor1,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Asset.iconSvg(
-                              'right',
-                              width: 24,
-                              color: application.theme.fontColor2,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, SettingsDevelopScreen.routeName);
-                    },
-                  ),
-                ),
-              ],
+                  ],
+                ],
+              ),
             ),
           ),
         ],

@@ -5,8 +5,10 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+
 import org.nkn.sdk.IChannelHandler
 import org.nkn.sdk.NknSdkFlutterPlugin
+
 
 class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     companion object {
@@ -36,12 +38,25 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "getPublicKeyFromPrivateKey" -> getPublicKeyFromPrivateKey(call, result)
-            "getPrivateKeyFromSeed" -> getPrivateKeyFromSeed(call, result)
-            "getSeedFromPrivateKey" -> getSeedFromPrivateKey(call, result)
-            "sign" -> sign(call, result)
-            "verify" -> verify(call, result)
-            else -> result.notImplemented()
+            "getPublicKeyFromPrivateKey" -> {
+                getPublicKeyFromPrivateKey(call, result)
+            }
+            "getPrivateKeyFromSeed" -> {
+                getPrivateKeyFromSeed(call, result)
+            }
+            "getSeedFromPrivateKey" -> {
+                getSeedFromPrivateKey(call, result)
+            }
+            "sign" -> {
+                sign(call, result)
+            }
+            "verify" -> {
+                verify(call, result)
+            }
+
+            else -> {
+                result.notImplemented()
+            }
         }
     }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:flutter/painting.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -13,6 +14,7 @@ import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/message_piece.dart';
+import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 
@@ -64,9 +66,17 @@ class MessageCommon with Tag {
     return await MessageStorage.instance.insert(schema);
   }
 
-  Future<int> delete(String? msgId, String? contentType) {
+  Future<int> delete(String? msgId, String? contentType) async {
+    if (msgId == null || msgId.isEmpty) return 0;
     if (contentType == MessageContentType.piece) {
+      await _deletePieceChunkDiskFilesForMsgId(msgId);
       return MessagePieceStorage.instance.delete(msgId);
+    }
+    MessageSchema? m = await query(msgId);
+    if (m != null) {
+      await _deletePieceChunkDiskFilesForMsgId(msgId);
+      await MessagePieceStorage.instance.delete(msgId);
+      _deleteSingleMessageContentAndThumbnail(m);
     }
     return MessageStorage.instance.delete(msgId);
   }
@@ -156,6 +166,90 @@ class MessageCommon with Tag {
     return messages;
   }
 
+  /// Resolves the on-disk path for [MessageSchema.content] whether it is a [File] or a path [String]
+  /// (e.g. [MessageContentType.file] / [MessageContentType.video] use the default [MessageSchema.fromMap] branch).
+  String? _messageContentPath(MessageSchema message) {
+    if (message.content is File) {
+      final p = (message.content as File).path;
+      return p.isNotEmpty ? p : null;
+    }
+    if (message.content is String) {
+      final s = (message.content as String).trim();
+      if (s.isEmpty) return null;
+      return Path.convert2Complete(s) ?? s;
+    }
+    return null;
+  }
+
+  void _evictFileImageFromCache(String absolutePath) {
+    if (absolutePath.isEmpty) return;
+    try {
+      PaintingBinding.instance.imageCache.evict(FileImage(File(absolutePath)));
+    } catch (_) {}
+  }
+
+  void _deleteLocalFileAndEvictImageCache(String? absolutePath) {
+    if (absolutePath == null || absolutePath.isEmpty) return;
+    final file = File(absolutePath);
+    if (file.existsSync()) {
+      try {
+        file.deleteSync();
+        logger.d("$TAG - messageDelete - file delete - path:$absolutePath");
+      } catch (e) {}
+    }
+    _evictFileImageFromCache(absolutePath);
+  }
+
+  /// Per-session chat media root: `{app_flutter}/{pubKey}/chat/{targetId}/`
+  Future<void> _deleteChatMediaDirectoryForTarget(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return;
+    final String? uid = clientCommon.getPublicKey();
+    if (uid == null || uid.isEmpty) return;
+    final String dirPath = Path.getDir(uid, DirType.chat, subPath: targetId);
+    final Directory dir = Directory(dirPath);
+    if (!await dir.exists()) return;
+    try {
+      await dir.delete(recursive: true);
+      logger.d("$TAG - onSessionDelete - chat cache dir removed - path:$dirPath");
+    } catch (e, st) {
+      logger.w("$TAG - onSessionDelete - chat cache dir delete fail - path:$dirPath - e:$e\n$st");
+    }
+  }
+
+  void _deleteSingleMessageContentAndThumbnail(MessageSchema message) {
+    final Set<String> seen = <String>{};
+    void once(String? path) {
+      if (path == null || path.isEmpty) return;
+      if (seen.contains(path)) return;
+      seen.add(path);
+      _deleteLocalFileAndEvictImageCache(path);
+    }
+    once(_messageContentPath(message));
+    once(MessageOptions.getMediaThumbnailPath(message.options));
+  }
+
+  /// On-disk chunk files for [msgId] in message_piece (does not delete DB rows).
+  Future<void> _deletePieceChunkDiskFilesForMsgId(String? msgId) async {
+    if (msgId == null || msgId.isEmpty) return;
+    const int limit = 20;
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await queryPieceList(msgId, offset: offset, limit: limit);
+      for (int i = 0; i < result.length; i++) {
+        MessageSchema p = result[i];
+        _deleteLocalFileAndEvictImageCache(_messageContentPath(p));
+        _deleteLocalFileAndEvictImageCache(MessageOptions.getMediaThumbnailPath(p.options));
+      }
+      if (result.length < limit) break;
+    }
+  }
+
+  /// Piece rows + chunk files + main body/thumbnail (e.g. row already gone but files remain).
+  Future<void> _purgeLocalFilesForMsgSnapshot(MessageSchema message) async {
+    await _deletePieceChunkDiskFilesForMsgId(message.msgId);
+    await MessagePieceStorage.instance.delete(message.msgId);
+    _deleteSingleMessageContentAndThumbnail(message);
+  }
+
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
     bool delDeep = !message.canReceipt ? true : (message.isOutbound ? (message.status >= MessageStatus.Receipt) : (message.status >= MessageStatus.Read));
@@ -194,9 +288,11 @@ class MessageCommon with Tag {
         }
       }
       if (success == null) {
-        success = (await delete(message.msgId, message.contentType)) > 0;
+        int removed = await delete(message.msgId, message.contentType);
+        success = removed > 0;
         if (!success && ((await query(message.msgId)) == null)) {
           success = true;
+          await _purgeLocalFilesForMsgSnapshot(message);
         }
       }
     } else {
@@ -206,34 +302,6 @@ class MessageCommon with Tag {
       }
     }
     if (notify) onDeleteSink.add(message.msgId); // no need success
-    // delete file
-    if (delDeep && (success == true)) {
-      if (message.isContentFile) {
-        (message.content as File).exists().then((exist) {
-          if (exist) {
-            try {
-              (message.content as File).delete(); // await
-            } catch (e) {}
-            logger.d("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
-          } else {
-            // logger.v("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
-          }
-        });
-      }
-      String? mediaThumbnail = MessageOptions.getMediaThumbnailPath(message.options);
-      if ((mediaThumbnail != null) && mediaThumbnail.isNotEmpty) {
-        File(mediaThumbnail).exists().then((exist) {
-          if (exist) {
-            try {
-              File(mediaThumbnail).delete(); // await
-            } catch (e) {}
-            logger.d("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
-          } else {
-            // logger.v("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
-          }
-        });
-      }
-    }
     return success ?? false;
   }
 
@@ -406,6 +474,8 @@ class MessageCommon with Tag {
         }
       }
     }
+    // Remove whole per-session chat cache directory (`.../chat/{targetId}/`) before DB bulk delete
+    await _deleteChatMediaDirectoryForTarget(targetId);
     // messages
     await MessageStorage.instance.deleteByTarget(targetId, targetType);
     // pieces

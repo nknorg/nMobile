@@ -2,12 +2,29 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 
 class Util {
+  /// Dismiss soft keyboard with focus unfocus + platform IME hide as fallback.
+  /// Some Android/iOS builds leave the IME up after [FocusNode.unfocus] alone.
+  static void hideKeyboard([BuildContext? context]) {
+    final FocusNode? primary = FocusManager.instance.primaryFocus;
+    if (primary != null && primary.hasFocus) {
+      primary.unfocus();
+    } else if (context != null && context.mounted) {
+      FocusScope.of(context).unfocus();
+    }
+    try {
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    } catch (e) {
+      logger.e("Util - hideKeyboard ---> $e");
+    }
+  }
+
   static void copyText(String? content, {bool toast = true}) {
     if (content == null || content.isEmpty) return;
     Clipboard.setData(ClipboardData(text: content));

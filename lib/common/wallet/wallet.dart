@@ -50,18 +50,17 @@ class WalletCommon with Tag {
 
   Future<bool> isPasswordRight(String? walletAddress, String? password) async {
     if (walletAddress == null || walletAddress.isEmpty) return false;
-    if (password == null || password.isEmpty) return false;
+    if (password == null) return false;
     String? storagePassword = await getPassword(walletAddress);
-    if (storagePassword?.isNotEmpty == true) {
+    if (storagePassword != null) {
       return password == storagePassword;
-    } else {
-      try {
-        final keystore = await getKeystore(walletAddress);
-        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password));
-        if (nknWallet.address.isNotEmpty) return true;
-      } catch (e) {
-        return false;
-      }
+    }
+    try {
+      final keystore = await getKeystore(walletAddress);
+      Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password));
+      if (nknWallet.address.isNotEmpty) return true;
+    } catch (e) {
+      return false;
     }
     return false;
   }

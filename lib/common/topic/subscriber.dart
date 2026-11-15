@@ -148,6 +148,11 @@ class SubscriberCommon with Tag {
   }
 
   // caller = everyone, meta = isPrivate
+  Future<List<SubscriberSchema>> mergeSubscribersAndPermissionsFromNode(String? topicId, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
+    List<SubscriberSchema>? result = await _mergeSubscribersAndPermissionsFromNode(topicId, ownerPubKey, meta: meta, txPool: txPool);
+    return result ?? [];
+  }
+
   Future<List<SubscriberSchema>?> _mergeSubscribersAndPermissionsFromNode(String? topicId, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
     if (topicId == null || topicId.isEmpty) return null;
     // subscribers(subscribe + permission)

@@ -1,12 +1,7 @@
-//
-//  Common.swift
-//  Runner
-//
-//  Created by 蒋治国 on 2021/6/4.
-//
 import Nkn
-//import FMDB
-//import SQLCipher
+import PhotosUI
+import UniformTypeIdentifiers
+
 
 class Common : ChannelBase, FlutterStreamHandler {
     
@@ -15,13 +10,14 @@ class Common : ChannelBase, FlutterStreamHandler {
     
     var methodChannel: FlutterMethodChannel?
     let METHOD_CHANNEL_NAME = "org.nkn.mobile/native/common_method"
+    private var imagePickSession: SerialImagePickSession?
     
     var eventChannel: FlutterEventChannel?
     let EVENT_CHANNEL_NAME = "org.nkn.mobile/native/common_event"
     var eventSink: FlutterEventSink?
     
-    public static func register(controller: FlutterViewController) {
-        instance.install(binaryMessenger: controller as! FlutterBinaryMessenger)
+    public static func register(messenger: FlutterBinaryMessenger) {
+        instance.install(binaryMessenger: messenger)
     }
     
     public static func eventAdd(name: String, map: [String: Any]) {
@@ -86,6 +82,8 @@ class Common : ChannelBase, FlutterStreamHandler {
             splitPieces(call, result: result)
         case "combinePieces":
             combinePieces(call, result: result)
+        case "pickImages":
+            pickImages(call, result: result)
             //        case "resetSQLitePassword":
             //            resetSQLitePassword(call, result: result)
         default:
@@ -93,6 +91,25 @@ class Common : ChannelBase, FlutterStreamHandler {
         }
     }
     
+    private func pickImages(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        if imagePickSession != nil {
+            result([])
+            return
+        }
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        var limit = args["limit"] as? Int ?? 9
+        if limit < 1 { limit = 1 }
+        if limit > 9 { limit = 9 }
+        let session = SerialImagePickSession(limit: limit) { [weak self] paths in
+            self?.imagePickSession = nil
+            result(paths)
+        }
+        imagePickSession = session
+        DispatchQueue.main.async {
+            session.present()
+        }
+    }
+
     private func create(_ call: FlutterMethodCall, result: FlutterResult) {
         result(nil)
     }
@@ -185,85 +202,8 @@ class Common : ChannelBase, FlutterStreamHandler {
             resp["data"] = dataBytes
             self.resultSuccess(result: result, resp: resp)
             return
-            
-            //            var error: NSError?
-            //            do {
-            //                let encoder = ReedsolomonNewDefault(dataShards, parityShards, &error) ?? ReedsolomonEncoder.init()
-            //                let encodeBytes = try encoder.splitBytesArray(dataString.data(using: String.Encoding.utf8))
-            //                try encoder.encode(encodeBytes)
-            //
-            //                guard (error == nil) else {
-            //                    self.resultError(result: result, error: error)
-            //                    return
-            //                }
-            //
-            //                var returnArray = [FlutterStandardTypedData]()
-            //                for index in 0 ..< encodeBytes.len() {
-            //                    if let theBytes = encodeBytes.get(index) {
-            //                        let fData = FlutterStandardTypedData(bytes: theBytes)
-            //                        returnArray.append(fData)
-            //                    }
-            //                }
-            //
-            //                var resp: [String: Any] = [String: Any]()
-            //                resp["event"] = "splitPieces"
-            //                resp["data"] = returnArray
-            //                self.resultSuccess(result: result, resp: resp)
-            //                return
-            //            } catch let error {
-            //                self.resultError(result: result, error: error)
-            //                return
-            //            }
         }
     }
-    
-    /*private func encryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-     let args = call.arguments as? [String: Any] ?? [String: Any]()
-     let algorithm = args["algorithm"] as? String ?? ""
-     let bits = args["bits"] as? Int ?? 1
-     let data = args["data"] as! FlutterStandardTypedData
-     
-     commonQueue.async {
-     var encrypted = Encrypt.encrypt(algorithm: algorithm, bits: bits, data: Data([UInt8](data.data)))
-     if(encrypted != nil){
-     if (encrypted!["key_bytes"] != nil) {
-     encrypted!["key_bytes"] = FlutterStandardTypedData(bytes: encrypted!["key_bytes"] as! Data)
-     }
-     if (encrypted!["iv_bytes"] != nil) {
-     encrypted!["iv_bytes"] = FlutterStandardTypedData(bytes: encrypted!["iv_bytes"] as! Data)
-     }
-     if (encrypted!["cipher_text_bytes"] != nil) {
-     encrypted!["cipher_text_bytes"] = FlutterStandardTypedData(bytes: encrypted!["cipher_text_bytes"] as! Data)
-     }
-     }
-     
-     var resp: [String: Any] = [String: Any]()
-     resp["event"] = "encryptBytes"
-     resp["data"] = encrypted
-     self.resultSuccess(result: result, resp: resp)
-     return
-     }
-     }*/
-    
-    /*private func decryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-     let args = call.arguments as? [String: Any] ?? [String: Any]()
-     let algorithm = args["algorithm"] as? String ?? ""
-     let bits = args["bits"] as? Int ?? 0
-     let keyBytes = args["key_bytes"] as! FlutterStandardTypedData
-     let ivBytes = args["iv_bytes"] as! FlutterStandardTypedData
-     let data = args["data"] as! FlutterStandardTypedData
-     
-     commonQueue.async {
-     let decrypted = Encrypt.decrypt(algorithm: algorithm, bits: bits, keyBytes: Data([UInt8](keyBytes.data)), ivBytes: Data([UInt8](ivBytes.data)), data: Data([UInt8](data.data)))
-     
-     var resp: [String: Any] = [String: Any]()
-     resp["event"] = "decryptBytes"
-     resp["data"] = (decrypted != nil) ? FlutterStandardTypedData(bytes: decrypted!) : nil
-     self.resultSuccess(result: result, resp: resp)
-     return
-     
-     }
-     }*/
     
     private func combinePieces(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as? [String: Any] ?? [String: Any]()
@@ -286,66 +226,158 @@ class Common : ChannelBase, FlutterStreamHandler {
             resp["data"] = combinedString
             self.resultSuccess(result: result, resp: resp)
             return
-            
-            //            var error: NSError?
-            //            do {
-            //                let totalShards = dataShards + parityShards
-            //                let encodeDataBytes = ReedsolomonNewBytesArray(totalShards)
-            //                var piecesLength = 0
-            //                for (index, data) in dataList.enumerated() {
-            //                    piecesLength += data.count
-            //                    if data.isEmpty {
-            //                        encodeDataBytes?.set(index, b: data)
-            //                    } else {
-            //                        encodeDataBytes?.set(index, b: nil)
-            //                    }
-            //                }
-            //
-            //                let encoder = ReedsolomonNewDefault(dataShards, parityShards, &error)
-            //                try encoder?.reconstructBytesArray(encodeDataBytes)
-            //                // encoder?.verifyBytesArray(<#T##shards: ReedsolomonBytesArray?##ReedsolomonBytesArray?#>, ret0_: <#T##UnsafeMutablePointer<ObjCBool>?#>)
-            //
-            //                guard (error == nil) else {
-            //                    self.resultError(result: result, error: error)
-            //                    return
-            //                }
-            //
-            //                var fullDataList = Data.init(count: piecesLength)
-            //                for index in 0..<dataShards {
-            //                    if let data = encodeDataBytes?.get(index) {
-            //                        fullDataList.append(data)
-            //                    }
-            //                }
-            //
-            //                let resultLength = fullDataList.count > bytesLength ? bytesLength : fullDataList.count
-            //                let resultBytes =  fullDataList.subdata(in: 0..<resultLength)
-            //                let combines = String.init(data: resultBytes, encoding: String.Encoding.utf8)
-            //
-            //                var resp: [String: Any] = [String: Any]()
-            //                resp["event"] = "combinePieces"
-            //                resp["data"] = combines
-            //                self.resultSuccess(result: result, resp: resp)
-            //                return
-            //            } catch let error {
-            //                self.resultError(result: result, error: error)
-            //                return
-            //            }
         }
     }
-    
-    //    private func resetSQLitePassword(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    //        let args = call.arguments as? [String: Any] ?? [String: Any]()
-    //        let path = args["path"] as! String
-    //        let password = args["password"] as! String
-    //        let readOnly = args["readOnly"] as? Bool ?? false
-    //
-    //        FMDatabaseQueue.init(path: path, flags: (readOnly ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)))?.inDatabase({ _db in
-    //            let success = _db.rekey(password)
-    //
-    //            var resp: [String: Any] = [String: Any]()
-    //            resp["event"] = "resetSQLitePassword"
-    //            resp["success"] = success
-    //            self.resultSuccess(result: result, resp: resp)
-    //        })
-    //    }
+}
+
+// Saves one picked item at a time. UIImage JPEG encoding is not safe to run
+// concurrently, which is what turns a multi-select into black thumbnails.
+private class SerialImagePickSession: NSObject, PHPickerViewControllerDelegate {
+    let limit: Int
+    let onComplete: ([String]) -> Void
+    let saveQueue = DispatchQueue(label: "org.nkn.nmobile/image_pick_save")
+    var finished = false
+    var results: [PHPickerResult] = []
+    var saved: [String] = []
+    var index = 0
+
+    init(limit: Int, onComplete: @escaping ([String]) -> Void) {
+        self.limit = limit
+        self.onComplete = onComplete
+    }
+
+    func present() {
+        var config = PHPickerConfiguration()
+        config.selectionLimit = limit
+        config.filter = PHPickerFilter.any(of: [.images, .videos])
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+        guard let root = SerialImagePickSession.topViewController() else {
+            finish([])
+            return
+        }
+        root.present(picker, animated: true)
+    }
+
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            if results.isEmpty {
+                self.finish([])
+                return
+            }
+            self.results = Array(results.prefix(self.limit))
+            self.index = 0
+            self.saved = []
+            self.saveQueue.async {
+                self.saveCurrent()
+            }
+        }
+    }
+
+    func saveCurrent() {
+        if index >= results.count {
+            let paths = saved
+            DispatchQueue.main.async {
+                self.finish(paths)
+            }
+            return
+        }
+        let provider = results[index].itemProvider
+        if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+            provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                self.saveQueue.async {
+                    if let data = data, let path = self.writeImage(data) {
+                        self.saved.append(path)
+                    }
+                    self.index += 1
+                    self.saveCurrent()
+                }
+            }
+        } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+            provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
+                var copied: String?
+                if let url = url {
+                    copied = self.copyFile(url, fallbackExt: "mp4")
+                }
+                self.saveQueue.async {
+                    if let copied = copied {
+                        self.saved.append(copied)
+                    }
+                    self.index += 1
+                    self.saveCurrent()
+                }
+            }
+        } else {
+            index += 1
+            saveCurrent()
+        }
+    }
+
+    func writeImage(_ data: Data) -> String? {
+        let kind = SerialImagePickSession.imageKind(data)
+        if kind == "jpg" || kind == "png" || kind == "gif" {
+            return writeBytes(data, ext: kind)
+        }
+        guard let image = UIImage(data: data), let jpeg = image.jpegData(compressionQuality: 1) else {
+            return nil
+        }
+        return writeBytes(jpeg, ext: "jpg")
+    }
+
+    func copyFile(_ url: URL, fallbackExt: String) -> String? {
+        let ext = url.pathExtension.isEmpty ? fallbackExt : url.pathExtension
+        let dest = SerialImagePickSession.tempPath(ext)
+        do {
+            try FileManager.default.copyItem(at: url, to: URL(fileURLWithPath: dest))
+            return dest
+        } catch {
+            return nil
+        }
+    }
+
+    func writeBytes(_ data: Data, ext: String) -> String? {
+        let dest = SerialImagePickSession.tempPath(ext)
+        do {
+            try data.write(to: URL(fileURLWithPath: dest))
+            return dest
+        } catch {
+            return nil
+        }
+    }
+
+    static func tempPath(_ ext: String) -> String {
+        let dir = (NSTemporaryDirectory() as NSString).appendingPathComponent("nm_pick")
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        return (dir as NSString).appendingPathComponent(UUID().uuidString + "." + ext)
+    }
+
+    static func imageKind(_ data: Data) -> String {
+        if data.count >= 3 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
+            return "jpg"
+        }
+        if data.count >= 8 && data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 {
+            return "png"
+        }
+        if data.count >= 6 && data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 {
+            return "gif"
+        }
+        return ""
+    }
+
+    func finish(_ paths: [String]) {
+        if finished { return }
+        finished = true
+        onComplete(paths)
+    }
+
+    static func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let window = scenes.flatMap { $0.windows }.first { $0.isKeyWindow } ?? scenes.first?.windows.first
+        var top = window?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
+    }
 }

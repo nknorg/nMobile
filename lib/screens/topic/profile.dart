@@ -16,6 +16,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -185,6 +186,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       remarkAvatarPath = picked.path;
       remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     }
+    await FileCrypto.encryptInPlace(remarkAvatarPath);
 
     topicCommon.setAvatar(_topic?.topicId, remarkAvatarLocalPath, notify: true); // await
   }

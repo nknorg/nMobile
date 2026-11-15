@@ -12,6 +12,7 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/native/common.dart' as NativeCommon;
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -56,30 +57,43 @@ class MediaPicker {
     // } catch (e, st) {
     //   handleError(e, st);
     // }
-    List<XFile>? pickedResults;
+    // iOS saves one asset at a time. The plugin encodes the whole selection
+    // concurrently, and overlapping JPEG writes come back black.
+    List<Map<String, String?>> pickedFiles = [];
     try {
-      pickedResults = await picker.pickMultipleMedia(limit: maxNum);
+      if (Platform.isIOS) {
+        List<String> paths = await NativeCommon.Common.pickImages(maxNum);
+        for (var path in paths) {
+          pickedFiles.add({'path': path, 'mime': null});
+        }
+      } else {
+        List<XFile> pickedResults = await picker.pickMultipleMedia(limit: maxNum);
+        if (pickedResults.length > maxNum) {
+          Toast.show(Settings.locale((s) => s.file_too_many(maxNum)));
+          pickedResults = pickedResults.sublist(0, maxNum);
+        }
+        for (var entity in pickedResults) {
+          if (entity.path.isEmpty) continue;
+          pickedFiles.add({'path': entity.path, 'mime': entity.mimeType});
+        }
+      }
     } catch (e, st) {
-
+      handleError(e, st);
     }
 
-    if (pickedResults != null && pickedResults.length > maxNum) {
-      Toast.show(Settings.locale((s) => s.file_too_many(maxNum)));
-      pickedResults = pickedResults.sublist(0, maxNum);
-    }
-
-    if (pickedResults == null || pickedResults.isEmpty) {
+    if (pickedFiles.isEmpty) {
       logger.d("MediaPicker - pickCommons - pickedResults = null");
       return [];
     }
 
     // result
     List<Map<String, dynamic>> pickedMaps = [];
-    for (var i = 0; i < pickedResults.length; i++) {
+    for (var i = 0; i < pickedFiles.length; i++) {
       // exist
-      XFile? entity = pickedResults[i];
-      File file = File(entity.path);
-      if (entity == null || entity.path.isEmpty) {
+      String pickedPath = pickedFiles[i]['path'] ?? '';
+      String? pickedMime = pickedFiles[i]['mime'];
+      File file = File(pickedPath);
+      if (pickedPath.isEmpty) {
         logger.e("MediaPicker - pickCommons - pickedResults originFile = null");
         continue;
       }
@@ -98,7 +112,7 @@ class MediaPicker {
       }
 
       String ext = "";
-      List<String>? splits = entity.mimeType?.split("/");
+      List<String>? splits = pickedMime?.split("/");
       if (splits != null && splits.length > 1) {
         ext = splits[splits.length - 1];
       }
@@ -137,6 +151,11 @@ class MediaPicker {
       if (maxSize != null && maxSize > 0) {
         if (size >= maxSize) {
           Toast.show(Settings.locale((s) => s.file_too_big));
+          if (pickedPath.contains('/nm_pick/')) {
+            try {
+              await file.delete();
+            } catch (e) {}
+          }
           continue;
         }
       }
@@ -173,6 +192,11 @@ class MediaPicker {
           params.addAll({"duration": videoController.value.duration.inSeconds});
         }
         pickedMaps.add(params);
+      }
+      if (pickedPath.contains('/nm_pick/') && savePath != file.absolute.path) {
+        try {
+          await file.delete();
+        } catch (e) {}
       }
       logger.i("MediaPicker - pickCommons - picked success - params:$pickedMaps");
     }

@@ -66,6 +66,34 @@ $ cd ios
 $ pod install
 ```
 
+### Build development
+
+To build an iOS development build:
+
+```
+flutter build ios --dart-define=APP_ENV=development
+```
+
+To build an Android development APK:
+
+```
+flutter build apk --dart-define=APP_ENV=development
+```
+
+### Build release
+
+To build an iOS release with the production environment, run:
+
+```
+flutter build ios --release --dart-define=APP_ENV=production
+```
+
+To build an Android APK release with the production environment, run:
+
+```
+flutter build apk --release --dart-define=APP_ENV=production
+```
+
 ### Run the app in device
 
 > [https://flutter.dev/docs/get-started/test-drive](https://flutter.dev/docs/get-started/test-drive)

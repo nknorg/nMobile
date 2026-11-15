@@ -3,6 +3,7 @@ import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/screens/contact/add.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/screens/contact/more_profile.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 
 Map<String, WidgetBuilder> _routes = {
@@ -10,6 +11,7 @@ Map<String, WidgetBuilder> _routes = {
   ContactAddScreen.routeName: (BuildContext context) => ContactAddScreen(),
   ContactProfileScreen.routeName: (BuildContext context, {arguments}) => ContactProfileScreen(arguments: arguments),
   ContactChatProfileScreen.routeName: (BuildContext context, {arguments}) => ContactChatProfileScreen(arguments: arguments),
+  ContactMoreProfileScreen.routeName: (BuildContext context, {arguments}) => ContactMoreProfileScreen(arguments: arguments),
 };
 
 init() {

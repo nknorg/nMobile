@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -96,7 +97,7 @@ class ContactSchema {
     if (Validate.isNknAddressOk(walletAddress)) return walletAddress;
     try {
       if (Validate.isNknPublicKey(pubKey)) {
-        walletAddress = (await Wallet.pubKeyToWalletAddr(pubKey)) ?? "";
+        walletAddress = (await Wallet.pubKeyToWalletAddr(hexDecode(pubKey))) ?? "";
       }
     } catch (e, st) {
       handleError(e, st);

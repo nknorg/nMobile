@@ -1,8 +1,9 @@
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -105,11 +106,17 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
   }
 
   Future _save() async {
-    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-      return null;
-    }
-    if ((await Permission.storage.request()) != PermissionStatus.granted) {
-      return null;
+    if (Platform.isIOS) {
+      if ((await Permission.photos.request()) != PermissionStatus.granted) {
+        return null;
+      }
+    } else if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt <= 32) {
+        if ((await Permission.storage.request()) != PermissionStatus.granted) {
+          return null;
+        }
+      }
     }
 
     File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
@@ -118,7 +125,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
     if (file == null || !await file.exists() || _content == null || (_content?.isEmpty == true)) return;
     String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
 
-    Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: videoName, isReturnPathOfIOS: true);
+    Map? result = await ImageGallerySaverPlus.saveFile(file.absolute.path, name: videoName, isReturnPathOfIOS: true);
 
     logger.i("VideoScreen - save copy file - path:${result?["filePath"]}");
     Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));

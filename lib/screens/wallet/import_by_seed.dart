@@ -81,7 +81,6 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
       String seed = _seedController.text.replaceAll("\n", "").trim();
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.i("$TAG - seed:$seed, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {

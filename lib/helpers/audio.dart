@@ -76,7 +76,7 @@ class AudioHelper with Tag {
   ///******************************************************* Player ********************************************************
   ///***********************************************************************************************************************
 
-  Future<bool> playStart(String playerId, String localPath, {int? durationMs, Function(PlaybackDisposition)? onProgress}) async {
+  Future<bool> playStart(String playerId, String localPath, {int? durationMs, Function(PlaybackDisposition)? onProgress, void Function()? onFinished}) async {
     logger.i("$TAG - playStart - playerId:$playerId - localPath:$localPath - durationMs:$durationMs");
     if (isPlayReleasing) return false;
     // permission
@@ -167,7 +167,7 @@ class AudioHelper with Tag {
               "position": 0,
               "percent": 0,
             });
-            playStop();
+            playStop().whenComplete(() => onFinished?.call());
           });
     } catch (e, st) {
       handleError(e, st);

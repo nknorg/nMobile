@@ -9,6 +9,11 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'contact.dart';
+import 'message.dart';
+import 'private_group.dart';
+import 'topic.dart';
+
 class SessionStorage with Tag {
   // static String get tableName => 'Session';
   static String get tableName => 'session_v7'; // v7
@@ -330,5 +335,140 @@ class SessionStorage with Tag {
           return false;
         }) ??
         false;
+  }
+
+  Future<List<SessionSchema>> queryListBySearch(String query) async {
+    if (query.trim().isEmpty) {
+      return await queryListRecent(offset: 0, limit: 1000);
+    }
+
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - queryListBySearch");
+      }
+      return [];
+    }
+
+    try {
+      String searchPattern = '%${query.trim()}%';
+      String lowerPattern = searchPattern.toLowerCase();
+      String lowerQuery = query.trim().toLowerCase();
+
+      // Get all sessions
+      List<SessionSchema> allSessions = [];
+      int offset = 0;
+      const int limit = 100;
+      while (true) {
+        List<SessionSchema> sessions = await queryListRecent(offset: offset, limit: limit);
+        if (sessions.isEmpty) break;
+        allSessions.addAll(sessions);
+        if (sessions.length < limit) break;
+        offset += limit;
+      }
+
+      List<SessionSchema> filtered = [];
+
+      for (var session in allSessions) {
+        bool matches = false;
+
+        // Check last message content in database
+        if (!matches) {
+          try {
+            List<Map<String, dynamic>>? msgResults = await db?.rawQuery(
+              'SELECT * FROM ${MessageStorage.tableName} WHERE target_id = ? AND target_type = ? AND is_delete = 0 AND (LOWER(content) LIKE ? OR LOWER(type) LIKE ?) ORDER BY send_at DESC LIMIT 1',
+              [session.targetId, session.type, lowerPattern, lowerPattern],
+            );
+            if (msgResults != null && msgResults.isNotEmpty) {
+              matches = true;
+            }
+          } catch (e) {
+            logger.w("$TAG - queryListBySearch - Search message error: $e");
+          }
+        }
+
+        // Check contact/topic/group name in database
+        if (!matches) {
+          if (session.type == SessionType.CONTACT) {
+            // Check contact name and address in database
+            try {
+              List<Map<String, dynamic>>? contactResults = await db?.rawQuery(
+                'SELECT * FROM ${ContactStorage.tableName} WHERE address = ? AND (LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ? OR LOWER(remark_name) LIKE ? OR LOWER(address) LIKE ?) LIMIT 1',
+                [session.targetId, lowerPattern, lowerPattern, lowerPattern, lowerPattern, lowerPattern],
+              );
+              if (contactResults != null && contactResults.isNotEmpty) {
+                matches = true;
+              } else {
+                // Fallback to targetId
+                if (session.targetId.toLowerCase().contains(lowerQuery)) {
+                  matches = true;
+                }
+              }
+            } catch (e) {
+              logger.w("$TAG - queryListBySearch - Search contact error: $e");
+              // Fallback to targetId
+              if (session.targetId.toLowerCase().contains(lowerQuery)) {
+                matches = true;
+              }
+            }
+          } else if (session.type == SessionType.TOPIC) {
+            // Check topic name in database
+            try {
+              List<Map<String, dynamic>>? topicResults = await db?.rawQuery(
+                'SELECT * FROM ${TopicStorage.tableName} WHERE topic_id = ? AND LOWER(topic_id) LIKE ? LIMIT 1',
+                [session.targetId, lowerPattern],
+              );
+              if (topicResults != null && topicResults.isNotEmpty) {
+                matches = true;
+              } else {
+                // Fallback to targetId
+                if (session.targetId.toLowerCase().contains(lowerQuery)) {
+                  matches = true;
+                }
+              }
+            } catch (e) {
+              logger.w("$TAG - queryListBySearch - Search topic error: $e");
+              // Fallback to targetId
+              if (session.targetId.toLowerCase().contains(lowerQuery)) {
+                matches = true;
+              }
+            }
+          } else if (session.type == SessionType.PRIVATE_GROUP) {
+            // Check group name in database
+            try {
+              List<Map<String, dynamic>>? groupResults = await db?.rawQuery(
+                'SELECT * FROM ${PrivateGroupStorage.tableName} WHERE group_id = ? AND LOWER(name) LIKE ? LIMIT 1',
+                [session.targetId, lowerPattern],
+              );
+              if (groupResults != null && groupResults.isNotEmpty) {
+                matches = true;
+              } else {
+                // Fallback to targetId
+                if (session.targetId.toLowerCase().contains(lowerQuery)) {
+                  matches = true;
+                }
+              }
+            } catch (e) {
+              logger.w("$TAG - queryListBySearch - Search group error: $e");
+              // Fallback to targetId
+              if (session.targetId.toLowerCase().contains(lowerQuery)) {
+                matches = true;
+              }
+            }
+          }
+        }
+
+        if (matches) {
+          filtered.add(session);
+        }
+      }
+
+      // Sort filtered results
+      filtered.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageAt).compareTo((a.lastMessageAt)) : -1) : (b.isTop ? 1 : b.lastMessageAt.compareTo(a.lastMessageAt)));
+
+      return filtered;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
   }
 }

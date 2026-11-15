@@ -20,6 +20,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -38,8 +39,11 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:nmobile/utils/util.dart';
 import 'package:nmobile/utils/path.dart' as Path2;
 import 'package:nmobile/utils/time.dart';
+
+import '../../components/chat/emoji_picker.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
@@ -103,9 +107,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Timer? _delRefreshTimer;
 
   bool _showBottomMenu = false;
+  bool _showEmojiPicker = false;
 
   bool _showRecordLock = false;
   bool _showRecordLockLocked = false;
+
+  final TextEditingController _inputController = TextEditingController();
 
   @override
   void onRefreshArguments() {
@@ -125,6 +132,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   @override
   void initState() {
     super.initState();
+    FileCrypto.clearTempSync();
     messageCommon.chattingTargetId = this._targetId;
     _moreLoading = false;
 
@@ -138,10 +146,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((bool inBackground) {
+    _appLifeChangeSubscription = application.appLifeStream.listen((bool inBackground) async {
       if (inBackground) {
-        audioHelper.playerRelease(); // await
-        audioHelper.recordRelease(); // await
+        await audioHelper.playerRelease();
+        await audioHelper.recordRelease();
+        await FileCrypto.releasePlayback();
       } else {
         int gap = application.goForegroundAt - application.goBackgroundAt;
         if (gap >= Settings.gapClientReAuthMs) {
@@ -308,6 +317,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     audioHelper.playerRelease(); // await
     audioHelper.recordRelease(); // await
+    FileCrypto.clearTempSync();
 
     _onInputChangeController.close();
     _clientStatusSubscription?.cancel();
@@ -412,7 +422,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (!clientCommon.isClientOK) return;
     if (this._targetType != SessionType.PRIVATE_GROUP) return;
     PrivateGroupSchema _privateGroup = this._target as PrivateGroupSchema;
-    if (privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address)) return;
+    await privateGroupCommon.ensurePrivateGroupMembersMatchChain(_privateGroup);
+    _privateGroup = (await privateGroupCommon.queryGroup(_privateGroup.groupId)) ?? _privateGroup;
+    bool owner = privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address);
+    bool incomplete = await privateGroupCommon.isPrivateGroupStateIncomplete(_privateGroup);
+    if (owner && incomplete) {
+      await privateGroupCommon.recoverOwnerPrivateGroup(_privateGroup, null);
+      return;
+    }
+    if (owner) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup.ownerPublicKey, _privateGroup.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
       if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup.groupId, _privateGroup.version, notify: true);
     }); // await
@@ -433,16 +451,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _toggleBottomMenu() {
-    if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+    if (mounted) Util.hideKeyboard(context);
     setState(() {
       _showBottomMenu = !_showBottomMenu;
+      if (_showBottomMenu) {
+        _showEmojiPicker = false;
+      }
     });
   }
 
   _hideAll() {
-    if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+    if (mounted) Util.hideKeyboard(context);
     setState(() {
       _showBottomMenu = false;
+      _showEmojiPicker = false;
     });
   }
 
@@ -749,6 +771,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         ],
       ),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () {
           _hideAll();
         },
@@ -767,13 +790,38 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       itemBuilder: (BuildContext context, int index) {
                         if (index < 0 || index >= _messages.length) return SizedBox.shrink();
                         MessageSchema msg = _messages[index];
+                        bool shouldShowResend = false;
+                        if (msg.isOutbound && 
+                            msg.status >= MessageStatus.Success && 
+                            msg.status < MessageStatus.Receipt) {
+                          if (msg.status == MessageStatus.Error) {
+                            shouldShowResend = true;
+                          } else {
+                            int now = DateTime.now().millisecondsSinceEpoch;
+                            int sendAt = msg.sendAt;
+                            int timeDiff = now - sendAt;
+                            bool isWithin10Seconds = timeDiff < 10000; // 10秒 = 10000毫秒
+                            
+                            if (!isWithin10Seconds) {
+                              if (index > 0) {
+                                for (int i = 0; i < index; i++) {
+                                  MessageSchema checkMsg = _messages[i];
+                                  if (checkMsg.isOutbound && 
+                                      checkMsg.status >= MessageStatus.Receipt) {
+                                    shouldShowResend = true;
+                                    break;
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                        bool lastMessageHasReceipt = shouldShowResend;
                         return ChatMessageItem(
                           message: msg,
-                          // sender: _sender,
-                          // topic: _topic,
-                          // privateGroup: _privateGroup,
                           prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
                           nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
+                          lastMessageHasReceipt: lastMessageHasReceipt,
                           onAvatarPress: (ContactSchema contact, _) {
                             ContactProfileScreen.go(context, schema: contact);
                           },
@@ -826,16 +874,25 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               ChatSendBar(
                 targetId: this._targetId,
                 disableTip: disableTip,
+                controller: _inputController,
                 onMenuPressed: () {
                   _toggleBottomMenu();
+                },
+                onEmojiPressed: () {
+                  if (mounted) Util.hideKeyboard(context);
+                  setState(() {
+                    _showBottomMenu = false;
+                    _showEmojiPicker = !_showEmojiPicker;
+                  });
                 },
                 onSendPress: (String content) {
                   return chatOutCommon.sendText(this._target, content); // await
                 },
                 onInputFocus: (bool focus) {
-                  if (focus && _showBottomMenu) {
+                  if (focus) {
                     setState(() {
                       _showBottomMenu = false;
+                      _showEmojiPicker = false;
                     });
                   }
                 },
@@ -904,7 +961,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       target: _targetId,
                       show: _showBottomMenu,
                       onPicked: (List<Map<String, dynamic>> results) async {
-                        if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+                        if (mounted) Util.hideKeyboard(context);
                         if (results.isEmpty) return;
                         for (var i = 0; i < results.length; i++) {
                           Map<String, dynamic> result = results[i];
@@ -916,16 +973,21 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           // no message_type(video/file), and result no mime_type from file_picker
                           // so big_file and video+file go with type_ipfs
                           if ((mimeType?.contains("image") == true) && (size <= Settings.piecesMaxSize)) {
-                            chatOutCommon.sendImage(this._target, File(path)); // await
+                            await chatOutCommon.sendImage(this._target, File(path));
                           } else if ((mimeType?.contains("audio") == true) && (size <= Settings.piecesMaxSize)) {
-                            chatOutCommon.sendAudio(this._target, File(path), durationS); // await
+                            await chatOutCommon.sendAudio(this._target, File(path), durationS);
                           } else {
-                            chatOutCommon.saveIpfs(this._target, result); // await
+                            await chatOutCommon.saveIpfs(this._target, result);
                           }
                         }
                       },
                     )
                   : SizedBox.shrink(),
+              isClientSendOk ? EmojiPickerBottomMenu(
+                target: _targetId,
+                show: _showEmojiPicker,
+                controller: _inputController,
+              ) : SizedBox.shrink(),
             ],
           ),
         ),

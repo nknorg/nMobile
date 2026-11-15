@@ -43,6 +43,19 @@ class Common {
     return false;
   }
 
+  static Future<List<String>> pickImages(int limit) async {
+    try {
+      final List<dynamic>? paths = await _methodChannel.invokeMethod('pickImages', {
+        'limit': limit,
+      });
+      if (paths == null) return [];
+      return paths.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
+  }
+
   static Future<bool> saveMediaToGallery(Uint8List imageData, String imageName, String albumName) async {
     try {
       await _methodChannel.invokeMethod('saveImageToGallery', {

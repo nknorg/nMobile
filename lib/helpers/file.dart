@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class FileHelper {
@@ -14,7 +15,9 @@ class FileHelper {
   static Future<String?> convertFileToBase64(File? file, {String? type}) async {
     if (file == null) return null;
     if (!file.existsSync()) return null;
-    String base64Data = base64Encode(file.readAsBytesSync());
+    Uint8List? bytes = await FileCrypto.readPlainBytes(file.path);
+    if (bytes == null || bytes.isEmpty) return null;
+    String base64Data = base64Encode(bytes);
     if (type?.isNotEmpty == true) {
       return '![$type](data:${mime(file.path)};base64,$base64Data)';
     } else {

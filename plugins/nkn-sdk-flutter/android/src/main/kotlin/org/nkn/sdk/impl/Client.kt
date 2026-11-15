@@ -7,7 +7,6 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nkn.Account
@@ -34,6 +33,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     lateinit var methodChannel: MethodChannel
     lateinit var eventChannel: EventChannel
     var eventSink: EventChannel.EventSink? = null
+
+    private val NUM_SUB_CLIENTS = 3L
+    private val CONNECT_RETRIES = -1
+    private val MAX_RECONNECT_INTERVAL = 5000
 
     private var clientMap: HashMap<String, HashMap<Long, MultiClient>> = hashMapOf()
 
@@ -62,9 +65,13 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         connectRetries: Int,
         maxReconnectInterval: Int,
         ethResolverConfigArray: ArrayList<Map<String, Any>>?,
-        dnsResolverConfigArray: ArrayList<Map<String, Any>>?
+        dnsResolverConfigArray: ArrayList<Map<String, Any>>?,
+        crossSendPolicy: Int?
     ): ClientConfig {
         val config = ClientConfig()
+        if (crossSendPolicy != null) {
+            config.crossSendPolicy = crossSendPolicy
+        }
         try {
             if (seedRpc != null) {
                 config.seedRPCServerAddr = StringArray(null)
@@ -76,20 +83,20 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             config.connectRetries = connectRetries
             config.maxReconnectInterval = maxReconnectInterval
 
-            if (!ethResolverConfigArray.isNullOrEmpty()) {
-                for (cfg in ethResolverConfigArray) {
-                    val ethResolverConfig: ethresolver.Config = ethresolver.Config()
-                    ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
-                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?: ""
-                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?: ""
-                    val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
-                    if (config.resolvers == null) {
-                        config.resolvers = nkngomobile.ResolverArray(ethResolver)
-                    } else {
-                        config.resolvers.append(ethResolver)
-                    }
-                }
-            }
+//            if (!ethResolverConfigArray.isNullOrEmpty()) {
+//                for (cfg in ethResolverConfigArray) {
+//                    val ethResolverConfig: ethresolver.Config = ethresolver.Config()
+//                    ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
+//                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?: ""
+//                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?: ""
+//                    val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
+//                    if (config.resolvers == null) {
+//                        config.resolvers = nkngomobile.ResolverArray(ethResolver)
+//                    } else {
+//                        config.resolvers.append(ethResolver)
+//                    }
+//                }
+//            }
 
             if (!dnsResolverConfigArray.isNullOrEmpty()) {
                 for (cfg in dnsResolverConfigArray) {
@@ -254,6 +261,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "getSubscription" -> getSubscription(call, result)
             "getHeight" -> getHeight(call, result)
             "getNonce" -> getNonce(call, result)
+            "getSubClientConnectionStates" -> getSubClientConnectionStates(call, result)
             else -> result.notImplemented()
         }
     }
@@ -269,13 +277,14 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
         val dnsResolverConfigArray =
             call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
+        val crossSendPolicy = call.argument<Int?>("crossSendPolicy")
 
         if (seed == null) {
             result.error("", "params error", "create")
             return
         }
 
-        val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray)
+        val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray, crossSendPolicy)
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -332,13 +341,14 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
         val dnsResolverConfigArray =
             call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
+        val crossSendPolicy = call.argument<Int?>("crossSendPolicy")
 
         if (seed == null) {
             result.error("", "params error", "recreate")
             return
         }
 
-        val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray)
+        val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray, crossSendPolicy)
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -805,5 +815,32 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 return@launch
             }
         }
+    }
+
+    private fun getSubClientConnectionStates(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id") ?: ""
+        val multiClient = getClientLatest(_id) ?: run {
+            result.success(emptyList<Map<String, Any>>())
+            return
+        }
+        val list = mutableListOf<Map<String, Any>>()
+        for (i in 0 until 16) {
+            val c = multiClient.getClient(i.toLong()) ?: break
+            val stats = multiClient.getClientStats(i.toLong())
+            val connectTime = try {
+                (stats?.javaClass?.getMethod("getConnectTime")?.invoke(stats) as? Number)?.toLong()?.toInt() ?: 0
+            } catch (e: Exception) {
+                0
+            }
+            val item = mutableMapOf<String, Any>(
+                "index" to i,
+                "state" to c.state.toInt(),
+                "connectTime" to connectTime,
+                "reconnectCount" to ((stats?.reconnectCount as? Number)?.toInt() ?: 0),
+                "sendFailureCount" to ((stats?.sendFailureCount as? Number)?.toInt() ?: 0)
+            )
+            list.add(item)
+        }
+        result.success(list)
     }
 }

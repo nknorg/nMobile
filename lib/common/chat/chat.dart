@@ -6,6 +6,7 @@ import 'package:nmobile/common/push/badge.dart' as Badge;
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -351,11 +352,18 @@ class ChatCommon with Tag {
     if (exists == null) return null;
     // sync
     if (!message.isOutbound) {
-      if ((clientCommon.address != null) && !privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
+      await privateGroupCommon.ensurePrivateGroupMembersMatchChain(exists);
+      exists = await privateGroupCommon.queryGroup(exists.groupId) ?? exists;
+      bool owner = (clientCommon.address != null) && privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address);
+      bool incomplete = await privateGroupCommon.isPrivateGroupStateIncomplete(exists);
+      if (owner && incomplete) {
+        await privateGroupCommon.recoverOwnerPrivateGroup(exists, message);
+        exists = await privateGroupCommon.queryGroup(exists.groupId) ?? exists;
+      } else if (!owner) {
         String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
         int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
         int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
-        if (nativeCommits < remoteCommits) {
+        if (nativeCommits < remoteCommits || incomplete) {
           logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits - sender:${message.sender}');
           // burning
           if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.sender) && message.canBurning) {
@@ -377,6 +385,9 @@ class ChatCommon with Tag {
           chatOutCommon.sendPrivateGroupOptionRequest(message.sender, message.targetId, gap: gap).then((value) {
             if (value) privateGroupCommon.setGroupOptionsRequestInfo(exists?.groupId, remoteVersion, notify: true);
           }); // await
+          if (incomplete) {
+            privateGroupCommon.recoverMemberPrivateGroup(exists, message);
+          }
         }
       }
     }
@@ -487,6 +498,13 @@ class ChatCommon with Tag {
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await messageCommon.updateMessageOptions(message, message.options);
       }
+      if (message.isContentFile) {
+        await FileCrypto.encryptInPlace((message.content as File).path);
+      }
+      String? storedThumb = MessageOptions.getMediaThumbnailPath(message.options);
+      if (storedThumb != null && storedThumb.isNotEmpty) {
+        await FileCrypto.encryptInPlace(storedThumb);
+      }
       return message;
     }
     // file_exist
@@ -515,15 +533,22 @@ class ChatCommon with Tag {
     // ipfs
     bool success = false;
     Completer completer = Completer();
+    String? plainPath = await FileCrypto.openForRead(file.absolute.path);
+    if (plainPath == null || plainPath.isEmpty) plainPath = file.absolute.path;
     ipfsHelper.uploadFile(
       message.msgId,
-      file.absolute.path,
+      plainPath,
       encrypt: true,
       onProgress: (percent) {
         messageCommon.onProgressSink.add({"msg_id": message?.msgId, "percent": percent});
       },
       onSuccess: (result) async {
         logger.i("$TAG - startIpfsUpload - success - result:$result - options${message?.options}");
+        await FileCrypto.encryptInPlace(file.absolute.path);
+        String? thumb = MessageOptions.getMediaThumbnailPath(message?.options);
+        if (thumb != null && thumb.isNotEmpty) {
+          await FileCrypto.encryptInPlace(thumb);
+        }
         message?.options = MessageOptions.setIpfsResult(
           message?.options,
           result[IpfsHelper.KEY_IP],
@@ -550,6 +575,7 @@ class ChatCommon with Tag {
       },
     );
     await completer.future;
+    if (plainPath != file.absolute.path) await FileCrypto.release(file.absolute.path);
     return success ? message : null;
   }
 
@@ -583,6 +609,9 @@ class ChatCommon with Tag {
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         await messageCommon.updateMessageOptions(message, message.options, notify: false);
       }
+      if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
+        await FileCrypto.encryptInPlace(thumbnailPath);
+      }
       return [message, true];
     } else if (thumbnailPath == null || thumbnailPath.isEmpty) {
       logger.d("$TAG - _tryIpfsThumbnailUpload - no thumbnail - options${message.options}");
@@ -594,12 +623,15 @@ class ChatCommon with Tag {
     // ipfs
     bool success = false;
     Completer completer = Completer();
+    String? plainThumb = await FileCrypto.openForRead(thumbnailPath);
+    if (plainThumb == null || plainThumb.isEmpty) plainThumb = thumbnailPath;
     ipfsHelper.uploadFile(
       message.msgId,
-      thumbnailPath,
+      plainThumb,
       encrypt: true,
       onSuccess: (result) async {
         logger.i("$TAG - _tryIpfsThumbnailUpload - success - result:$result - options${message.options}");
+        await FileCrypto.encryptInPlace(thumbnailPath);
         message.options = MessageOptions.setIpfsResultThumbnail(
           message.options,
           result[IpfsHelper.KEY_IP],
@@ -624,6 +656,7 @@ class ChatCommon with Tag {
       },
     );
     await completer.future;
+    if (plainThumb != thumbnailPath) await FileCrypto.release(thumbnailPath);
     return [success ? message : null, true];
   }
 
@@ -665,9 +698,6 @@ class ChatCommon with Tag {
       },
       onSuccess: () async {
         logger.i("$TAG - startIpfsDownload - success - options${message.options}");
-        message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
-        await messageCommon.updateMessageOptions(message, message.options);
-        await _onIpfsDownload(walletAddress, message.msgId, "FILE", true);
         success = true;
         if (!completer.isCompleted) completer.complete();
       },
@@ -682,24 +712,37 @@ class ChatCommon with Tag {
       },
     );
     await completer.future;
-    // thumbnail
+    // thumbnail from the plaintext download, then encrypt received files before UI refresh
+    String? createdThumbnailPath;
     int? fileType = MessageOptions.getFileType(message.options);
     if (success && (fileType == MessageOptions.fileTypeImage || fileType == MessageOptions.fileTypeVideo)) {
-      String? savePath = MessageOptions.getMediaThumbnailPath(message.options);
-      if (savePath == null || savePath.isEmpty) {
-        savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: message.targetId, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+      String? thumbPath = MessageOptions.getMediaThumbnailPath(message.options);
+      if (thumbPath == null || thumbPath.isEmpty) {
+        thumbPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: message.targetId, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
       }
       File? file = message.content as File?;
-      File thumbnail = File(savePath);
+      File thumbnail = File(thumbPath);
       if ((file != null) && file.existsSync() && !thumbnail.existsSync()) {
         logger.i("$TAG - startIpfsDownload - create thumbnail when no exist - message:${message.toStringSimple()}");
-        Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(file.absolute.path, savePath);
+        Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(file.absolute.path, thumbPath);
         if (res != null && res.isNotEmpty) {
-          message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
+          createdThumbnailPath = thumbPath;
+          message.options = MessageOptions.setMediaThumbnailPath(message.options, thumbPath);
           message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
-          bool optionsOK = await messageCommon.updateMessageOptions(message, message.options);
-          await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", optionsOK);
         }
+      }
+    }
+    if (success) {
+      await FileCrypto.encryptInPlace(savePath);
+      String? thumb = createdThumbnailPath ?? MessageOptions.getMediaThumbnailPath(message.options);
+      if (thumb != null && thumb.isNotEmpty) {
+        await FileCrypto.encryptInPlace(thumb);
+      }
+      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
+      bool optionsOK = await messageCommon.updateMessageOptions(message, message.options);
+      await _onIpfsDownload(walletAddress, message.msgId, "FILE", true);
+      if (createdThumbnailPath != null) {
+        await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", optionsOK);
       }
     }
     return success ? message : null;
@@ -760,6 +803,7 @@ class ChatCommon with Tag {
       },
       onSuccess: () async {
         logger.i("$TAG - _tryIpfsThumbnailDownload - success - options${message.options}");
+        await FileCrypto.encryptInPlace(savePath);
         message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         bool optionsOK = await messageCommon.updateMessageOptions(message, message.options);

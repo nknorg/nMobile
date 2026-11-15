@@ -14,6 +14,11 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     let clientListenQueue = DispatchQueue(label: "org.nkn.sdk/client/listen_queue", qos: .userInitiated, attributes: .concurrent)
     let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
     
+
+    let NUM_SUB_CLIENTS = 3
+    let CONNECT_RETRIES = -1
+    let MAX_RECONNECT_INTERVAL = 5000
+
     var clientMap = Dictionary<String, Dictionary<Int, NknMultiClient>>()
     
     func install(binaryMessenger: FlutterBinaryMessenger) {
@@ -99,8 +104,11 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
     }
     
-    private func getClientConfig(seedRpc: [String]?, connectRetries: Int32, maxReconnectInterval: Int32, ethResolverConfigArray: [[String: Any]]?, dnsResolverConfigArray: [[String: Any]]?) -> NknClientConfig {
+    private func getClientConfig(seedRpc: [String]?, connectRetries: Int32, maxReconnectInterval: Int32, ethResolverConfigArray: [[String: Any]]?, dnsResolverConfigArray: [[String: Any]]?, crossSendPolicy: Int32?) -> NknClientConfig {
         let config: NknClientConfig = NknClientConfig()
+        if (crossSendPolicy != nil) {
+            config.crossSendPolicy = crossSendPolicy!
+        }
         do {
             if(seedRpc != nil) {
                 config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
@@ -112,19 +120,19 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
            config.connectRetries = connectRetries
            config.maxReconnectInterval = maxReconnectInterval
             
-           if ((ethResolverConfigArray != nil) && !ethResolverConfigArray!.isEmpty) {
-               for (_, cfg) in ethResolverConfigArray!.enumerated() {
-                   let ethResolverConfig: EthresolverConfig = EthresolverConfig()
-                   ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
-                   ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?? ""
-                   ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?? ""
-                   if (config.resolvers == nil) {
-                       config.resolvers = try NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
-                   } else {
-                       config.resolvers?.append(EthResolver(config: ethResolverConfig))
-                   }
-               }
-           }
+//           if ((ethResolverConfigArray != nil) && !ethResolverConfigArray!.isEmpty) {
+//               for (_, cfg) in ethResolverConfigArray!.enumerated() {
+//                   let ethResolverConfig: EthresolverConfig = EthresolverConfig()
+//                   ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
+//                   ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?? ""
+//                   ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?? ""
+//                   if (config.resolvers == nil) {
+//                       config.resolvers = try NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
+//                   } else {
+//                       config.resolvers?.append(EthResolver(config: ethResolverConfig))
+//                   }
+//               }
+//           }
 
            if ((dnsResolverConfigArray != nil) && !dnsResolverConfigArray!.isEmpty) {
                for (_, cfg) in dnsResolverConfigArray!.enumerated() {
@@ -317,6 +325,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             getHeight(call, result: result)
         case "getNonce":
             getNonce(call, result: result)
+         case "getSubClientConnectionStates":
+            getSubClientConnectionStates(call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -327,18 +337,19 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let identifier = args["identifier"] as? String ?? ""
         let seed = args["seed"] as? FlutterStandardTypedData
         let seedRpc = args["seedRpc"] as? [String]
-        let numSubClients = args["numSubClients"] as? Int ?? 3
-        let connectRetries = args["connectRetries"] as? Int32 ?? -1
-        let maxReconnectInterval = args["maxReconnectInterval"] as? Int32 ?? 5000
+        let numSubClients = args["numSubClients"] as? Int ?? NUM_SUB_CLIENTS
+        let connectRetries = args["connectRetries"] as? Int32 ?? Int32(CONNECT_RETRIES)
+        let maxReconnectInterval = args["maxReconnectInterval"] as? Int32 ?? Int32(MAX_RECONNECT_INTERVAL)
         let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
         let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
+        let crossSendPolicy = args["crossSendPolicy"] as? Int32
         
         if (seed == nil || seed?.data == nil) {
             self.resultError(result: result, code: "", message: "params error", details: "create")
             return
         }
         
-        let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
+        let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray, crossSendPolicy: crossSendPolicy)
         
         let queueItem = DispatchWorkItem {
             do {
@@ -404,13 +415,14 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let maxReconnectInterval = args["maxReconnectInterval"] as? Int32 ?? 5000
         let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
         let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
+        let crossSendPolicy = args["crossSendPolicy"] as? Int32
         
         if (seed == nil || seed?.data == nil) {
             self.resultError(result: result, code: "", message: "params error", details: "recreate")
             return
         }
         
-        let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
+        let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray, crossSendPolicy: crossSendPolicy)
         
         let queueItem = DispatchWorkItem {
             do {
@@ -894,5 +906,28 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             }
         }
         clientEventQueue.async(execute: queueItem)
+    }
+
+    private func getSubClientConnectionStates(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let _id = args["_id"] as? String ?? ""
+        guard let multiClient = getClientLatest(id: _id) else {
+            result([])
+            return
+        }
+        var list: [[String: Any]] = []
+        for i in 0..<16 {
+            guard let c = multiClient.getClient(i) else { break }
+            var item: [String: Any] = ["index": i, "state": Int(c.state), "connectTime": 0, "reconnectCount": 0, "sendFailureCount": 0]
+            if let stats = multiClient.getStats(i) {
+                item["reconnectCount"] = Int(stats.reconnectCount)
+                item["sendFailureCount"] = Int(stats.sendFailureCount)
+                if stats.responds(to: NSSelectorFromString("connectTime")), let ms = stats.value(forKey: "connectTime") as? Int64 {
+                    item["connectTime"] = Int(ms)
+                }
+            }
+            list.append(item)
+        }
+        result(list)
     }
 }

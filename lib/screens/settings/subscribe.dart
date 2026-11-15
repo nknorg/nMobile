@@ -183,7 +183,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _subscribeSpeedEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE}', value);
                                     setState(() {
@@ -236,7 +236,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                             children: <Widget>[
                               CupertinoSwitch(
                                   value: _resubscribeSpeedEnable,
-                                  activeColor: application.theme.primaryColor,
+                                  activeTrackColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE}', value);
                                     setState(() {

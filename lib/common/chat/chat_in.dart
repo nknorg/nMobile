@@ -5,6 +5,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -17,6 +18,8 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
+
+import '../../storages/message.dart';
 
 class ChatInCommon with Tag {
   ChatInCommon();
@@ -151,21 +154,19 @@ class ChatInCommon with Tag {
         if (received.isGroupAction) {
           // nothing
         } else {
-          if (privateGroup.joined != true) {
-            logger.w("$TAG - _handleMessage - group - deny message - me no joined - topic:$topic");
+          bool allowed = await privateGroupCommon.canReceiveGroupMessage(privateGroup, received);
+          if (!allowed) {
+            logger.w("$TAG - _handleMessage - group - deny message - permission check fail - group:$privateGroup - sender:${received.sender}");
             return;
           }
-          PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
-          if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
-            logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
-            return;
-          }
-          PrivateGroupItemSchema? _sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.sender);
-          if ((_sender == null) || (_sender.permission <= PrivateGroupItemPerm.none)) {
-            logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$_sender - group:$privateGroup");
-            return;
-          }
+          privateGroup = await privateGroupCommon.queryGroup(privateGroup.groupId) ?? privateGroup;
         }
+      }
+      bool blocked = await contactCommon.isBlocked(received.sender);
+      if (blocked) {
+        logger.w("$TAG - _handleMessage - blocked - store as deleted - sender:${received.sender} - targetId:${received.targetId} - type:${received.contentType}");
+        received.isDelete = true;
+        received.deleteAt = DateTime.now().millisecondsSinceEpoch;
       }
       // receive
       switch (received.contentType) {
@@ -228,6 +229,9 @@ class ChatInCommon with Tag {
           break;
         case MessageContentType.topicKickOut:
           await _receiveTopicKickOut(received);
+          break;
+        case MessageContentType.revoke:
+          await _receiveRevoke(received);
           break;
         case MessageContentType.privateGroupInvitation:
           insertOk = await _receivePrivateGroupInvitation(received);
@@ -470,6 +474,7 @@ class ChatInCommon with Tag {
               String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : FileHelper.DEFAULT_IMAGE_EXT;
               if (fileExt == null || fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
               File? avatar = await FileHelper.convertBase64toFile(avatarData, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: received.targetId, fileExt: ext ?? fileExt));
+              if (avatar != null) await FileCrypto.encryptInPlace(avatar.path);
               avatarPath = Path.convert2Local(avatar?.path);
             } else {
               logger.w("$TAG - _receiveContact - avatar_data is empty - data:$data - sender:${received.sender}");
@@ -526,6 +531,7 @@ class ChatInCommon with Tag {
       } else {
         logger.i("$TAG - _receiveContactOptions - deviceToken same - sender:${received.sender} - new:$deviceToken - deviceInfo:$deviceInfo");
       }
+      if (content['silent'] == true) return false;
     } else {
       logger.e("$TAG - _receiveContactOptions - setNothing - data:$data - sender:${received.sender}");
       return false;
@@ -645,6 +651,7 @@ class ChatInCommon with Tag {
       logger.e("$TAG - _receiveImage - content is null - message:${received.toStringSimple()}");
       return false;
     }
+    await FileCrypto.encryptInPlace((received.content as File).path);
     // DB
     MessageSchema? inserted = await messageCommon.insert(received);
     bool isPieceCombine = received.options?[MessageOptions.KEY_FROM_PIECE] ?? false;
@@ -665,6 +672,7 @@ class ChatInCommon with Tag {
       logger.e("$TAG - _receiveAudio - content is null - message:${received.toStringSimple()}");
       return false;
     }
+    await FileCrypto.encryptInPlace((received.content as File).path);
     // DB
     MessageSchema? inserted = await messageCommon.insert(received);
     bool isPieceCombine = received.options?[MessageOptions.KEY_FROM_PIECE] ?? false;
@@ -699,6 +707,9 @@ class ChatInCommon with Tag {
     } else {
       // received.status = MessageStatus.Read; // modify in before
       received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.cache, fileExt: ext ?? parentType));
+      if (received.content is File) {
+        await FileCrypto.encryptInPlace((received.content as File).path);
+      }
       piece = await messageCommon.insert(received);
       if (piece != null) {
         pieces.add(piece);
@@ -942,38 +953,34 @@ class ChatInCommon with Tag {
     await privateGroupCommon.updatePrivateGroupMembers(received.sender, groupId, version, members);
   }
 
+  Future<bool> _receiveRevoke(MessageSchema received) async {
+    // content is target msgId
+    String? targetMsgId = received.content?.toString();
+    if (targetMsgId == null || targetMsgId.isEmpty) return false;
+    MessageSchema? target = await messageCommon.query(targetMsgId);
+    if (target == null) return false;
+    // Only sender can revoke
+    String sender = received.sender;
+    bool isSameSender = target.isOutbound
+        ? (clientCommon.address == sender)
+        : (target.sender == sender);
+    if (!isSameSender) return false;
+    // Soft delete first
+    await MessageStorage.instance.updateIsDelete(target.msgId, true);
+    // Optional: deep delete pieces/content
+    await messageCommon.messageDelete(target, notify: true);
+    return true;
+  }
+
   Future<int> _deletePieces(String msgId) async {
-    final limit = 20;
-    List<MessageSchema> pieces = [];
-    for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await messageCommon.queryPieceList(msgId, offset: offset, limit: limit);
-      pieces.addAll(result);
-      if (result.length < limit) break;
-    }
-    logger.i("$TAG - _deletePieces - DELETE:START - pieces_count:${pieces.length}");
-    int count = 0;
+    logger.i("$TAG - _deletePieces - DELETE:START - msgId:$msgId");
     int result = await messageCommon.delete(msgId, MessageContentType.piece);
     if (result > 0) {
-      for (var i = 0; i < pieces.length; i++) {
-        MessageSchema piece = pieces[i];
-        if (piece.isContentFile) {
-          File file = piece.content as File;
-          if (file.existsSync()) {
-            await file.delete();
-            // logger.v("$TAG - _deletePieces - DELETE:PROGRESS - path:${(piece.content as File).path}");
-            count++;
-          } else {
-            // logger.v("$TAG - _deletePieces - DELETE:NO_EXISTS - path:${(piece.content as File).path}");
-          }
-        } else {
-          logger.w("$TAG - _deletePieces - DELETE:ERROR - empty:${piece.content?.toString()}");
-        }
-      }
-      logger.i("$TAG - _deletePieces - DELETE:SUCCESS - count:${pieces.length}");
+      logger.i("$TAG - _deletePieces - DELETE:SUCCESS - piece_rows:$result");
     } else {
-      logger.w("$TAG - _deletePieces - DELETE:FAIL - empty - pieces:$pieces");
+      logger.w("$TAG - _deletePieces - DELETE:FAIL - empty - msgId:$msgId");
     }
-    return count;
+    return result;
   }
 
   // SUPPORT:START

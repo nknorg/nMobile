@@ -9,8 +9,8 @@ class EthResolver : ChannelBase, FlutterStreamHandler {
     let METHOD_CHANNEL_NAME = "org.nkn.mobile/native/nameservice/ethresolver"
     var eventSink: FlutterEventSink?
     
-    public static func register(controller: FlutterViewController) {
-        instance.install(binaryMessenger: controller as! FlutterBinaryMessenger)
+    public static func register(messenger: FlutterBinaryMessenger) {
+        instance.install(binaryMessenger: messenger)
     }
     
     func install(binaryMessenger: FlutterBinaryMessenger) {

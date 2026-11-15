@@ -196,6 +196,10 @@ class SessionCommon with Tag {
     return SessionStorage.instance.queryListRecent(offset: offset, limit: limit);
   }
 
+  Future<List<SessionSchema>> queryListBySearch(String query) {
+    return SessionStorage.instance.queryListBySearch(query);
+  }
+
   Future<int> totalUnReadCount() {
     return SessionStorage.instance.querySumUnReadCount();
   }

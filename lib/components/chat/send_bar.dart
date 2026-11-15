@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -11,6 +12,8 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
+import '../../common/client/client.dart';
+
 class ChatSendBar extends BaseStateFulWidget {
   static const String ChangeTypeReplace = "replace";
   static const String ChangeTypeAppend = "append";
@@ -20,22 +23,26 @@ class ChatSendBar extends BaseStateFulWidget {
   final String? targetId;
   final String? disableTip;
   final VoidCallback? onMenuPressed;
+  final VoidCallback? onEmojiPressed;
   final Function(String)? onSendPress;
   final Function(bool)? onInputFocus;
   final Function(bool, bool, int)? onRecordTap;
   final Function(bool, bool)? onRecordLock;
   final Stream<Map<String, dynamic>>? onChangeStream;
+  final TextEditingController? controller;
 
   ChatSendBar({
     Key? key,
     required this.targetId,
     this.disableTip,
     this.onMenuPressed,
+    this.onEmojiPressed,
     this.onSendPress,
     this.onInputFocus,
     this.onRecordTap,
     this.onRecordLock,
     this.onChangeStream,
+    this.controller,
   }) : super(key: key);
 
   @override
@@ -46,10 +53,14 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   static const double ActionWidth = 66;
   static const double ActionHeight = 70;
 
+  StreamSubscription? _clientStatusChangeSubscription;
+  int clientConnectStatus = clientCommon.status;
+
   StreamSubscription? _onChangeSubscription;
   StreamSubscription? _onRecordProgressSubscription;
-  TextEditingController _inputController = TextEditingController();
+  late TextEditingController _inputController;
   FocusNode _inputFocusNode = FocusNode();
+  VoidCallback? _inputControllerListener;
 
   String? _draft;
   bool _canSendText = false;
@@ -66,7 +77,31 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   @override
   void initState() {
     super.initState();
+
+    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      if (clientConnectStatus != status) {
+        setState(() {
+          clientConnectStatus = status;
+        });
+      }
+    });
+
+    _inputController = widget.controller ?? TextEditingController();
     // input
+    _inputControllerListener = () {
+      String draft = _inputController.text;
+      if (draft.isNotEmpty) {
+        appCache.setDraft(clientCommon.address, widget.targetId, clientCommon.getSeed(), draft);
+      } else {
+        appCache.removeDraft(clientCommon.address, widget.targetId);
+      }
+      if (mounted) {
+        setState(() {
+          _canSendText = draft.isNotEmpty;
+        });
+      }
+    };
+    _inputController.addListener(_inputControllerListener!);
     _onChangeSubscription = widget.onChangeStream?.listen((event) {
       String? type = event["type"];
       if (type == null || type.isEmpty) return;
@@ -75,9 +110,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       } else if (type == ChatSendBar.ChangeTypeAppend) {
         _inputController.text += event["content"] ?? "";
       }
-      setState(() {
-        _canSendText = _inputController.text.isNotEmpty;
-      });
     });
     _inputFocusNode.addListener(() {
       widget.onInputFocus?.call(_inputFocusNode.hasFocus);
@@ -104,7 +136,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       });
     });
     // draft
-    _draft = memoryCache.getDraft(widget.targetId);
+    _draft = appCache.getDraft(clientCommon.address, widget.targetId, clientCommon.getSeed());
     if (_draft?.isNotEmpty == true) {
       _inputController.text = _draft!;
       _canSendText = true;
@@ -116,8 +148,13 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
 
   @override
   void dispose() {
+    _clientStatusChangeSubscription?.cancel();
     _onRecordProgressSubscription?.cancel();
     _onChangeSubscription?.cancel();
+    if (_inputControllerListener != null) {
+      _inputController.removeListener(_inputControllerListener!);
+    }
+    _inputFocusNode.dispose();
     super.dispose();
   }
 
@@ -238,7 +275,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     setState(() {
       _canSendText = false;
     });
-    memoryCache.removeDraft(widget.targetId);
+    appCache.removeDraft(clientCommon.address, widget.targetId);
     widget.onSendPress?.call(content); // await
   }
 
@@ -335,157 +372,184 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       child: Container(
         height: ActionHeight,
         color: application.theme.backgroundColor1,
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Stack(
-                children: [
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: ActionWidth,
-                        height: ActionHeight,
-                        child: UnconstrainedBox(
-                          child: Asset.iconSvg(
-                            'grid',
-                            width: 24,
-                            color: _theme.primaryColor,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: _theme.backgroundColor2,
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: <Widget>[
-                              Expanded(
-                                child: FixedTextField(
-                                  style: TextStyle(fontSize: 14, height: 1.4),
-                                  decoration: InputDecoration(
-                                    hintText: Settings.locale((s) => s.type_a_message, ctx: context),
-                                    hintStyle: TextStyle(color: _theme.fontColor2),
-                                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                                    border: UnderlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                                      borderSide: const BorderSide(width: 0, style: BorderStyle.none),
-                                    ),
-                                  ),
-                                  maxLines: 5,
-                                  minLines: 1,
-                                  controller: _inputController,
-                                  focusNode: _inputFocusNode,
-                                  textInputAction: TextInputAction.newline,
-                                  onChanged: (val) {
-                                    String draft = _inputController.text;
-                                    if (draft.isNotEmpty) {
-                                      memoryCache.setDraft(widget.targetId, draft);
-                                    } else {
-                                      memoryCache.removeDraft(widget.targetId);
-                                    }
-                                    setState(() {
-                                      _canSendText = val.isNotEmpty;
-                                    });
-                                  },
+        child: clientConnectStatus == ClientConnectStatus.connected || clientConnectStatus == ClientConnectStatus.connectPing
+            ? Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: ActionWidth,
+                              height: ActionHeight,
+                              child: UnconstrainedBox(
+                                child: Asset.iconSvg(
+                                  'grid',
+                                  width: 24,
+                                  color: _theme.primaryColor,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  _audioRecordVisible
-                      ? Container(
-                          color: application.theme.backgroundColor1,
-                          child: Container(
-                            color: _audioBgColorTween.transform(_audioDragPercent),
-                            child: Row(
-                              children: [
-                                SizedBox(width: 16),
-                                Icon(FontAwesomeIcons.microphone, size: 24, color: volumeColor),
-                                SizedBox(width: 8),
-                                Container(
-                                  child: Label(
-                                    recordDurationText,
-                                    type: LabelType.bodyRegular,
-                                    fontWeight: FontWeight.normal,
-                                    color: recordWidgetColor,
-                                  ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _theme.backgroundColor2,
+                                  borderRadius: BorderRadius.all(Radius.circular(20)),
                                 ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Container(
-                                    height: ActionHeight,
-                                    child: Center(
-                                      child: Label(
-                                        _audioLockedMode
-                                            ? Settings.locale((s) => s.cancel, ctx: context)
-                                            : (_audioDragPercent != 0 ? Settings.locale((s) => s.release_to_cancel, ctx: context) : Settings.locale((s) => s.slide_to_cancel)),
-                                        type: LabelType.bodyLarge,
-                                        textAlign: TextAlign.center,
-                                        color: recordWidgetColor,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: FixedTextField(
+                                        style: TextStyle(fontSize: 14, height: 1.4),
+                                        decoration: InputDecoration(
+                                          hintText: Settings.locale((s) => s.type_a_message, ctx: context),
+                                          hintStyle: TextStyle(color: _theme.fontColor2),
+                                          contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                          suffixIcon: GestureDetector(
+                                            onTap: widget.onEmojiPressed,
+                                            behavior: HitTestBehavior.opaque,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(right: 8, top: 4),
+                                              child: FaIcon(
+                                                FontAwesomeIcons.file,
+                                                color: application.theme.primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                          suffixIconConstraints: BoxConstraints(minHeight: 32, minWidth: 32),
+                                          border: UnderlineInputBorder(
+                                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                                            borderSide: const BorderSide(width: 0, style: BorderStyle.none),
+                                          ),
+                                        ),
+                                        maxLines: 5,
+                                        minLines: 1,
+                                        controller: _inputController,
+                                        focusNode: _inputFocusNode,
+                                        textInputAction: TextInputAction.newline,
+                                        onChanged: null,
                                       ),
                                     ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        _audioRecordVisible
+                            ? Container(
+                                color: application.theme.backgroundColor1,
+                                child: Container(
+                                  color: _audioBgColorTween.transform(_audioDragPercent),
+                                  child: Row(
+                                    children: [
+                                      SizedBox(width: 16),
+                                      Icon(FontAwesomeIcons.microphone, size: 24, color: volumeColor),
+                                      SizedBox(width: 8),
+                                      Container(
+                                        child: Label(
+                                          recordDurationText,
+                                          type: LabelType.bodyRegular,
+                                          fontWeight: FontWeight.normal,
+                                          color: recordWidgetColor,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Container(
+                                          height: ActionHeight,
+                                          child: Center(
+                                            child: Label(
+                                              _audioLockedMode
+                                                  ? Settings.locale((s) => s.cancel, ctx: context)
+                                                  : (_audioDragPercent != 0
+                                                      ? Settings.locale((s) => s.release_to_cancel, ctx: context)
+                                                      : Settings.locale((s) => s.slide_to_cancel)),
+                                              type: LabelType.bodyLarge,
+                                              textAlign: TextAlign.center,
+                                              color: recordWidgetColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 16),
+                                    ],
                                   ),
                                 ),
-                                SizedBox(width: 16),
-                              ],
+                              )
+                            : SizedBox.shrink()
+                      ],
+                    ),
+                  ),
+                  _canSendText
+                      ? SizedBox(
+                          width: ActionWidth,
+                          height: ActionHeight,
+                          child: UnconstrainedBox(
+                            child: Asset.iconSvg(
+                              'send',
+                              width: 24,
+                              color: _canSendText ? _theme.primaryColor : _theme.fontColor2,
                             ),
                           ),
                         )
-                      : SizedBox.shrink()
+                      : (_audioLockedMode
+                          ? Container(
+                              width: ActionWidth,
+                              height: ActionHeight,
+                              alignment: Alignment.center,
+                              color: application.theme.backgroundColor1,
+                              child: Label(
+                                Settings.locale((s) => s.send, ctx: context),
+                                type: LabelType.bodyLarge,
+                                textAlign: TextAlign.center,
+                                color: _theme.primaryColor,
+                              ),
+                            )
+                          : Container(
+                              color: application.theme.backgroundColor1,
+                              child: Container(
+                                color: _audioBgColorTween.transform(_audioDragPercent),
+                                child: SizedBox(
+                                  width: ActionWidth,
+                                  height: ActionHeight,
+                                  child: UnconstrainedBox(
+                                    child: Asset.iconSvg(
+                                      'microphone',
+                                      width: 24,
+                                      color: !_canSendText ? _theme.primaryColor : _theme.fontColor2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )),
+                  // _voiceAndSendWidget(),
                 ],
-              ),
-            ),
-            _canSendText
-                ? SizedBox(
-                    width: ActionWidth,
-                    height: ActionHeight,
-                    child: UnconstrainedBox(
-                      child: Asset.iconSvg(
-                        'send',
-                        width: 24,
-                        color: _canSendText ? _theme.primaryColor : _theme.fontColor2,
+              )
+            : Container(
+                height: ActionHeight,
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Label(
+                      Settings.locale((s) => s.connecting, ctx: context),
+                      type: LabelType.h4,
+                      color: application.theme.fontColor2,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2, left: 4),
+                      child: SpinKitThreeBounce(
+                        color: application.theme.fontColor2,
+                        size: 10,
                       ),
                     ),
-                  )
-                : (_audioLockedMode
-                    ? Container(
-                        width: ActionWidth,
-                        height: ActionHeight,
-                        alignment: Alignment.center,
-                        color: application.theme.backgroundColor1,
-                        child: Label(
-                          Settings.locale((s) => s.send, ctx: context),
-                          type: LabelType.bodyLarge,
-                          textAlign: TextAlign.center,
-                          color: _theme.primaryColor,
-                        ),
-                      )
-                    : Container(
-                        color: application.theme.backgroundColor1,
-                        child: Container(
-                          color: _audioBgColorTween.transform(_audioDragPercent),
-                          child: SizedBox(
-                            width: ActionWidth,
-                            height: ActionHeight,
-                            child: UnconstrainedBox(
-                              child: Asset.iconSvg(
-                                'microphone',
-                                width: 24,
-                                color: !_canSendText ? _theme.primaryColor : _theme.fontColor2,
-                              ),
-                            ),
-                          ),
-                        ),
-                      )),
-            // _voiceAndSendWidget(),
-          ],
-        ),
+                  ],
+                ),
+              ),
       ),
     );
   }

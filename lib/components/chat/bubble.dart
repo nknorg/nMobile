@@ -15,8 +15,8 @@ import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
-import 'package:nmobile/components/tip/popup_menu.dart' as PopMenu;
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/file_crypto.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/media.dart';
 import 'package:nmobile/utils/format.dart';
@@ -30,6 +30,7 @@ class ChatBubble extends BaseStateFulWidget {
   final bool showTimeAndStatus;
   final bool hideTopMargin;
   final bool hideBotMargin;
+  final bool lastMessageHasReceipt;
   final Function(String)? onResend;
 
   ChatBubble({
@@ -37,6 +38,7 @@ class ChatBubble extends BaseStateFulWidget {
     this.showTimeAndStatus = true,
     this.hideTopMargin = false,
     this.hideBotMargin = false,
+    this.lastMessageHasReceipt = false,
     this.onResend,
   });
 
@@ -46,6 +48,8 @@ class ChatBubble extends BaseStateFulWidget {
 
 class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   GlobalKey _contentKey = GlobalKey();
+  final MenuController _menuController = MenuController();
+  static const double _menuMinWidth = 180;
 
   StreamSubscription? _onProgressStreamSubscription;
   StreamSubscription? _onPlayProgressSubscription;
@@ -55,6 +59,14 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   double _fetchProgress = -1;
   double _playProgress = -1;
   String? _thumbnailPath;
+  String? _plainThumb;
+  String? _plainContent;
+  String? _heldThumb;
+  String? _heldContent;
+  int _bindGen = 0;
+  int _plainEpoch = 0;
+  bool _rebindScheduled = false;
+  Offset _menuAlignmentOffset = Offset.zero;
 
   @override
   void onRefreshArguments() {
@@ -66,6 +78,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _refreshProgress();
     // thumbnail
     _refreshMediaThumbnail();
+    _bindPlainFiles();
   }
 
   @override
@@ -124,7 +137,142 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _onProgressStreamSubscription?.cancel();
     _onPlayProgressSubscription?.cancel();
     _message.temp?["mediaPlayProgress"] = 0; // need init
+    final thumb = _heldThumb;
+    final content = _heldContent;
+    _heldThumb = null;
+    _heldContent = null;
+    _bindGen++;
+    FileCrypto.release(thumb);
+    FileCrypto.release(content);
     super.dispose();
+  }
+
+  void _bindPlainFiles() {
+    _plainEpoch = FileCrypto.epoch;
+    final gen = ++_bindGen;
+    _bindPlainFilesAsync(gen);
+  }
+
+  Future<void> _bindPlainFilesAsync(int gen) async {
+    final thumb = _thumbnailPath;
+    String? content;
+    if ((thumb == null || thumb.isEmpty) && _message.isContentFile) {
+      String contentType = _message.contentType;
+      if (contentType == MessageContentType.ipfs) {
+        int? type = MessageOptions.getFileType(_message.options);
+        if (type == MessageOptions.fileTypeImage) contentType = MessageContentType.image;
+      }
+      if (contentType == MessageContentType.image) {
+        content = (_message.content as File).path;
+      }
+    }
+    if (gen != _bindGen) return;
+    await _swapHold(isThumb: true, path: thumb, gen: gen);
+    if (gen != _bindGen) return;
+    await _swapHold(isThumb: false, path: content, gen: gen);
+  }
+
+  Future<void> _swapHold({required bool isThumb, String? path, required int gen}) async {
+    final held = isThumb ? _heldThumb : _heldContent;
+    final plain = isThumb ? _plainThumb : _plainContent;
+    if ((path == null || path.isEmpty) && (held == null || held.isEmpty)) return;
+    final encrypted = (path != null && path.isNotEmpty) ? FileCrypto.isEncryptedSync(path) : false;
+    final ready = path == held && plain != null && plain.isNotEmpty && File(plain).existsSync() && (!encrypted || plain != path);
+    if (ready) return;
+
+    if (held != null) {
+      await FileCrypto.release(held);
+      if (gen != _bindGen || !mounted) return;
+    }
+    if (isThumb) {
+      _heldThumb = null;
+      _plainThumb = null;
+    } else {
+      _heldContent = null;
+      _plainContent = null;
+    }
+
+    if (path == null || path.isEmpty) {
+      if (mounted && gen == _bindGen) setState(() {});
+      return;
+    }
+
+    String? opened;
+    if (!encrypted) {
+      opened = path;
+    } else {
+      try {
+        opened = await FileCrypto.openForRead(path);
+      } catch (e, st) {
+        handleError(e, st);
+        return;
+      }
+      if (opened == null || opened.isEmpty || gen != _bindGen || !mounted) {
+        await FileCrypto.release(path);
+        return;
+      }
+    }
+    if (opened.isEmpty || !mounted || gen != _bindGen) return;
+    setState(() {
+      if (isThumb) {
+        _heldThumb = path;
+        _plainThumb = opened;
+      } else {
+        _heldContent = path;
+        _plainContent = opened;
+      }
+    });
+  }
+
+  void _scheduleRebindIfWiped() {
+    if (FileCrypto.epoch == _plainEpoch || _rebindScheduled) return;
+    _rebindScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _rebindScheduled = false;
+      if (!mounted) return;
+      if (FileCrypto.epoch == _plainEpoch) return;
+      _plainEpoch = FileCrypto.epoch;
+      _heldThumb = null;
+      _heldContent = null;
+      _plainThumb = null;
+      _plainContent = null;
+      _bindPlainFiles();
+    });
+  }
+
+  void _recoverPlain() {
+    if (_rebindScheduled) return;
+    _rebindScheduled = true;
+    Future.microtask(() async {
+      _rebindScheduled = false;
+      if (!mounted) return;
+      final thumb = _heldThumb;
+      final content = _heldContent;
+      _heldThumb = null;
+      _heldContent = null;
+      _plainThumb = null;
+      _plainContent = null;
+      await FileCrypto.release(thumb);
+      await FileCrypto.release(content);
+      if (!mounted) return;
+      _bindPlainFiles();
+    });
+  }
+
+  Widget _fileImage(String? plainPath, int? cacheWidth, int? cacheHeight, double placeholderWidth, double placeholderHeight) {
+    if (plainPath == null || plainPath.isEmpty || !File(plainPath).existsSync()) {
+      return SizedBox(width: placeholderWidth, height: placeholderHeight);
+    }
+    return Image.file(
+      File(plainPath),
+      fit: BoxFit.cover,
+      cacheWidth: cacheWidth,
+      cacheHeight: cacheHeight,
+      errorBuilder: (context, error, stack) {
+        _recoverPlain();
+        return SizedBox(width: placeholderWidth, height: placeholderHeight);
+      },
+    );
   }
 
   void _refreshProgress() {
@@ -190,6 +338,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       ],
     );
 
+    _scheduleRebindIfWiped();
     if (Settings.messageDebugInfo) {
       return Column(children: [widget, _widgetMessageDebugInfo()]);
     }
@@ -197,39 +346,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _widgetStatusTip(bool self) {
-    // bool isSending = _message.status == MessageStatus.Sending;
     bool isSendFail = _message.status == MessageStatus.Error;
-    // bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
-    // bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
+    bool shouldShowResend = isSendFail;
+    if (!shouldShowResend && widget.lastMessageHasReceipt && _message.isOutbound) {
+      if (_message.status >= MessageStatus.Success && _message.status < MessageStatus.Receipt) {
+        shouldShowResend = true;
+      }
+    }
 
-    // bool canProgress = _message.isContentFile && !_message.isTopic;
-
-    // bool showSending = isSending && !canProgress;
-    // bool showProgress = isSending && canProgress && _uploadProgress < 1;
-
-    // if (showSending) {
-    //   return Padding(
-    //     padding: const EdgeInsets.symmetric(horizontal: 10),
-    //     child: SpinKitRing(
-    //       color: application.theme.fontColor4,
-    //       lineWidth: 1,
-    //       size: 15,
-    //     ),
-    //   );
-    // } else if (showProgress) {
-    //   return Container(
-    //     width: 40,
-    //     height: 40,
-    //     padding: EdgeInsets.all(10),
-    //     child: CircularProgressIndicator(
-    //       backgroundColor: application.theme.fontColor4.withAlpha(80),
-    //       color: application.theme.primaryColor.withAlpha(200),
-    //       strokeWidth: 2,
-    //       value: _uploadProgress,
-    //     ),
-    //   );
-    // } else
-    if (isSendFail) {
+    if (shouldShowResend) {
       return ButtonIcon(
         icon: Icon(
           FontAwesomeIcons.circleExclamation,
@@ -256,27 +381,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         },
       );
     }
-    // else if (isSendSuccess) {
-    //   return Container(
-    //     width: 5,
-    //     height: 5,
-    //     margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
-    //     decoration: BoxDecoration(
-    //       borderRadius: BorderRadius.circular(5),
-    //       color: application.theme.strongColor.withAlpha(127),
-    //     ),
-    //   );
-    // } else if (isSendReceipt) {
-    //   return Container(
-    //     width: 5,
-    //     height: 5,
-    //     margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
-    //     decoration: BoxDecoration(
-    //       borderRadius: BorderRadius.circular(5),
-    //       color: application.theme.successColor.withAlpha(127),
-    //     ),
-    //   );
-    // }
     return SizedBox.shrink();
   }
 
@@ -297,6 +401,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     }
 
     var onTap = _onTapBubble(contentType);
+    bool includeCopy = contentType == MessageContentType.text || contentType == MessageContentType.textExtension;
 
     List<Widget> childs = [SizedBox.shrink()];
     switch (contentType) {
@@ -322,21 +427,41 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
     }
 
-    return GestureDetector(
-      key: _contentKey,
-      onTap: onTap,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        padding: EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 5),
-        decoration: decoration,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            ...childs,
-            _widgetBubbleInfoBottom(),
-          ],
-        ),
+    return MenuAnchor(
+      controller: _menuController,
+      style: MenuStyle(
+        backgroundColor: MaterialStatePropertyAll(application.theme.backgroundColor4),
+        surfaceTintColor: MaterialStatePropertyAll(Colors.transparent),
+        elevation: MaterialStatePropertyAll(6),
+        shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+        padding: MaterialStatePropertyAll(EdgeInsets.zero),
       ),
+      alignmentOffset: _menuAlignmentOffset,
+      menuChildren: _buildMenuChildren(includeCopy),
+      builder: (context, anchorController, child) {
+        return Semantics(
+          label: 'chat_bubble',
+          button: true,
+          child: GestureDetector(
+            key: _contentKey,
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            onLongPressStart: (_) => _openMenu(),
+            child: Container(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              padding: EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 5),
+              decoration: decoration,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  ...childs,
+                  _widgetBubbleInfoBottom(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -345,27 +470,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     switch (contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
-        onTap = () {
-          PopMenu.PopupMenu popupMenu = PopMenu.PopupMenu(
-            context: context,
-            items: [
-              PopMenu.MenuItem(
-                userInfo: 0,
-                title: Settings.locale((s) => s.copy, ctx: context),
-                textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
-              ),
-            ],
-            onClickMenu: (PopMenu.MenuItemProvider item) {
-              var index = (item as PopMenu.MenuItem).userInfo;
-              switch (index) {
-                case 0:
-                  Util.copyText(_message.content?.toString() ?? "");
-                  break;
-              }
-            },
-          );
-          popupMenu.show(widgetKey: _contentKey);
-        };
+        onTap = null; // Open menu via MenuAnchor
         break;
       case MessageContentType.image:
         // image + ipfs_image
@@ -394,8 +499,32 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           double? durationS = MessageOptions.getMediaDuration(_message.options);
           int? durationMs = (durationS == null) ? null : ((durationS * 1000).round());
           File file = _message.content as File;
-          onTap = () {
-            audioHelper.playStart(_message.msgId, file.path, durationMs: durationMs);
+          onTap = () async {
+            final stored = file.path;
+            final playingThis = audioHelper.playerId == _message.msgId && !audioHelper.player.isStopped;
+            if (playingThis) {
+              await audioHelper.playStop();
+              await FileCrypto.playbackFinished(stored);
+              return;
+            }
+            final plain = await FileCrypto.openForRead(stored);
+            if (plain == null || plain.isEmpty) return;
+            final prev = FileCrypto.playbackStored;
+            FileCrypto.playbackStored = stored;
+            final started = await audioHelper.playStart(
+              _message.msgId,
+              plain,
+              durationMs: durationMs,
+              onFinished: () {
+                FileCrypto.playbackFinished(stored);
+              },
+            );
+            if (prev != null && prev != stored) {
+              await FileCrypto.release(prev);
+            }
+            if (!started || audioHelper.playerId != _message.msgId) {
+              await FileCrypto.playbackFinished(stored);
+            }
           };
         }
         break;
@@ -427,9 +556,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         bool fileDownloaded = (_message.contentType == MessageContentType.ipfs) && (state == MessageOptions.ipfsStateYes);
         if (_message.isContentFile && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
-          onTap = () {
+          onTap = () async {
+            final plain = await FileCrypto.openForRead(file.path);
+            if (plain == null || plain.isEmpty) return;
             try {
-              OpenFilex.open(file.path);
+              await OpenFilex.open(plain);
             } catch (e, st) {
               handleError(e, st);
             }
@@ -444,6 +575,167 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
     }
     return onTap;
+  }
+
+  List<Widget> _buildMenuChildren(bool includeCopy) {
+    List<Widget> children = [];
+    Widget buildItem({required String keyName, required String label, required IconData icon, required VoidCallback onPressed, Color? textColor, Color? iconColor}) {
+      return Semantics(
+        label: keyName,
+        button: true,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: _menuMinWidth),
+          child: MenuItemButton(
+            key: ValueKey(keyName),
+            onPressed: onPressed,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(label, style: TextStyle(color: textColor ?? application.theme.fontLightColor)),
+                ),
+                SizedBox(width: 12),
+                Icon(icon, size: 18, color: iconColor ?? application.theme.fontLightColor),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    void addDivider() {
+      children.add(Divider(height: 1, thickness: 0.5, color: application.theme.lineColor));
+    }
+    if (includeCopy) {
+      children.add(buildItem(
+        keyName: 'chat_bubble_menu_copy',
+        label: Settings.locale((s) => s.copy, ctx: context),
+        icon: Icons.copy_outlined,
+        onPressed: () {
+          Util.copyText(_message.content?.toString() ?? "");
+        },
+      ));
+      addDivider();
+    }
+
+    if (_message.isOutbound) {
+      children.add(buildItem(
+        keyName: 'chat_bubble_menu_revoke',
+        label: Settings.locale((s) => s.revoke, ctx: context),
+        icon: Icons.undo,
+        onPressed: () {
+          ModalDialog.of(Settings.appContext).confirm(
+            title: Settings.locale((s) => s.tip, ctx: context),
+            content: Settings.locale((s) => s.confirm_revoke, ctx: context),
+            agree: Button(
+              width: double.infinity,
+              text: Settings.locale((s) => s.revoke, ctx: context),
+              backgroundColor: application.theme.strongColor,
+              onPressed: () async {
+                bool ok = await chatOutCommon.sendRevoke(_message.msgId);
+                if (ok) await messageCommon.messageDelete(_message, notify: true);
+                if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+              },
+            ),
+            reject: Button(
+              width: double.infinity,
+              text: Settings.locale((s) => s.cancel, ctx: context),
+              fontColor: application.theme.fontColor2,
+              backgroundColor: application.theme.backgroundLightColor,
+              onPressed: () {
+                if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+              },
+            ),
+          );
+        },
+      ));
+      addDivider();
+    }
+    children.add(buildItem(
+      keyName: 'chat_bubble_menu_delete',
+      label: Settings.locale((s) => s.delete, ctx: context),
+      icon: Icons.delete_outline,
+      textColor: application.theme.fallColor,
+      iconColor: application.theme.fallColor,
+      onPressed: () {
+        ModalDialog.of(Settings.appContext).confirm(
+          title: Settings.locale((s) => s.delete_message_confirm_title, ctx: context),
+          agree: Button(
+            width: double.infinity,
+            text: Settings.locale((s) => s.delete, ctx: context),
+            backgroundColor: application.theme.strongColor,
+            onPressed: () async {
+              await messageCommon.messageDelete(_message, notify: true);
+              if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+            },
+          ),
+          reject: Button(
+            width: double.infinity,
+            text: Settings.locale((s) => s.cancel, ctx: context),
+            fontColor: application.theme.fontColor2,
+            backgroundColor: application.theme.backgroundLightColor,
+            onPressed: () {
+              if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+            },
+          ),
+        );
+      },
+    ));
+    return children;
+  }
+
+  void _openMenu() {
+    if (!mounted) return;
+    try {
+      RenderBox? box = _contentKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box != null) {
+        final Offset global = box.localToGlobal(Offset.zero);
+        final double anchorTop = global.dy;
+        final double anchorHeight = box.size.height;
+        final double anchorBottom = anchorTop + anchorHeight;
+        double visibleTop;
+        double visibleBottom;
+        final scrollable = Scrollable.of(context);
+        if (scrollable != null) {
+          final RenderBox? vpBox = scrollable.context.findRenderObject() as RenderBox?;
+          final double vpTop = vpBox?.localToGlobal(Offset.zero).dy ?? 0;
+          final double vpBottom = vpTop + scrollable.position.viewportDimension;
+          visibleTop = vpTop;
+          visibleBottom = vpBottom;
+        } else {
+          final media = MediaQuery.of(context);
+          visibleTop = media.padding.top;
+          visibleBottom = media.size.height - media.viewInsets.bottom;
+        }
+
+        // Estimate menu height
+        final int itemsCount = 1 /*delete*/ + (_message.isOutbound ? 1 : 0) + ((_message.contentType == MessageContentType.text || _message.contentType == MessageContentType.textExtension) ? 1 : 0);
+        final double estimatedMenuHeight = itemsCount * 48.0;
+        final double gap = 8.0;
+        final double spaceBelow = visibleBottom - anchorBottom;
+        final double spaceAbove = anchorTop - visibleTop;
+
+        Offset nextOffset = Offset.zero;
+        final double needed = estimatedMenuHeight + gap;
+        if (spaceBelow < needed) {
+          if (spaceAbove >= needed) {
+            nextOffset = Offset(0, -needed);
+          } else {
+            nextOffset = Offset(0, -max(0.0, spaceAbove - gap));
+          }
+        }
+        if (nextOffset != _menuAlignmentOffset) {
+          setState(() {
+            _menuAlignmentOffset = nextOffset;
+          });
+        }
+      }
+    } catch (_) {
+      // ignore
+    }
+    if (!_menuController.isOpen) {
+      _menuController.open();
+    }
   }
 
   Widget _widgetBubbleInfoBottom() {
@@ -657,24 +949,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     Widget child;
     Color? color;
     if (_thumbnailPath != null) {
-      child = Image.file(
-        File(_thumbnailPath!),
-        fit: BoxFit.cover,
-        cacheWidth: ratioWH[0]?.toInt(),
-        cacheHeight: ratioWH[1]?.toInt(),
-      );
+      child = _fileImage(_plainThumb, ratioWH[0]?.toInt(), ratioWH[1]?.toInt(), placeholderWidth, placeholderHeight);
       color = Colors.black;
     } else {
       if ((_message.isOutbound == false) && (_message.contentType == MessageContentType.ipfs)) {
         int state = MessageOptions.getIpfsState(_message.options);
         if ((state == MessageOptions.ipfsStateYes) && _message.isContentFile) {
-          File file = _message.content as File;
-          child = Image.file(
-            file,
-            fit: BoxFit.cover,
-            cacheWidth: ratioWH[0]?.toInt(),
-            cacheHeight: ratioWH[1]?.toInt(),
-          );
+          child = _fileImage(_plainContent, ratioWH[0]?.toInt(), ratioWH[1]?.toInt(), placeholderWidth, placeholderHeight);
         } else {
           child = SizedBox(
             width: placeholderWidth,
@@ -682,13 +963,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           );
         }
       } else if (_message.isContentFile) {
-        File file = _message.content as File;
-        child = Image.file(
-          file,
-          fit: BoxFit.cover,
-          cacheWidth: ratioWH[0]?.toInt(),
-          cacheHeight: ratioWH[1]?.toInt(),
-        );
+        child = _fileImage(_plainContent, ratioWH[0]?.toInt(), ratioWH[1]?.toInt(), placeholderWidth, placeholderHeight);
       } else {
         child = SizedBox(
           width: placeholderWidth,
@@ -868,12 +1143,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             ),
             color: Colors.black,
             child: (_thumbnailPath != null)
-                ? Image.file(
-                    File(_thumbnailPath!),
-                    fit: BoxFit.cover,
-                    cacheWidth: ratioWH[0]?.toInt(),
-                    cacheHeight: ratioWH[1]?.toInt(),
-                  )
+                ? _fileImage(_plainThumb, ratioWH[0]?.toInt(), ratioWH[1]?.toInt(), placeholderWidth, placeholderHeight)
                 : SizedBox(width: placeholderWidth, height: placeholderHeight),
           ),
           (durationText != null && durationText.isNotEmpty)

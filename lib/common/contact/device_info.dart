@@ -52,10 +52,11 @@ class DeviceInfoCommon with Tag {
     if (deviceInfo == null) return null;
     if (fetchDeviceToken) {
       String? deviceToken = await DeviceToken.get();
-      if ((deviceToken?.isNotEmpty == true) && (deviceInfo.deviceToken != deviceToken)) {
-        logger.i("$TAG - getMe - deviceToken diff - new:$deviceToken - old:${deviceInfo.deviceToken}");
-        bool success = await setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
-        if (success) deviceInfo.deviceToken = deviceToken ?? "";
+      String newToken = deviceToken ?? "";
+      if (deviceInfo.deviceToken != newToken) {
+        logger.i("$TAG - getMe - deviceToken diff - new:$newToken - old:${deviceInfo.deviceToken}");
+        bool success = await setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, newToken);
+        if (success) deviceInfo.deviceToken = newToken;
       }
     }
     if (refreshOnlineAt) {

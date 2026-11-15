@@ -78,7 +78,6 @@ class DB {
     String path = await getDBFilePath(publicKey);
     bool exists = await databaseExists(path);
     String password = seed.isEmpty ? "" : hexEncode(Uint8List.fromList(Hash.sha256(seed)));
-    logger.i("DB - open - exists:$exists - publicKey:$publicKey - seed:$seed - password:$password - path:$path");
 
     if (!Platform.isIOS) {
       database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
@@ -156,7 +155,11 @@ class DB {
         }
       }
     }
-    if (database != null) _openedSink.add(true);
+    if (database != null) {
+      _openedSink.add(true);
+    } else {
+      _openedSink.add(false);
+    }
   }
 
   Future<Database?> _tryOpenDB(String path, String password, {String publicKey = "", bool upgradeTip = false}) async {
@@ -338,6 +341,77 @@ class DB {
   Future<String> getDBFilePath(String publicKey) async {
     var databasesPath = await getDBDirPath();
     return join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
+  }
+
+  /// Backup all databases that haven't been backed up yet
+  static Future<void> backupAllUnbackedDatabases() async {
+    try {
+      final String dbDirPath = await getDatabasesPath();
+      final Directory dbDir = Directory(dbDirPath);
+      
+      if (!await dbDir.exists()) {
+        logger.w("DB - backupAll - database directory does not exist: $dbDirPath");
+        return;
+      }
+
+      final List<FileSystemEntity> files = dbDir.listSync();
+      final String dbPrefix = '${NKN_DATABASE_NAME}_';
+      final String dbSuffix = '.db';
+      final String backupSuffix = '_bak$dbSuffix';
+
+      int backedUpCount = 0;
+      int skippedCount = 0;
+
+      for (final FileSystemEntity entity in files) {
+        if (entity is! File) continue;
+
+        final String fileName = basename(entity.path);
+        
+        // Skip files that don't match the database naming pattern
+        if (!fileName.startsWith(dbPrefix) || !fileName.endsWith(dbSuffix)) {
+          continue;
+        }
+
+        // Skip files that are already backups
+        if (fileName.contains('_bak')) {
+          continue;
+        }
+
+        // Extract publicKey from filename: nkn_{publicKey}.db
+        final String publicKey = fileName.substring(
+          dbPrefix.length,
+          fileName.length - dbSuffix.length,
+        );
+
+        if (publicKey.isEmpty) {
+          continue;
+        }
+
+        // Check if backup already exists
+        final String backupPath = join(dbDirPath, '${dbPrefix}${publicKey}${backupSuffix}');
+        if (await databaseExists(backupPath)) {
+          logger.d("DB - backupAll - backup already exists, skipping: $fileName");
+          skippedCount++;
+          continue;
+        }
+
+        // Create backup
+        try {
+          final File sourceFile = File(entity.path);
+          await sourceFile.copy(backupPath);
+          logger.i("DB - backupAll - backed up: $fileName -> ${basename(backupPath)}");
+          backedUpCount++;
+        } catch (e, st) {
+          logger.e("DB - backupAll - failed to backup $fileName: $e");
+          handleError(e, st);
+        }
+      }
+
+      logger.i("DB - backupAll - completed: $backedUpCount backed up, $skippedCount skipped");
+    } catch (e, st) {
+      logger.e("DB - backupAll - error: $e");
+      handleError(e, st);
+    }
   }
 
   Future<bool> needUpgrade(String publicKey) async {

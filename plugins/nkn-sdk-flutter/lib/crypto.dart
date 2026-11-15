@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 
 /// Crypto
@@ -14,7 +12,7 @@ class Crypto {
         'privateKey': privateKey,
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -25,7 +23,7 @@ class Crypto {
         'seed': seed,
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -36,7 +34,7 @@ class Crypto {
         'privateKey': privateKey,
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -48,7 +46,7 @@ class Crypto {
         'data': data,
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -61,7 +59,7 @@ class Crypto {
         'signature': signature,
       });
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

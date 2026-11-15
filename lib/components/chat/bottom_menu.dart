@@ -79,22 +79,20 @@ class ChatBottomMenu extends StatelessWidget {
   }
 
   _pickFiles({int? maxSize}) async {
-    FilePickerResult? result;
+    List<PlatformFile> files = [];
     application.inSystemSelecting = true;
     try {
-      result = await FilePicker.platform.pickFiles(
-        allowMultiple: true,
+      files = await FilePicker.pickFiles(
         type: FileType.any,
-        allowCompression: true,
       );
     } catch (e, st) {
       handleError(e, st);
     }
     application.inSystemSelecting = false;
-    if (result == null || result.files.isEmpty) return;
+    if (files.isEmpty) return;
     List<Map<String, dynamic>> results = [];
-    for (var i = 0; i < result.files.length; i++) {
-      PlatformFile picked = result.files[i];
+    for (var i = 0; i < files.length; i++) {
+      PlatformFile picked = files[i];
       String? path = picked.path;
       String name = picked.name;
       if (path == null || path.isEmpty) continue;

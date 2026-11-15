@@ -1,13 +1,13 @@
 import Nkn
 
 class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
-    
+
     let CHANNEL_NAME = "org.nkn.sdk/crypto"
     let EVENT_NAME = "org.nkn.sdk/crypto/event"
     var methodChannel: FlutterMethodChannel?
     var eventChannel: FlutterEventChannel?
     var eventSink: FlutterEventSink?
-    
+
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
         self.methodChannel?.setMethodCallHandler(handle)
@@ -45,7 +45,7 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func getPublicKeyFromPrivateKey(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        let args = call.arguments as! [String: Any]
         let privateKey = args["privateKey"] as? FlutterStandardTypedData
         
         let publicKey = CryptoGetPublicKeyFromPrivateKey(privateKey?.data)
@@ -53,7 +53,7 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func getPrivateKeyFromSeed(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        let args = call.arguments as! [String: Any]
         let seed = args["seed"] as? FlutterStandardTypedData
         
         let privateKey = CryptoGetPrivateKeyFromSeed(seed?.data)
@@ -61,7 +61,7 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func getSeedFromPrivateKey(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        let args = call.arguments as! [String: Any]
         let privateKey = args["privateKey"] as? FlutterStandardTypedData
         
         let seed = CryptoGetSeedFromPrivateKey(privateKey?.data)
@@ -69,7 +69,7 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func sign(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        let args = call.arguments as! [String: Any]
         let privateKey = args["privateKey"] as? FlutterStandardTypedData
         let data = args["data"] as? FlutterStandardTypedData
         
@@ -83,15 +83,14 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func verify(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        let args = call.arguments as! [String: Any]
         let publicKey = args["publicKey"] as? FlutterStandardTypedData
         let data = args["data"] as? FlutterStandardTypedData
         let signature = args["signature"] as? FlutterStandardTypedData
         var error: NSError?
-        
         CryptoVerify(publicKey?.data, data?.data, signature?.data, &error)
         if (error != nil) {
-            //NSLog("%@", error!)
+            NSLog("%@", error!)
             result(false)
             return
         }

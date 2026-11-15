@@ -36,8 +36,15 @@ class SecureStorage {
     //   if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
     // }
     try {
-      final options = IOSOptions(synchronizable: false, accessibility: KeychainAccessibility.first_unlock);
-      return await _storage.read(key: key, iOptions: options);
+      // flutter_secure_storage 10 adds accessibility to the Keychain lookup.
+      // Items written by 9.x are stored without that constraint on read, so
+      // a strict query returns null. Match the old lookup: no accessibility,
+      // then both synchronizable flags.
+      for (final synchronizable in const [false, true]) {
+        final options = IOSOptions(synchronizable: synchronizable, accessibility: null);
+        final value = await _storage.read(key: key, iOptions: options);
+        if (value != null) return value;
+      }
     } catch (e) {
       logger.e("SecureStorage - get - key:$key - error:$e");
     }

@@ -67,7 +67,6 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
 
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.i("$TAG - name:$name, password:$password");
 
       Wallet nkn = await Wallet.create(null, config: WalletConfig(password: password));
       logger.i("$TAG - wallet create - nkn:${nkn.toString()}");

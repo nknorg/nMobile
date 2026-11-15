@@ -330,6 +330,30 @@ class RPC {
     return success;
   }
 
+  /// Subscribe with a custom [identifier] and [meta] (e.g. last-device `__lst__`).
+  static Future<bool> subscribeWithIdentifier(
+    String? topicId, {
+    required String identifier,
+    String meta = "",
+    int? nonce,
+    double fee = 0,
+    int? duration,
+    bool toast = false,
+  }) async {
+    List results = await _subscribe(
+      topicId,
+      fee: fee,
+      identifier: identifier,
+      meta: meta,
+      nonce: nonce,
+      duration: duration,
+      toast: toast,
+    );
+    bool success = results[0] == true;
+    bool isBlock = results[2] == true;
+    return success || isBlock;
+  }
+
   // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
   static Future<List> _subscribe(
     String? topicId, {
@@ -337,10 +361,12 @@ class RPC {
     double fee = 0,
     String identifier = "",
     String meta = "",
+    int? duration,
     bool toast = false,
   }) async {
     if (topicId == null || topicId.isEmpty) return [false, false, false, null];
     int maxTryTimes = Settings.tryTimesTopicRpc;
+    int subscribeDuration = duration ?? Settings.blockHeightTopicSubscribeDefault;
     // func
     Function(int?) func = (int? nonce) async {
       bool success = false;
@@ -351,7 +377,7 @@ class RPC {
         if (await clientCommon.checkClientOk("_subscribe")) {
           String? topicHash = await clientCommon.client?.subscribe(
             topic: RPC.genTopicHash(topicId),
-            duration: Settings.blockHeightTopicSubscribeDefault,
+            duration: subscribeDuration,
             fee: fee.toStringAsFixed(8),
             identifier: identifier,
             meta: meta,

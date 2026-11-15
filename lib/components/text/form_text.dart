@@ -33,6 +33,7 @@ class FormText extends BaseStateFulWidget {
   // decoration
   String? hintText;
   String? helperText;
+  String? errorText;
   final bool showErrorMessage;
   Widget? suffixIcon;
   final Color? borderColor;
@@ -64,6 +65,7 @@ class FormText extends BaseStateFulWidget {
     // decoration
     this.hintText,
     this.helperText,
+    this.errorText,
     this.showErrorMessage = true,
     this.suffixIcon,
     this.borderColor,
@@ -117,6 +119,8 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
             hintStyle: TextStyle(fontSize: widget.fontSize),
             helperText: widget.helperText,
             helperMaxLines: 3,
+            errorText: widget.errorText,
+            errorMaxLines: 3,
             errorStyle: widget.showErrorMessage ? null : TextStyle(height: 0, fontSize: 0),
             suffixIcon: GestureDetector(
               onTap: () => setState(() => _showPassword = !_showPassword),
@@ -156,6 +160,8 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
             hintText: widget.hintText,
             hintStyle: TextStyle(fontSize: widget.fontSize),
             helperText: widget.helperText,
+            errorText: widget.errorText,
+            errorMaxLines: 3,
             errorStyle: widget.showErrorMessage ? null : TextStyle(height: 0, fontSize: 0),
             suffixIcon: widget.suffixIcon,
             disabledBorder: borderStyle,

@@ -141,8 +141,9 @@ class NknError {
   }
 }
 
-void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, String? text, bool upload = true}) {
+void handleError(dynamic error, StackTrace? stackTrace, {bool? toast, String? text, bool upload = true}) {
   if (Settings.isRelease) {
+    toast = toast ?? false;
     String errStr = error?.toString().toLowerCase() ?? "";
     bool contains = _containsStrings(errStr, [
       "wrong password",
@@ -162,10 +163,11 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
       if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stackTrace); // await
     }
   } else if (Settings.debug) {
+    toast = toast ?? true;
     logger.e(error);
     debugPrintStack(maxFrames: 100);
   }
-  if (!toast) return;
+  if (toast != true) return;
   text = text ?? getErrorShow(error);
   if ((text != null) && text.isNotEmpty) {
     Toast.show(text);
